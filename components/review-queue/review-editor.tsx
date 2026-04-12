@@ -1,11 +1,13 @@
 import Link from "next/link";
+import type { SocialPlatform } from "@prisma/client";
 import { QueueIcon } from "@/components/icons";
-import { PostStatusBadge } from "@/components/review-queue/post-status-badge";
+import { DraftEditorWorkspace } from "@/components/review-queue/draft-editor-workspace";
 import {
   getGeneratedPostStatusLabel,
-  getGenerationToneLabel,
   getSocialPlatformLabel,
+  SUPPORTED_REVIEW_PLATFORMS,
 } from "@/lib/review-queue/constants";
+import { getReviewEditorActions } from "@/lib/review-queue/editor-actions";
 import type { ReviewQueueItem } from "@/server/review-queue/service";
 
 function formatDateTime(value: Date | null) {
@@ -23,6 +25,12 @@ function getCurrentDraftText(post: ReviewQueueItem) {
   return post.editedText ?? post.generatedText;
 }
 
+function formatArticleStatus(status: ReviewQueueItem["article"]["status"]) {
+  const normalized = status.replaceAll("_", " ").toLowerCase();
+
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+}
+
 export function ReviewEditor({
   post,
   siblingPosts,
@@ -34,6 +42,20 @@ export function ReviewEditor({
 }>) {
   const currentDraftText = getCurrentDraftText(post);
   const hasEdits = Boolean(post.editedText && post.editedText !== post.generatedText);
+  const platformPosts = new Map<SocialPlatform, ReviewQueueItem>(
+    siblingPosts.map((item) => [item.platform, item]),
+  );
+  const platformTabs = SUPPORTED_REVIEW_PLATFORMS.map((platform) => {
+    const platformPost = platformPosts.get(platform) ?? null;
+
+    return {
+      platform,
+      label: platformPost ? getSocialPlatformLabel(platform) : `${getSocialPlatformLabel(platform)} unavailable`,
+      href: platformPost ? `/queue/${platformPost.id}` : null,
+      active: platform === post.platform,
+    };
+  });
+  const actions = getReviewEditorActions();
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(320px,0.86fr)_minmax(0,1.14fr)]">
@@ -52,9 +74,6 @@ export function ReviewEditor({
         <h1 className="mt-4 font-[var(--font-display)] text-[2rem] font-semibold tracking-[-0.04em] text-[var(--foreground)]">
           {post.article.title}
         </h1>
-        <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-          {post.article.excerpt ?? post.article.contentText ?? "No article excerpt is available yet."}
-        </p>
 
         <div className="mt-6 grid gap-4">
           <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
@@ -70,7 +89,7 @@ export function ReviewEditor({
               Article status
             </p>
             <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
-              {post.article.status.replaceAll("_", " ").toLowerCase()}
+              {formatArticleStatus(post.article.status)}
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
@@ -91,6 +110,24 @@ export function ReviewEditor({
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+            Excerpt
+          </p>
+          <p className="mt-3 text-sm leading-7 text-[var(--foreground)]">
+            {post.article.excerpt ?? "No short excerpt is available for this article yet."}
+          </p>
+        </div>
+
+        <div className="mt-4 rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+            Content preview
+          </p>
+          <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
+            {post.article.contentText ?? "No content preview is available for this article yet."}
+          </p>
         </div>
 
         <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-low)] p-4 text-sm leading-7 text-[var(--muted)]">
@@ -114,120 +151,20 @@ export function ReviewEditor({
       </aside>
 
       <section className="grid gap-6">
-        <section className="surface-card rounded-[1.75rem] p-5 sm:p-6">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-            <div>
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Draft editor
-              </p>
-              <h2 className="mt-3 font-[var(--font-display)] text-[2rem] font-semibold tracking-[-0.04em] text-[var(--foreground)]">
-                {getSocialPlatformLabel(post.platform)} review draft
-              </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">
-                Review the generated copy, compare other platform variants, and keep moderation
-                tied to the original source context.
-              </p>
-            </div>
-            <PostStatusBadge status={post.status} />
-          </div>
-
-          {siblingPosts.length > 1 ? (
-            <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-low)] p-1">
-              <div className="flex flex-wrap gap-1">
-                {siblingPosts.map((siblingPost) => {
-                  const active = siblingPost.id === post.id;
-
-                  return (
-                    <Link
-                      key={siblingPost.id}
-                      href={`/queue/${siblingPost.id}`}
-                      className={`inline-flex min-w-[140px] items-center justify-center rounded-[1rem] px-4 py-2.5 text-sm font-semibold ${
-                        active
-                          ? "bg-white text-[var(--primary)] shadow-[var(--shadow-soft)]"
-                          : "text-[var(--muted)] hover:bg-white/70 hover:text-[var(--foreground)]"
-                      }`}
-                    >
-                      {getSocialPlatformLabel(siblingPost.platform)}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="mt-6 grid gap-4 lg:grid-cols-4">
-            <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Tone
-              </p>
-              <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
-                {getGenerationToneLabel(post.tone)}
-              </p>
-            </div>
-            <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Prompt version
-              </p>
-              <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
-                {post.promptVersion}
-              </p>
-            </div>
-            <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Model
-              </p>
-              <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
-                {post.generationModel}
-              </p>
-            </div>
-            <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Last updated
-              </p>
-              <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
-                {formatDateTime(post.updatedAt)}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6 rounded-[1.5rem] bg-[var(--surface-low)] p-4 sm:p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                  Current draft
-                </p>
-                <p className="mt-2 text-sm text-[var(--muted)]">
-                  {hasEdits ? "Edited copy is currently in review." : "Showing the latest generated text."}
-                </p>
-              </div>
-              <span className="rounded-full bg-white px-3 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                {hasEdits ? "Edited" : "Generated"}
-              </span>
-            </div>
-
-            <div className="mt-4 rounded-[1.25rem] bg-white p-5 shadow-[var(--shadow-soft)]">
-              <p className="whitespace-pre-wrap text-sm leading-8 text-[var(--foreground)]">
-                {currentDraftText}
-              </p>
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--muted)]">
-              <span>{currentDraftText.length} characters</span>
-              <span>Version {post.versionNumber}</span>
-            </div>
-          </div>
-
-          {hasEdits ? (
-            <div className="mt-4 rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Original generation
-              </p>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-[var(--muted)]">
-                {post.generatedText}
-              </p>
-            </div>
-          ) : null}
-        </section>
+        <DraftEditorWorkspace
+          draftText={currentDraftText}
+          platform={post.platform}
+          status={post.status}
+          tone={post.tone}
+          promptVersion={post.promptVersion}
+          generationModel={post.generationModel}
+          updatedAtLabel={formatDateTime(post.updatedAt)}
+          versionNumber={post.versionNumber}
+          hasEdits={hasEdits}
+          originalGeneratedText={post.generatedText}
+          platformTabs={platformTabs}
+          actions={actions}
+        />
 
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.85fr)]">
           <article className="surface-card rounded-[1.75rem] p-6">

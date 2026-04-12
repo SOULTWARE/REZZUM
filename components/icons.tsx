@@ -180,3 +180,54 @@ export function ArrowRightIcon(props: Readonly<IconProps>) {
     </BaseIcon>
   );
 }
+
+export function RefreshIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M20 6.5V11.5H15" />
+      <path d="M4 17.5V12.5H9" />
+      <path d="M6.2 9.5C7.5 6.6 10.7 4.8 13.9 5.2C16.1 5.4 18.1 6.6 19.3 8.4" />
+      <path d="M17.8 14.5C16.5 17.4 13.3 19.2 10.1 18.8C7.9 18.6 5.9 17.4 4.7 15.6" />
+    </BaseIcon>
+  );
+}
+
+export function SaveIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M5.5 4.5H16.5L19.5 7.5V18.5C19.5 19.6046 18.6046 20.5 17.5 20.5H6.5C5.39543 20.5 4.5 19.6046 4.5 18.5V5.5C4.5 4.94772 4.94772 4.5 5.5 4.5Z" />
+      <path d="M8 4.5V9.5H15.5" />
+      <path d="M8 20V14.5H16" />
+    </BaseIcon>
+  );
+}
+
+export function ApproveIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M5 12.5L9.5 17L19 7.5" />
+    </BaseIcon>
+  );
+}
+
+export function RejectIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M6 6L18 18" />
+      <path d="M18 6L6 18" />
+    </BaseIcon>
+  );
+}
+
+export function CalendarIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <rect x="4.5" y="5.5" width="15" height="15" rx="2" />
+      <path d="M8 3.5V7.5" />
+      <path d="M16 3.5V7.5" />
+      <path d="M4.5 10.5H19.5" />
+      <path d="M12 13.5V17.5" />
+      <path d="M10 15.5H14" />
+    </BaseIcon>
+  );
+}

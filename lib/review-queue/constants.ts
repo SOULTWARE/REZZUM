@@ -4,6 +4,8 @@ import {
   SocialPlatform,
 } from "@prisma/client";
 
+export const SUPPORTED_REVIEW_PLATFORMS = [SocialPlatform.LINKEDIN, SocialPlatform.X] as const;
+
 export const SOCIAL_PLATFORM_LABELS: Record<SocialPlatform, string> = {
   LINKEDIN: "LinkedIn",
   X: "X",
@@ -24,6 +26,11 @@ export const GENERATION_TONE_LABELS: Record<GenerationTone, string> = {
   EDUCATIONAL: "Educational",
 };
 
+export const SOCIAL_PLATFORM_CHARACTER_LIMITS: Record<SocialPlatform, number> = {
+  LINKEDIN: 3000,
+  X: 280,
+};
+
 export function getSocialPlatformLabel(platform: SocialPlatform) {
   return SOCIAL_PLATFORM_LABELS[platform];
 }
@@ -34,4 +41,8 @@ export function getGeneratedPostStatusLabel(status: GeneratedPostStatus) {
 
 export function getGenerationToneLabel(tone: GenerationTone) {
   return GENERATION_TONE_LABELS[tone];
+}
+
+export function getSocialPlatformCharacterLimit(platform: SocialPlatform) {
+  return SOCIAL_PLATFORM_CHARACTER_LIMITS[platform];
 }
