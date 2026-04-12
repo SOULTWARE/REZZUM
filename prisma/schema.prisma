@@ -47,6 +47,12 @@ enum SocialAccountStatus {
   DISCONNECTED
 }
 
+enum PublishAttemptStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
 model RssFeed {
   id                     String      @id @default(cuid())
   name                   String      @db.VarChar(120)
@@ -136,6 +142,7 @@ model GeneratedPost {
   article             Article             @relation(fields: [articleId], references: [id], onDelete: Cascade)
   previousVersion     GeneratedPost?      @relation("GeneratedPostVersions", fields: [previousVersionId], references: [id], onDelete: SetNull)
   nextVersions        GeneratedPost[]     @relation("GeneratedPostVersions")
+  publishAttempts     PublishAttempt[]
 
   @@index([articleId, platform])
   @@index([status])
@@ -143,6 +150,26 @@ model GeneratedPost {
   @@index([publishedAt])
   @@index([publishedExternalId])
   @@map("generated_posts")
+}
+
+model PublishAttempt {
+  id                 String               @id @default(cuid())
+  generatedPostId    String               @map("generated_post_id")
+  status             PublishAttemptStatus @default(PENDING)
+  idempotencyKey     String               @unique @map("idempotency_key") @db.VarChar(191)
+  attemptedAt        DateTime?            @map("attempted_at")
+  completedAt        DateTime?            @map("completed_at")
+  providerStatusCode String?              @map("provider_status_code") @db.VarChar(64)
+  providerMessage    String?              @map("provider_message") @db.Text
+  publishedExternalId String?             @map("published_external_id") @db.VarChar(191)
+  failureReason      String?              @map("failure_reason") @db.Text
+  createdAt          DateTime             @default(now()) @map("created_at")
+  updatedAt          DateTime             @updatedAt @map("updated_at")
+  generatedPost      GeneratedPost        @relation(fields: [generatedPostId], references: [id], onDelete: Cascade)
+
+  @@index([generatedPostId, createdAt])
+  @@index([status])
+  @@map("publish_attempts")
 }
 
 model SocialAccount {
