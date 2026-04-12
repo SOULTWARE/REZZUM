@@ -181,6 +181,15 @@ export function ArrowRightIcon(props: Readonly<IconProps>) {
   );
 }
 
+export function PlusIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M12 5V19" />
+      <path d="M5 12H19" />
+    </BaseIcon>
+  );
+}
+
 export function RefreshIcon(props: Readonly<IconProps>) {
   return (
     <BaseIcon {...props}>
@@ -228,6 +237,16 @@ export function CalendarIcon(props: Readonly<IconProps>) {
       <path d="M4.5 10.5H19.5" />
       <path d="M12 13.5V17.5" />
       <path d="M10 15.5H14" />
+    </BaseIcon>
+  );
+}
+
+export function DisconnectIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M10.5 6.5H8C6.067 6.5 4.5 8.067 4.5 10V14C4.5 15.933 6.067 17.5 8 17.5H10.5" />
+      <path d="M14.5 8L19 12L14.5 16" />
+      <path d="M10.5 12H19" />
     </BaseIcon>
   );
 }

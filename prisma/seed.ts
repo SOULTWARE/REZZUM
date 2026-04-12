@@ -1,6 +1,11 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { FeedStatus, PrismaClient } from "@prisma/client";
+import {
+  FeedStatus,
+  PrismaClient,
+  SocialAccountStatus,
+  SocialPlatform,
+} from "@prisma/client";
 import { normalizeFeedUrl } from "../lib/feeds/constants";
 
 if (!process.env.DATABASE_URL) {
@@ -78,6 +83,57 @@ const seededFeeds = [
   },
 ] as const;
 
+const seededSocialAccounts = [
+  {
+    platform: SocialPlatform.LINKEDIN,
+    status: SocialAccountStatus.CONNECTED,
+    displayName: "REZZUM Company Page",
+    handle: "linkedin.com/company/rezzum",
+    profileUrl: "https://linkedin.com/company/rezzum",
+    providerAccountId: "li_company_rezzum_001",
+    providerUsername: "rezzum",
+    accessTokenEncrypted: "dev_token_placeholder_linkedin_company",
+    refreshTokenEncrypted: "dev_refresh_placeholder_linkedin_company",
+    tokenExpiresAt: new Date(now.getTime() + 21 * 24 * 60 * 60_000),
+    scopes: ["w_member_social", "r_organization_social"],
+    lastValidatedAt: new Date(now.getTime() - 95 * 60_000),
+    connectedAt: new Date(now.getTime() - 45 * 24 * 60 * 60_000),
+    disconnectedAt: null,
+  },
+  {
+    platform: SocialPlatform.X,
+    status: SocialAccountStatus.PENDING,
+    displayName: "REZZUM on X",
+    handle: "@rezzumhq",
+    profileUrl: "https://x.com/rezzumhq",
+    providerAccountId: "x_rezzumhq_pending_001",
+    providerUsername: "rezzumhq",
+    accessTokenEncrypted: null,
+    refreshTokenEncrypted: null,
+    tokenExpiresAt: null,
+    scopes: [],
+    lastValidatedAt: null,
+    connectedAt: null,
+    disconnectedAt: null,
+  },
+  {
+    platform: SocialPlatform.LINKEDIN,
+    status: SocialAccountStatus.EXPIRED,
+    displayName: "Ismail Founder Profile",
+    handle: "linkedin.com/in/ismail-rezzum",
+    profileUrl: "https://linkedin.com/in/ismail-rezzum",
+    providerAccountId: "li_founder_ismail_001",
+    providerUsername: "ismail-rezzum",
+    accessTokenEncrypted: "dev_token_placeholder_linkedin_founder",
+    refreshTokenEncrypted: "dev_refresh_placeholder_linkedin_founder",
+    tokenExpiresAt: new Date(now.getTime() - 36 * 60 * 60_000),
+    scopes: ["w_member_social"],
+    lastValidatedAt: new Date(now.getTime() - 9 * 24 * 60 * 60_000),
+    connectedAt: new Date(now.getTime() - 120 * 24 * 60 * 60_000),
+    disconnectedAt: null,
+  },
+] as const;
+
 async function main() {
   for (const feed of seededFeeds) {
     const normalizedRssUrl = normalizeFeedUrl(feed.rssUrl);
@@ -131,7 +187,50 @@ async function main() {
     });
   }
 
-  console.log(`Seeded ${seededFeeds.length} REZZUM feeds.`);
+  for (const account of seededSocialAccounts) {
+    await prisma.socialAccount.upsert({
+      where: {
+        platform_providerAccountId: {
+          platform: account.platform,
+          providerAccountId: account.providerAccountId,
+        },
+      },
+      update: {
+        status: account.status,
+        displayName: account.displayName,
+        handle: account.handle,
+        profileUrl: account.profileUrl,
+        providerUsername: account.providerUsername,
+        accessTokenEncrypted: account.accessTokenEncrypted,
+        refreshTokenEncrypted: account.refreshTokenEncrypted,
+        tokenExpiresAt: account.tokenExpiresAt,
+        scopes: [...account.scopes],
+        lastValidatedAt: account.lastValidatedAt,
+        connectedAt: account.connectedAt,
+        disconnectedAt: account.disconnectedAt,
+      },
+      create: {
+        platform: account.platform,
+        status: account.status,
+        displayName: account.displayName,
+        handle: account.handle,
+        profileUrl: account.profileUrl,
+        providerAccountId: account.providerAccountId,
+        providerUsername: account.providerUsername,
+        accessTokenEncrypted: account.accessTokenEncrypted,
+        refreshTokenEncrypted: account.refreshTokenEncrypted,
+        tokenExpiresAt: account.tokenExpiresAt,
+        scopes: [...account.scopes],
+        lastValidatedAt: account.lastValidatedAt,
+        connectedAt: account.connectedAt,
+        disconnectedAt: account.disconnectedAt,
+      },
+    });
+  }
+
+  console.log(
+    `Seeded ${seededFeeds.length} REZZUM feeds and ${seededSocialAccounts.length} social accounts.`,
+  );
 }
 
 main()

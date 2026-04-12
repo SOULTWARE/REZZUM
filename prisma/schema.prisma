@@ -40,6 +40,13 @@ enum GeneratedPostStatus {
   FAILED
 }
 
+enum SocialAccountStatus {
+  CONNECTED
+  PENDING
+  EXPIRED
+  DISCONNECTED
+}
+
 model RssFeed {
   id                     String      @id @default(cuid())
   name                   String      @db.VarChar(120)
@@ -136,4 +143,29 @@ model GeneratedPost {
   @@index([publishedAt])
   @@index([publishedExternalId])
   @@map("generated_posts")
+}
+
+model SocialAccount {
+  id                    String              @id @default(cuid())
+  platform              SocialPlatform
+  status                SocialAccountStatus @default(PENDING)
+  displayName           String              @map("display_name") @db.VarChar(191)
+  handle                String?             @db.VarChar(191)
+  profileUrl            String?             @map("profile_url") @db.Text
+  providerAccountId     String?             @map("provider_account_id") @db.VarChar(191)
+  providerUsername      String?             @map("provider_username") @db.VarChar(191)
+  accessTokenEncrypted  String?             @map("access_token_encrypted") @db.Text
+  refreshTokenEncrypted String?             @map("refresh_token_encrypted") @db.Text
+  tokenExpiresAt        DateTime?           @map("token_expires_at")
+  scopes                String[]            @default([])
+  lastValidatedAt       DateTime?           @map("last_validated_at")
+  connectedAt           DateTime?           @map("connected_at")
+  disconnectedAt        DateTime?           @map("disconnected_at")
+  createdAt             DateTime            @default(now()) @map("created_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+
+  @@unique([platform, providerAccountId])
+  @@index([platform, status])
+  @@index([status])
+  @@map("social_accounts")
 }
