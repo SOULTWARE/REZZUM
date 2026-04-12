@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { AccountCard } from "@/components/accounts/account-card";
 import { AccountEmptyState } from "@/components/accounts/account-empty-state";
-import { AccountsIcon } from "@/components/icons";
-import { MetricCard } from "@/components/metric-card";
+import { AccountsIcon, LinkedInIcon, SparkIcon, XIcon } from "@/components/icons";
 import { PageContainer } from "@/components/page-container";
 import { getAccountsOverview } from "@/server/accounts/service";
 
@@ -12,73 +11,144 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+function formatPercentage(value: number, total: number) {
+  if (total <= 0) {
+    return 0;
+  }
+
+  return Math.round((value / total) * 100);
+}
+
+function StarterPlatformCard({
+  title,
+  detail,
+  icon,
+}: Readonly<{
+  title: string;
+  detail: string;
+  icon: React.ReactNode;
+}>) {
+  return (
+    <article className="rounded-xl border border-transparent bg-white p-6 shadow-sm transition-all duration-300 hover:border-[rgb(0_83_218_/_0.1)]">
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-[var(--surface-high)] ring-4 ring-[var(--surface-low)] text-slate-900">
+          {icon}
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[rgb(95_95_98_/_0.08)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+          Pending
+        </span>
+      </div>
+      <h2 className="font-[var(--font-display)] text-lg font-bold text-slate-900">{title}</h2>
+      <p className="mt-1 text-sm leading-6 text-slate-500">{detail}</p>
+      <div className="mt-5 flex items-center gap-3">
+        <button
+          type="button"
+          disabled
+          aria-disabled="true"
+          className="button-primary flex-1 rounded-lg py-2 text-xs font-semibold text-white disabled:opacity-70"
+        >
+          Connect
+        </button>
+        <button
+          type="button"
+          disabled
+          aria-disabled="true"
+          className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--surface-low)] text-slate-500 disabled:opacity-70"
+        >
+          <AccountsIcon className="h-4 w-4" />
+        </button>
+      </div>
+    </article>
+  );
+}
+
 export default async function AccountsPage() {
   const overview = await getAccountsOverview();
   const hasAccounts = overview.totalCount > 0;
-  const hasConnectedAccounts = overview.connectedCount > 0;
+  const connectionRate = formatPercentage(overview.connectedCount, overview.totalCount);
+  const platformCoverage = formatPercentage(overview.activePlatformCount, 2);
 
   return (
     <PageContainer>
-      <section className="grid gap-4 md:grid-cols-3">
-        <MetricCard
-          label="Connected"
-          value={String(overview.connectedCount)}
-          detail="Accounts ready to publish."
-        />
-        <MetricCard
-          label="Needs attention"
-          value={String(overview.attentionCount)}
-          detail="Accounts that need reconnection or setup."
-        />
-        <MetricCard
-          label="Live platforms"
-          value={String(overview.activePlatformCount)}
-          detail="LinkedIn and X."
-        />
+      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {hasAccounts ? (
+          <>
+            {overview.accounts.map((account) => (
+              <AccountCard
+                key={account.id}
+                account={account}
+                showPlatformLabel={overview.accounts.length > 1}
+              />
+            ))}
+          </>
+        ) : (
+          <>
+            <StarterPlatformCard
+              title="LinkedIn"
+              detail="Connect a professional publishing destination for long-form distribution."
+              icon={<LinkedInIcon className="h-6 w-6" />}
+            />
+            <StarterPlatformCard
+              title="X"
+              detail="Connect a short-form channel for fast updates and launch announcements."
+              icon={<XIcon className="h-6 w-6" />}
+            />
+          </>
+        )}
+
+        <AccountEmptyState />
       </section>
 
-      {!hasConnectedAccounts ? <AccountEmptyState /> : null}
+      <section className="flex flex-col gap-8 rounded-[1.5rem] border border-[rgb(223_213_247)] bg-[rgb(223_213_247_/_0.28)] p-8 md:flex-row md:items-center">
+        <div className="flex-1 space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[rgb(98_91_119)] px-3 py-1 text-white">
+            <SparkIcon className="h-4 w-4" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.18em]">
+              Connection pulse
+            </span>
+          </div>
+          <h2 className="font-[var(--font-display)] text-2xl font-bold tracking-[-0.03em] text-[rgb(60_54_80)]">
+            Publishing coverage stays healthy when every destination is verified.
+          </h2>
+          <p className="max-w-2xl text-sm leading-7 text-[rgb(89_82_110)]">
+            REZZUM currently has {overview.connectedCount} connected account
+            {overview.connectedCount === 1 ? "" : "s"} and {overview.attentionCount} connection
+            {overview.attentionCount === 1 ? "" : "s"} that still need attention before
+            scheduling and publishing can run without interruption.
+          </p>
+        </div>
 
-      {hasAccounts ? (
-        <section className="grid gap-5 lg:grid-cols-2 xl:grid-cols-3">
-          {overview.accounts.map((account) => (
-            <AccountCard
-              key={account.id}
-              account={account}
-              showPlatformLabel={overview.accounts.length > 1}
-            />
-          ))}
-        </section>
-      ) : (
-        <section className="grid gap-4 lg:grid-cols-2">
-          {[
-            {
-              title: "LinkedIn",
-              detail: "Professional publishing and long-form distribution.",
-            },
-            {
-              title: "X",
-              detail: "Short-form distribution and fast updates.",
-            },
-          ].map((platform) => (
-            <article key={platform.title} className="surface-card rounded-[1.5rem] p-6">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--surface-low)] text-[var(--foreground)]">
-                  <AccountsIcon className="h-5 w-5" />
-                </div>
-                <div>
-                  <h2 className="font-[var(--font-display)] text-xl font-semibold text-[var(--foreground)]">
-                    {platform.title}
-                  </h2>
-                  <p className="mt-2 max-w-lg text-sm leading-7 text-[var(--muted)]">
-                    {platform.detail}
-                  </p>
-                </div>
+        <div className="w-full rounded-xl border border-white/60 bg-white/50 p-4 backdrop-blur-md md:w-72">
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                <span>Connection rate</span>
+                <span>{connectionRate}%</span>
               </div>
-            </article>
-          ))}
-        </section>
-      )}
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-high)]">
+                <div
+                  className="h-full bg-[rgb(98_91_119)]"
+                  style={{ width: `${connectionRate}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <div className="flex justify-between text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                <span>Platform coverage</span>
+                <span>{platformCoverage}%</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-high)]">
+                <div
+                  className="h-full bg-[var(--primary)]"
+                  style={{ width: `${platformCoverage}%` }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </PageContainer>
   );
 }

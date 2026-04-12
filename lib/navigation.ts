@@ -219,7 +219,7 @@ export function getShellPage(pathname: string): ShellPage {
       description: "Manage the publishing accounts available to REZZUM.",
       actions: [
         {
-          label: "Connect Account",
+          label: "Connect New Account",
           icon: PlusIcon,
           tone: "primary",
           disabled: true,
