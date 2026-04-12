@@ -38,7 +38,6 @@ export default async function EditFeedPage({
   return (
     <PageContainer>
       <FeedForm
-        mode="edit"
         action={boundAction}
         initialValues={initialValues}
         metadata={{

@@ -22,11 +22,7 @@ export default async function QueueEditorPage({
 
   return (
     <PageContainer>
-      <ReviewEditor
-        post={result.post}
-        siblingPosts={result.siblingPosts}
-        isDemoData={result.isDemoData}
-      />
+      <ReviewEditor post={result.post} siblingPosts={result.siblingPosts} />
     </PageContainer>
   );
 }

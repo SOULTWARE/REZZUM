@@ -25,18 +25,20 @@ export function AppSidebar({
         onClick={onClose}
       />
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-[var(--surface-low)] px-4 py-5 transition-transform duration-200 lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200/70 bg-slate-50 px-4 py-4 transition-transform duration-200 lg:translate-x-0 ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex items-center justify-between px-2">
+        <div className="mb-8 flex items-center justify-between px-2 py-4">
           <Link href="/dashboard" className="flex items-center gap-3" onClick={onClose}>
-            <RezzumLogo className="h-10 w-10" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70">
+              <RezzumLogo className="h-9 w-9" />
+            </div>
             <div>
-              <p className="font-[var(--font-display)] text-lg font-semibold tracking-[-0.03em] text-[var(--foreground)]">
+              <p className="font-[var(--font-display)] text-lg font-bold tracking-[-0.03em] text-slate-900">
                 REZZUM
               </p>
-              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-[var(--muted-soft)]">
+              <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-500">
                 RSS to social
               </p>
             </div>
@@ -44,17 +46,17 @@ export function AppSidebar({
           <button
             type="button"
             onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/70 text-[var(--muted)] lg:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-slate-500 shadow-sm lg:hidden"
             aria-label="Close navigation"
           >
             <MenuCloseIcon className="h-5 w-5" />
           </button>
         </div>
 
-        <nav className="mt-10 flex flex-1 flex-col justify-between">
+        <nav className="flex flex-1 flex-col justify-between">
           <div className="space-y-1.5">
             {primaryNavigation.map(({ href, label, icon: Icon }) => {
-              const isActive = pathname === href;
+              const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
               return (
                 <Link
@@ -62,10 +64,10 @@ export function AppSidebar({
                   href={href}
                   onClick={onClose}
                   aria-current={isActive ? "page" : undefined}
-                  className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium ${
+                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
                     isActive
-                      ? "surface-card text-[var(--primary)]"
-                      : "text-[var(--muted)] hover:bg-white/70 hover:text-[var(--foreground)]"
+                      ? "bg-white text-[var(--primary)] shadow-sm"
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -75,41 +77,40 @@ export function AppSidebar({
             })}
           </div>
 
-          <div className="space-y-6">
-            <div className="surface-card rounded-[1.5rem] p-4">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Workflow
-              </p>
-              <p className="mt-3 font-[var(--font-display)] text-lg font-semibold text-[var(--foreground)]">
-                RSS to publish
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Feeds, review, scheduling, and connected destinations share one consistent MVP
-                workspace.
-              </p>
-            </div>
+          <div className="space-y-1.5">
+            {secondaryNavigation.map(({ href, label, icon: Icon }) => {
+              const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
-            <div className="space-y-1.5">
-              {secondaryNavigation.map(({ href, label, icon: Icon }) => {
-                const isActive = pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={onClose}
+                  aria-current={isActive ? "page" : undefined}
+                  className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
+                    isActive
+                      ? "bg-white text-[var(--primary)] shadow-sm"
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
 
-                return (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={onClose}
-                    aria-current={isActive ? "page" : undefined}
-                    className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium ${
-                      isActive
-                        ? "surface-card text-[var(--primary)]"
-                        : "text-[var(--muted)] hover:bg-white/70 hover:text-[var(--foreground)]"
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" />
-                    <span>{label}</span>
-                  </Link>
-                );
-              })}
+            <div className="mt-4 border-t border-slate-200/70 pt-4">
+              <div className="flex items-center gap-3 px-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+                  <RezzumLogo className="h-8 w-8" />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-slate-900">
+                    Default workspace
+                  </p>
+                  <p className="truncate text-[11px] text-slate-500">MVP preview</p>
+                </div>
+              </div>
             </div>
           </div>
         </nav>
