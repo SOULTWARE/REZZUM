@@ -29,7 +29,7 @@ function ActionButton({
         ? "button-secondary"
         : "bg-transparent text-[var(--muted)] hover:text-[var(--foreground)]";
   const visibilityClassName = action.mobileHidden ? "hidden sm:inline-flex" : "inline-flex";
-  const buttonClassName = `${visibilityClassName} items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-70 ${toneClassName} ${className ?? ""}`.trim();
+  const buttonClassName = `${visibilityClassName} items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold disabled:opacity-70 ${toneClassName} ${className ?? ""}`.trim();
 
   if (action.href) {
     return (
@@ -76,10 +76,7 @@ export function AppHeader({ pathname, onMenuClick }: Readonly<AppHeaderProps>) {
             </div>
 
             <div className="min-w-0">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                {page.section.label}
-              </p>
-              <h1 className="mt-2 truncate font-[var(--font-display)] text-2xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2rem]">
+              <h1 className="truncate font-[var(--font-display)] text-2xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2rem]">
                 {page.title}
               </h1>
               <p className="mt-1 text-sm font-medium text-slate-500">
