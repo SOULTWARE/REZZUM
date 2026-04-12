@@ -75,20 +75,7 @@ export function AppSidebar({
             })}
           </div>
 
-          <div className="space-y-6">
-            <div className="surface-card rounded-[1.5rem] p-4">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Workspace
-              </p>
-              <p className="mt-3 font-[var(--font-display)] text-lg font-semibold text-[var(--foreground)]">
-                Content pipeline
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Feeds, queue, schedule, and accounts in one place.
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
+          <div className="space-y-1.5">
               {secondaryNavigation.map(({ href, label, icon: Icon }) => {
                 const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
@@ -109,7 +96,6 @@ export function AppSidebar({
                   </Link>
                 );
               })}
-            </div>
           </div>
         </nav>
       </aside>
