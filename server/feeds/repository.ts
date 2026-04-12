@@ -12,7 +12,7 @@ export type FeedRecord = Prisma.RssFeedGetPayload<{
 export async function listFeeds() {
   return db.rssFeed.findMany({
     include: feedWithFilterInclude,
-    orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ createdAt: "desc" }, { updatedAt: "desc" }],
   });
 }
 

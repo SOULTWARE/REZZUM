@@ -27,3 +27,7 @@ export function FeedStatusBadge({
     </span>
   );
 }
+
+export function getFeedStatusLabel(status: FeedStatus) {
+  return FEED_STATUS_LABELS[status];
+}
