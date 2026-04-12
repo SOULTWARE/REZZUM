@@ -41,6 +41,7 @@ body {
     linear-gradient(180deg, #fbfdff 0%, var(--surface) 36%, #f5f8fb 100%);
   color: var(--foreground);
   font-family: var(--font-inter), sans-serif;
+  line-height: 1.5;
 }
 
 ::selection {
@@ -112,4 +113,15 @@ button:disabled {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

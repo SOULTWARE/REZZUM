@@ -42,7 +42,7 @@ export function AppHeader({
             </div>
           </div>
           <div className="hidden rounded-full bg-[var(--tertiary-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] sm:block">
-            MVP foundation
+            MVP workspace
           </div>
         </div>
       </div>

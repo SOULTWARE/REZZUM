@@ -144,8 +144,8 @@ export function ReviewEditor({
 
         {isDemoData ? (
           <div className="mt-6 rounded-[1.25rem] bg-[var(--tertiary-soft)] p-4 text-sm leading-7 text-[rgb(79_73_100)]">
-            Queue and editor content is using development demo data until article ingestion and
-            generation are connected to the real backend.
+            This editor is using development review data until article ingestion and generation
+            are connected to the real backend.
           </div>
         ) : null}
       </aside>
@@ -215,21 +215,21 @@ export function ReviewEditor({
               Workflow handoff
             </p>
             <h3 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-              Action surface is next
+              Publishing controls
             </h3>
             <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-              This editor is ready to host approval, rejection, scheduling, and publish-now
-              actions once the review workflow mutations are added.
+              Approval, rejection, scheduling, and publish-now controls are already placed here.
+              They remain disabled until the review mutations are connected.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <span className="rounded-full bg-[var(--surface-low)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
-                Approve flow
+                Approve
               </span>
               <span className="rounded-full bg-[var(--surface-low)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
-                Reject flow
+                Reject
               </span>
               <span className="rounded-full bg-[var(--surface-low)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
-                Schedule handoff
+                Schedule
               </span>
             </div>
           </article>

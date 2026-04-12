@@ -4,6 +4,7 @@ type PageEmptyStateProps = {
   description: string;
   icon: React.ReactNode;
   actions?: React.ReactNode;
+  className?: string;
 };
 
 export function PageEmptyState({
@@ -12,9 +13,10 @@ export function PageEmptyState({
   description,
   icon,
   actions,
+  className,
 }: Readonly<PageEmptyStateProps>) {
   return (
-    <section className="surface-card rounded-[1.5rem] p-6 sm:p-8">
+    <section className={`surface-card rounded-[1.5rem] p-6 sm:p-8 ${className ?? ""}`}>
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--surface-low)] text-[var(--primary)]">
         {icon}
       </div>

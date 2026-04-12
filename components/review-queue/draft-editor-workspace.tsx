@@ -93,6 +93,7 @@ function ActionButton({ action }: Readonly<{ action: ReviewEditorAction }>) {
       type="button"
       disabled={action.disabled}
       aria-disabled={action.disabled}
+      aria-label={action.label}
       className={`${baseClassName} ${ACTION_STYLES[action.tone]}`}
     >
       <ActionIcon actionId={action.id} className="h-4 w-4" />
@@ -120,6 +121,7 @@ export function DraftEditorWorkspace({
   const isOverLimit = value.length > characterLimit;
   const toolbarActions = actions.filter((action) => action.placement === "toolbar");
   const footerActions = actions.filter((action) => action.placement === "footer");
+  const characterCountId = `character-count-${platform.toLowerCase()}`;
 
   return (
     <section className="surface-card rounded-[1.75rem] p-5 sm:p-6">
@@ -147,6 +149,7 @@ export function DraftEditorWorkspace({
                 <Link
                   key={tab.platform}
                   href={tab.href}
+                  aria-current={tab.active ? "page" : undefined}
                   className={`inline-flex items-center justify-center gap-2 rounded-[1rem] px-4 py-3 text-sm font-semibold ${
                     tab.active
                       ? "bg-white text-[var(--primary)] shadow-[var(--shadow-soft)]"
@@ -162,6 +165,7 @@ export function DraftEditorWorkspace({
             return (
               <span
                 key={tab.platform}
+                aria-disabled="true"
                 className="inline-flex items-center justify-center gap-2 rounded-[1rem] px-4 py-3 text-sm font-semibold text-[var(--muted-soft)] opacity-75"
               >
                 <PlatformIcon platform={tab.platform} className="h-4 w-4" />
@@ -223,11 +227,15 @@ export function DraftEditorWorkspace({
             value={value}
             onChange={(event) => setValue(event.target.value)}
             aria-label="Editable draft content"
+            aria-describedby={characterCountId}
+            aria-invalid={isOverLimit}
             placeholder="Draft content will appear here."
             className="h-[24rem] w-full resize-none rounded-[1.25rem] bg-white p-5 text-sm leading-8 text-[var(--foreground)] shadow-[var(--shadow-soft)] outline-none focus:shadow-[0_0_0_2px_var(--ring-soft)]"
           />
 
           <div
+            id={characterCountId}
+            aria-live="polite"
             className={`pointer-events-none absolute bottom-4 right-4 rounded-full px-3 py-1 text-[0.72rem] font-semibold ${
               isOverLimit
                 ? "bg-[rgb(159_64_61_/_0.12)] text-[rgb(117_33_33)]"
@@ -257,7 +265,7 @@ export function DraftEditorWorkspace({
       ) : null}
 
       <div className="mt-6 rounded-[1.25rem] bg-[var(--tertiary-soft)] p-4 text-sm leading-7 text-[rgb(79_73_100)]">
-        Workflow controls are scaffolded here for the upcoming review and publishing backend.
+        Actions stay disabled in this MVP build until review and publishing mutations are wired.
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-[var(--ghost-line)] pt-6">

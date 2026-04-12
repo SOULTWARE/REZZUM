@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageContainer } from "@/components/page-container";
+import { MetricCard } from "@/components/metric-card";
 import { PageEmptyState } from "@/components/page-empty-state";
+import { PageIntro } from "@/components/page-intro";
 import { QueueIcon } from "@/components/icons";
 import { QueueFilters } from "@/components/review-queue/queue-filters";
 import { QueueList } from "@/components/review-queue/queue-list";
@@ -30,61 +32,35 @@ export default async function QueuePage({
 
   return (
     <PageContainer>
-      <section className="surface-card rounded-[1.5rem] p-6 sm:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-              Review workflow
-            </p>
-            <h2 className="mt-4 font-[var(--font-display)] text-[2rem] font-semibold tracking-[-0.04em] text-[var(--foreground)]">
-              Generated drafts waiting on moderation
-            </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--muted)]">
-              Review generated posts before they move into scheduling or publish-now
-              actions. Source context, platform variant, and draft state stay visible in one
-              place.
-            </p>
-          </div>
-
-          {queue.isDemoData ? (
+      <PageIntro
+        eyebrow="Review workflow"
+        title="Generated drafts waiting on moderation"
+        description="Review generated posts before they move into scheduling or publish-now actions. Source context, platform variant, and draft state stay visible in one place."
+        badge={
+          queue.isDemoData ? (
             <span className="rounded-full bg-[var(--tertiary-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(79_73_100)]">
               Demo queue data
             </span>
-          ) : null}
-        </div>
+          ) : undefined
+        }
+      />
 
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          {[
-            {
-              label: "Visible drafts",
-              value: String(queue.items.length),
-              detail: `${queue.totalItems} seeded post${queue.totalItems === 1 ? "" : "s"} aligned to the review schema`,
-            },
-            {
-              label: "Platforms",
-              value: String(platformCount),
-              detail: "LinkedIn and X variants stay grouped by source article.",
-            },
-            {
-              label: "Source feeds",
-              value: String(feedCount),
-              detail: "Queue filters can narrow drafts by the originating RSS source.",
-            },
-          ].map((card) => (
-            <article
-              key={card.label}
-              className="rounded-[1.25rem] bg-[var(--surface-low)] p-4 sm:p-5"
-            >
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                {card.label}
-              </p>
-              <p className="mt-3 font-[var(--font-display)] text-4xl font-semibold text-[var(--foreground)]">
-                {card.value}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-[var(--muted)]">{card.detail}</p>
-            </article>
-          ))}
-        </div>
+      <section className="grid gap-4 md:grid-cols-3">
+        <MetricCard
+          label="Visible drafts"
+          value={String(queue.items.length)}
+          detail={`${queue.totalItems} review records aligned to the generated-post schema.`}
+        />
+        <MetricCard
+          label="Platforms"
+          value={String(platformCount)}
+          detail="LinkedIn and X variants stay grouped by source article."
+        />
+        <MetricCard
+          label="Source feeds"
+          value={String(feedCount)}
+          detail="Queue filters can narrow drafts by the originating RSS source."
+        />
       </section>
 
       <QueueFilters filters={queue.filters} options={queue.filterOptions} />

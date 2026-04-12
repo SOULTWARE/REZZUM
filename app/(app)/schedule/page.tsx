@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { ScheduleEmptyState } from "@/components/schedule/schedule-empty-state";
 import { ScheduleErrorState } from "@/components/schedule/schedule-error-state";
 import { ScheduleList } from "@/components/schedule/schedule-list";
+import { MetricCard } from "@/components/metric-card";
 import { PageContainer } from "@/components/page-container";
+import { PageIntro } from "@/components/page-intro";
 import { getScheduleOverview } from "@/server/schedule/service";
 
 export const metadata: Metadata = {
@@ -28,73 +30,46 @@ export default async function SchedulePage() {
 
   return (
     <PageContainer>
+      <PageIntro
+        eyebrow="Publishing pipeline"
+        title="Scheduled drafts and publish outcomes"
+        description="Keep the MVP simple: scheduled time, platform, and publish state stay visible without introducing a calendar interface before it is needed."
+        badge={
+          overview.isDemoData ? (
+            <span className="rounded-full bg-[var(--tertiary-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(79_73_100)]">
+              Demo publish state
+            </span>
+          ) : undefined
+        }
+      />
+
       <section className="grid gap-4 md:grid-cols-3">
-        <article className="surface-card rounded-[1.25rem] p-5">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-            Scheduled
-          </p>
-          <p className="mt-4 font-[var(--font-display)] text-4xl font-semibold text-[var(--foreground)]">
-            {overview.scheduledItems.length}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            {overview.nextScheduledItem
+        <MetricCard
+          label="Scheduled"
+          value={String(overview.scheduledItems.length)}
+          detail={
+            overview.nextScheduledItem
               ? `${overview.nextScheduledItem.article.title} is set for ${formatDateTime(
                   overview.nextScheduledItem.scheduledFor,
                 )}`
-              : "No posts are reserved for future publishing windows."}
-          </p>
-        </article>
-        <article className="surface-card rounded-[1.25rem] p-5">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-            Published
-          </p>
-          <p className="mt-4 font-[var(--font-display)] text-4xl font-semibold text-[var(--foreground)]">
-            {overview.publishedItems.length}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Delivered posts remain visible here so operators can distinguish successful sends
-            from scheduled or failed ones.
-          </p>
-        </article>
-        <article className="surface-card rounded-[1.25rem] p-5">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-            Failed
-          </p>
-          <p className="mt-4 font-[var(--font-display)] text-4xl font-semibold text-[var(--foreground)]">
-            {overview.failedItems.length}
-          </p>
-          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-            Failed sends keep their publish context visible so future retry flows can be added
-            without redesigning this page.
-          </p>
-        </article>
+              : "No posts are reserved for future publishing windows."
+          }
+        />
+        <MetricCard
+          label="Published"
+          value={String(overview.publishedItems.length)}
+          detail="Delivered posts remain visible so operators can distinguish successful sends from scheduled or failed ones."
+        />
+        <MetricCard
+          label="Failed"
+          value={String(overview.failedItems.length)}
+          detail="Failed sends keep their publish context visible so future retry flows can be added without redesigning this page."
+        />
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.9fr)]">
         {hasItems ? (
           <section className="grid gap-4">
-            <section className="surface-card rounded-[1.5rem] p-6 sm:p-8">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                    Publishing pipeline
-                  </p>
-                  <h2 className="mt-3 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-                    Scheduled drafts and publish outcomes
-                  </h2>
-                </div>
-                {overview.isDemoData ? (
-                  <span className="rounded-full bg-[var(--tertiary-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(79_73_100)]">
-                    Demo publish state
-                  </span>
-                ) : null}
-              </div>
-              <p className="mt-4 max-w-3xl text-sm leading-7 text-[var(--muted)]">
-                This view keeps the MVP simple: scheduled time, platform, and publish state stay
-                visible without introducing a calendar interface before it is actually needed.
-              </p>
-            </section>
-
             <ScheduleList items={overview.items} />
           </section>
         ) : (

@@ -32,6 +32,7 @@ export function QueueList({ items }: Readonly<{ items: ReviewQueueItem[] }>) {
         <Link
           key={item.id}
           href={`/queue/${item.id}`}
+          aria-label={`Open ${getSocialPlatformLabel(item.platform)} draft for ${item.article.title}`}
           className="surface-card group rounded-[1.5rem] p-5 sm:p-6"
         >
           <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">

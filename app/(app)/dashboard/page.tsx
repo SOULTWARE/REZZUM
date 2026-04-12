@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { MetricCard } from "@/components/metric-card";
 import { PageContainer } from "@/components/page-container";
 import { PageEmptyState } from "@/components/page-empty-state";
 import { FeedStatusBadge, getFeedStatusLabel } from "@/components/feeds/feed-status-badge";
@@ -99,26 +100,14 @@ export default async function DashboardPage() {
     <PageContainer>
       <section className="grid gap-4 md:grid-cols-3">
         {overviewCards.map(({ label, value, detail, tone, icon: Icon }) => (
-          <article
+          <MetricCard
             key={label}
-            className="surface-card rounded-[1.25rem] p-5 text-sm text-[var(--muted)]"
-          >
-            <div className="mb-6 flex items-center justify-between">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[var(--surface-low)] text-[var(--primary)]">
-                <Icon className="h-5 w-5" />
-              </div>
-              <span className="rounded-full bg-[var(--surface-low)] px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                {tone}
-              </span>
-            </div>
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-              {label}
-            </p>
-            <p className="mt-3 font-[var(--font-display)] text-4xl font-semibold text-[var(--foreground)]">
-              {value}
-            </p>
-            <p className="mt-2 leading-6">{detail}</p>
-          </article>
+            label={label}
+            value={value}
+            detail={detail}
+            badge={tone}
+            icon={<Icon className="h-5 w-5" />}
+          />
         ))}
       </section>
 
@@ -237,13 +226,15 @@ export default async function DashboardPage() {
             <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
               <p className="font-semibold text-[var(--foreground)]">2. Review queue</p>
               <p className="mt-1 leading-6">
-                Draft generation is not connected yet, so the queue remains intentionally empty.
+                The queue UI is available now with development review records aligned to the
+                generated-post schema.
               </p>
             </div>
             <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
               <p className="font-semibold text-[var(--foreground)]">3. Scheduling</p>
               <p className="mt-1 leading-6">
-                Publishing windows will remain empty until posts and social accounts exist.
+                Publish states and scheduled windows are already represented so the later queue
+                integration has a stable UI target.
               </p>
             </div>
           </div>
@@ -259,15 +250,15 @@ export default async function DashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <PageEmptyState
           eyebrow="Review queue"
-          title="No drafts are waiting for approval"
-          description="Article ingestion and AI generation are not seeded yet, so REZZUM keeps the review queue intentionally empty until those backend domains exist."
+          title="Review workflow is ready for the next backend step"
+          description="The moderation UI is already in place with development draft records, so operators can review the workflow shape before ingestion and generation are connected."
           icon={<QueueIcon className="h-6 w-6" />}
           actions={
             <Link
-              href="/feeds"
+              href="/queue"
               className="button-secondary inline-flex items-center rounded-full px-4 py-2.5 text-sm font-semibold"
             >
-              Inspect feed setup
+              Open review queue
             </Link>
           }
         />
@@ -284,21 +275,20 @@ export default async function DashboardPage() {
             </div>
             <div className="inline-flex items-center gap-2 rounded-full bg-[var(--tertiary-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)]">
               <AccountsIcon className="h-4 w-4" />
-              Waiting on accounts
+              MVP state model
             </div>
           </div>
           <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-            This is deliberate: feeds are seeded for demos, but scheduled posts and
-            publishing activity stay empty until social accounts, draft generation, and
-            publishing services are implemented.
+            Scheduling, publish states, and connected destinations are represented in the UI
+            while real publishing workers and provider integrations remain out of scope.
           </p>
           <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-low)] p-4">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-              Current placeholder state
+              Current demo state
             </p>
             <p className="mt-3 text-sm leading-7 text-[var(--foreground)]">
-              Useful for demos: feed health is real, while queue and schedule remain honest
-              placeholders instead of fabricated performance metrics.
+              Useful for demos: feed health is data-backed, and the later workflow stages stay
+              honest about what is modeled versus what is live.
             </p>
           </div>
         </section>

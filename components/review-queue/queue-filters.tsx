@@ -66,7 +66,11 @@ export function QueueFilters({ filters, options }: Readonly<QueueFiltersProps>) 
         </p>
       </div>
 
-      <form className="mt-6 grid gap-4 xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+      <form
+        method="get"
+        aria-label="Review queue filters"
+        className="mt-6 grid gap-4 xl:grid-cols-[repeat(3,minmax(0,1fr))_auto]"
+      >
         <FilterField
           label="Platform"
           name="platform"

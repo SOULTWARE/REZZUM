@@ -40,15 +40,21 @@ function formatDateTime(value: Date | null) {
 }
 
 function FieldError({
+  id,
   errors,
 }: Readonly<{
+  id: string;
   errors?: string[];
 }>) {
   if (!errors?.length) {
     return null;
   }
 
-  return <p className="text-xs text-[rgb(117_33_33)]">{errors[0]}</p>;
+  return (
+    <p id={id} role="alert" className="text-xs text-[rgb(117_33_33)]">
+      {errors[0]}
+    </p>
+  );
 }
 
 export function FeedForm({
@@ -105,7 +111,10 @@ export function FeedForm({
       </div>
 
       {state.status === "error" && state.message ? (
-        <div className="rounded-[1.25rem] bg-[rgb(159_64_61_/_0.08)] px-4 py-3 text-sm text-[rgb(117_33_33)]">
+        <div
+          role="alert"
+          className="rounded-[1.25rem] bg-[rgb(159_64_61_/_0.08)] px-4 py-3 text-sm text-[rgb(117_33_33)]"
+        >
           {state.message}
         </div>
       ) : null}
@@ -135,9 +144,10 @@ export function FeedForm({
                     }
                     placeholder="e.g. Product Updates"
                     aria-invalid={Boolean(state.fieldErrors?.name)}
+                    aria-describedby={state.fieldErrors?.name ? "feed-name-error" : undefined}
                     className="w-full rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   />
-                  <FieldError errors={state.fieldErrors?.name} />
+                  <FieldError id="feed-name-error" errors={state.fieldErrors?.name} />
                 </label>
 
                 <label className="block space-y-2">
@@ -153,9 +163,10 @@ export function FeedForm({
                     }
                     placeholder="https://example.com/feed.xml"
                     aria-invalid={Boolean(state.fieldErrors?.rssUrl)}
+                    aria-describedby={state.fieldErrors?.rssUrl ? "feed-rss-url-error" : undefined}
                     className="w-full rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   />
-                  <FieldError errors={state.fieldErrors?.rssUrl} />
+                  <FieldError id="feed-rss-url-error" errors={state.fieldErrors?.rssUrl} />
                 </label>
               </div>
             </div>
@@ -187,9 +198,17 @@ export function FeedForm({
                       }))
                     }
                     aria-invalid={Boolean(state.fieldErrors?.minimumWordCount)}
+                    aria-describedby={
+                      state.fieldErrors?.minimumWordCount
+                        ? "feed-minimum-word-count-error"
+                        : undefined
+                    }
                     className="w-full rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   />
-                  <FieldError errors={state.fieldErrors?.minimumWordCount} />
+                  <FieldError
+                    id="feed-minimum-word-count-error"
+                    errors={state.fieldErrors?.minimumWordCount}
+                  />
                 </label>
 
                 <label className="block space-y-2">
@@ -209,6 +228,11 @@ export function FeedForm({
                       }))
                     }
                     aria-invalid={Boolean(state.fieldErrors?.refreshIntervalMinutes)}
+                    aria-describedby={
+                      state.fieldErrors?.refreshIntervalMinutes
+                        ? "feed-refresh-interval-error"
+                        : undefined
+                    }
                     className="w-full appearance-none rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   >
                     {FEED_REFRESH_INTERVAL_OPTIONS.map((option) => (
@@ -217,7 +241,10 @@ export function FeedForm({
                       </option>
                     ))}
                   </select>
-                  <FieldError errors={state.fieldErrors?.refreshIntervalMinutes} />
+                  <FieldError
+                    id="feed-refresh-interval-error"
+                    errors={state.fieldErrors?.refreshIntervalMinutes}
+                  />
                 </label>
               </div>
 
@@ -238,13 +265,21 @@ export function FeedForm({
                     }
                     placeholder="AI, launch, roadmap"
                     aria-invalid={Boolean(state.fieldErrors?.includeKeywords)}
+                    aria-describedby={
+                      state.fieldErrors?.includeKeywords
+                        ? "feed-include-keywords-error"
+                        : undefined
+                    }
                     className="w-full rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm leading-7 text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   />
                   <p className="text-xs leading-6 text-[var(--muted)]">
                     Separate keywords with commas or new lines. Articles must match
                     at least one term when this list is used.
                   </p>
-                  <FieldError errors={state.fieldErrors?.includeKeywords} />
+                  <FieldError
+                    id="feed-include-keywords-error"
+                    errors={state.fieldErrors?.includeKeywords}
+                  />
                 </label>
 
                 <label className="block space-y-2">
@@ -263,13 +298,21 @@ export function FeedForm({
                     }
                     placeholder="jobs, sponsored, hiring"
                     aria-invalid={Boolean(state.fieldErrors?.excludeKeywords)}
+                    aria-describedby={
+                      state.fieldErrors?.excludeKeywords
+                        ? "feed-exclude-keywords-error"
+                        : undefined
+                    }
                     className="w-full rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm leading-7 text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   />
                   <p className="text-xs leading-6 text-[var(--muted)]">
                     Use exclusions to stop low-signal content from entering later
                     review and generation steps.
                   </p>
-                  <FieldError errors={state.fieldErrors?.excludeKeywords} />
+                  <FieldError
+                    id="feed-exclude-keywords-error"
+                    errors={state.fieldErrors?.excludeKeywords}
+                  />
                 </label>
               </div>
             </div>

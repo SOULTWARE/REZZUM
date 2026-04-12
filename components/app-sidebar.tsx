@@ -61,6 +61,7 @@ export function AppSidebar({
                   key={href}
                   href={href}
                   onClick={onClose}
+                  aria-current={isActive ? "page" : undefined}
                   className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium ${
                     isActive
                       ? "surface-card text-[var(--primary)]"
@@ -77,14 +78,14 @@ export function AppSidebar({
           <div className="space-y-6">
             <div className="surface-card rounded-[1.5rem] p-4">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Foundation
+                Workflow
               </p>
               <p className="mt-3 font-[var(--font-display)] text-lg font-semibold text-[var(--foreground)]">
-                Initial shell
+                RSS to publish
               </p>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Layout, navigation, and empty states are ready for the next implementation
-                milestones.
+                Feeds, review, scheduling, and connected destinations share one consistent MVP
+                workspace.
               </p>
             </div>
 
@@ -97,6 +98,7 @@ export function AppSidebar({
                     key={href}
                     href={href}
                     onClick={onClose}
+                    aria-current={isActive ? "page" : undefined}
                     className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium ${
                       isActive
                         ? "surface-card text-[var(--primary)]"

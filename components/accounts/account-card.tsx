@@ -119,6 +119,7 @@ export function AccountCard({
         <button
           type="button"
           disabled
+          aria-disabled="true"
           className="button-secondary inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:opacity-70"
         >
           <SettingsIcon className="h-4 w-4" />
@@ -127,6 +128,7 @@ export function AccountCard({
         <button
           type="button"
           disabled
+          aria-disabled="true"
           className="inline-flex items-center gap-2 rounded-full bg-[rgb(159_64_61_/_0.08)] px-4 py-2.5 text-sm font-semibold text-[rgb(117_33_33)] disabled:opacity-70"
         >
           <DisconnectIcon className="h-4 w-4" />
