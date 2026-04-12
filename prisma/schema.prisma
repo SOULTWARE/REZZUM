@@ -13,6 +13,33 @@ enum FeedStatus {
   ARCHIVED
 }
 
+enum ArticleStatus {
+  DISCOVERED
+  FILTERED_OUT
+  READY
+  PROCESSED
+}
+
+enum SocialPlatform {
+  LINKEDIN
+  X
+}
+
+enum GenerationTone {
+  PROFESSIONAL
+  BOLD
+  EDUCATIONAL
+}
+
+enum GeneratedPostStatus {
+  DRAFT
+  APPROVED
+  REJECTED
+  SCHEDULED
+  PUBLISHED
+  FAILED
+}
+
 model RssFeed {
   id                     String      @id @default(cuid())
   name                   String      @db.VarChar(120)
@@ -28,6 +55,7 @@ model RssFeed {
   updatedAt              DateTime    @updatedAt @map("updated_at")
   archivedAt             DateTime?   @map("archived_at")
   filter                 FeedFilter?
+  articles               Article[]
 
   @@index([status])
   @@index([nextSyncAt])
@@ -45,4 +73,67 @@ model FeedFilter {
   feed             RssFeed  @relation(fields: [feedId], references: [id], onDelete: Cascade)
 
   @@map("feed_filters")
+}
+
+model Article {
+  id                String        @id @default(cuid())
+  feedId            String        @map("feed_id")
+  sourceEntryId     String?       @map("source_entry_id") @db.VarChar(255)
+  title             String        @db.Text
+  sourceUrl         String        @map("source_url") @db.Text
+  canonicalUrl      String?       @unique @map("canonical_url") @db.Text
+  contentHash       String?       @unique @map("content_hash") @db.VarChar(64)
+  excerpt           String?       @db.Text
+  contentText       String?       @map("content_text") @db.Text
+  authorName        String?       @map("author_name") @db.VarChar(191)
+  publishedAt       DateTime?     @map("published_at")
+  discoveredAt      DateTime      @default(now()) @map("discovered_at")
+  status            ArticleStatus @default(DISCOVERED)
+  filteredOutReason String?       @map("filtered_out_reason") @db.Text
+  createdAt         DateTime      @default(now()) @map("created_at")
+  updatedAt         DateTime      @updatedAt @map("updated_at")
+  feed              RssFeed       @relation(fields: [feedId], references: [id], onDelete: Cascade)
+  generatedPosts    GeneratedPost[]
+
+  @@unique([feedId, sourceUrl])
+  @@index([feedId, status])
+  @@index([publishedAt])
+  @@index([discoveredAt])
+  @@map("articles")
+}
+
+model GeneratedPost {
+  id                  String              @id @default(cuid())
+  articleId           String              @map("article_id")
+  platform            SocialPlatform
+  tone                GenerationTone
+  status              GeneratedPostStatus @default(DRAFT)
+  promptVersion       String              @map("prompt_version") @db.VarChar(64)
+  generationModel     String?             @map("generation_model") @db.VarChar(128)
+  generatedText       String              @map("generated_text") @db.Text
+  editedText          String?             @map("edited_text") @db.Text
+  generationStartedAt DateTime?           @map("generation_started_at")
+  generatedAt         DateTime?           @map("generated_at")
+  reviewedAt          DateTime?           @map("reviewed_at")
+  approvedAt          DateTime?           @map("approved_at")
+  rejectedAt          DateTime?           @map("rejected_at")
+  scheduledFor        DateTime?           @map("scheduled_for")
+  publishedAt         DateTime?           @map("published_at")
+  failedAt            DateTime?           @map("failed_at")
+  failureReason       String?             @map("failure_reason") @db.Text
+  publishedExternalId String?             @map("published_external_id") @db.VarChar(191)
+  previousVersionId   String?             @map("previous_version_id")
+  versionNumber       Int                 @default(1) @map("version_number")
+  createdAt           DateTime            @default(now()) @map("created_at")
+  updatedAt           DateTime            @updatedAt @map("updated_at")
+  article             Article             @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  previousVersion     GeneratedPost?      @relation("GeneratedPostVersions", fields: [previousVersionId], references: [id], onDelete: SetNull)
+  nextVersions        GeneratedPost[]     @relation("GeneratedPostVersions")
+
+  @@index([articleId, platform])
+  @@index([status])
+  @@index([scheduledFor])
+  @@index([publishedAt])
+  @@index([publishedExternalId])
+  @@map("generated_posts")
 }
