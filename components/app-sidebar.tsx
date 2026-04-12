@@ -31,12 +31,15 @@ export function AppSidebar({
       >
         <div className="mb-8 flex items-center justify-between px-2 py-4">
           <Link href="/dashboard" className="flex items-center gap-3" onClick={onClose}>
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/70">
+              <RezzumLogo className="h-9 w-9" />
+            </div>
             <div>
               <p className="font-[var(--font-display)] text-lg font-bold tracking-[-0.03em] text-slate-900">
                 REZZUM
               </p>
               <p className="mt-1 text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-slate-500">
-                AI curator
+                RSS to social
               </p>
             </div>
           </Link>
