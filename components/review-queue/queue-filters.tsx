@@ -27,13 +27,13 @@ function FilterField({
 }>) {
   return (
     <label className="block">
-      <span className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+      <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
         {label}
       </span>
       <select
         name={name}
         defaultValue={value}
-        className="mt-3 h-12 w-full rounded-[1rem] border border-transparent bg-[var(--surface-low)] px-4 text-sm text-[var(--foreground)] shadow-none outline-none focus:border-[var(--primary-soft)] focus:bg-white"
+        className="mt-3 h-12 w-full rounded-lg border border-transparent bg-[var(--surface-low)] px-4 text-sm text-slate-900 shadow-none outline-none focus:border-[rgb(0_83_218_/_0.2)] focus:bg-white"
       >
         <option value={ALL_REVIEW_QUEUE_FILTER}>All</option>
         {options.map((option) => (
@@ -50,17 +50,17 @@ export function QueueFilters({ filters, options }: Readonly<QueueFiltersProps>) 
   const active = hasActiveReviewQueueFilters(filters);
 
   return (
-    <section className="surface-card rounded-[1.5rem] p-5 sm:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <section className="rounded-xl bg-white p-6 shadow-sm">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
             Filters
           </p>
-          <h2 className="mt-3 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
+          <h2 className="mt-3 font-[var(--font-display)] text-2xl font-semibold tracking-[-0.03em] text-slate-900">
             Narrow the review queue
           </h2>
         </div>
-        <p className="max-w-xl text-sm leading-6 text-[var(--muted)]">
+        <p className="max-w-xl text-sm leading-6 text-slate-500">
           Filter drafts by destination, status, or source feed.
         </p>
       </div>
@@ -87,14 +87,14 @@ export function QueueFilters({ filters, options }: Readonly<QueueFiltersProps>) 
         <div className="flex flex-wrap items-end gap-3 xl:justify-end">
           <button
             type="submit"
-            className="button-primary inline-flex h-12 items-center rounded-full px-5 text-sm font-semibold"
+            className="button-primary inline-flex h-12 items-center rounded-lg px-5 text-sm font-semibold"
           >
             Apply filters
           </button>
           {active ? (
             <Link
               href="/queue"
-              className="button-secondary inline-flex h-12 items-center rounded-full px-5 text-sm font-semibold"
+              className="button-secondary inline-flex h-12 items-center rounded-lg px-5 text-sm font-semibold"
             >
               Clear
             </Link>
