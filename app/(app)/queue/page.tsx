@@ -3,7 +3,6 @@ import Link from "next/link";
 import { PageContainer } from "@/components/page-container";
 import { MetricCard } from "@/components/metric-card";
 import { PageEmptyState } from "@/components/page-empty-state";
-import { PageIntro } from "@/components/page-intro";
 import { QueueIcon } from "@/components/icons";
 import { QueueFilters } from "@/components/review-queue/queue-filters";
 import { QueueList } from "@/components/review-queue/queue-list";
@@ -32,12 +31,6 @@ export default async function QueuePage({
 
   return (
     <PageContainer>
-      <PageIntro
-        eyebrow="Review workflow"
-        title="Review drafts"
-        description="Compare platform variants, edit copy, and keep source context close."
-      />
-
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Visible drafts"

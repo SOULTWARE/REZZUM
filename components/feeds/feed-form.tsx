@@ -1,10 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useActionState, useMemo, useState } from "react";
 import type { FeedStatus } from "@prisma/client";
 import { FeedStatusBadge } from "@/components/feeds/feed-status-badge";
-import { FeedFormSubmit } from "@/components/feeds/feed-form-submit";
 import {
   FEED_REFRESH_INTERVAL_OPTIONS,
   getRefreshIntervalLabel,
@@ -17,7 +15,6 @@ import {
 } from "@/lib/feeds/validation";
 
 type FeedFormProps = {
-  mode: "create" | "edit";
   action: (state: FeedActionState, formData: FormData) => Promise<FeedActionState>;
   initialValues: FeedFormValues;
   metadata?: {
@@ -58,7 +55,6 @@ function FieldError({
 }
 
 export function FeedForm({
-  mode,
   action,
   initialValues,
   metadata,
@@ -81,34 +77,7 @@ export function FeedForm({
     )?.description ?? "A custom cadence is selected.";
 
   return (
-    <form action={formAction} className="space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="max-w-2xl">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
-            Feed management
-          </p>
-          <h1 className="mt-3 font-[var(--font-display)] text-4xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">
-            {mode === "create" ? "Configure a new feed" : "Edit feed settings"}
-          </h1>
-          <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-            Save the source URL, define filters, and choose a refresh cadence.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/feeds"
-            className="button-secondary inline-flex items-center rounded-full px-4 py-3 text-sm font-semibold"
-          >
-            Back to feeds
-          </Link>
-          <FeedFormSubmit
-            idleLabel={mode === "create" ? "Save feed" : "Save changes"}
-            pendingLabel={mode === "create" ? "Saving feed..." : "Saving changes..."}
-          />
-        </div>
-      </div>
-
+    <form id="feed-form" action={formAction} className="space-y-8">
       {state.status === "error" && state.message ? (
         <div
           role="alert"

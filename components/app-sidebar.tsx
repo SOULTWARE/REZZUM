@@ -54,7 +54,7 @@ export function AppSidebar({
         <nav className="mt-10 flex flex-1 flex-col justify-between">
           <div className="space-y-1.5">
             {primaryNavigation.map(({ href, label, icon: Icon }) => {
-              const isActive = pathname === href;
+              const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
               return (
                 <Link
@@ -90,7 +90,7 @@ export function AppSidebar({
 
             <div className="space-y-1.5">
               {secondaryNavigation.map(({ href, label, icon: Icon }) => {
-                const isActive = pathname === href;
+                const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
                 return (
                   <Link

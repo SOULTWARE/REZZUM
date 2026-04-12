@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { PageContainer } from "@/components/page-container";
 import { MetricCard } from "@/components/metric-card";
-import { PageIntro } from "@/components/page-intro";
 import { FeedEmptyState } from "@/components/feeds/feed-empty-state";
 import { FeedList } from "@/components/feeds/feed-list";
 import { listManagedFeeds } from "@/server/feeds/service";
@@ -20,20 +18,6 @@ export default async function FeedsPage() {
 
   return (
     <PageContainer>
-      <PageIntro
-        eyebrow="Feed management"
-        title="Configure and manage RSS sources"
-        description="Add sources, set filters, and choose a refresh cadence."
-        actions={
-          <Link
-            href="/feeds/new"
-            className="button-primary inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold"
-          >
-            Add feed
-          </Link>
-        }
-      />
-
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Total feeds"

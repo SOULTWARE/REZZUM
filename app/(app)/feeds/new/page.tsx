@@ -11,11 +11,7 @@ export const metadata: Metadata = {
 export default function NewFeedPage() {
   return (
     <PageContainer>
-      <FeedForm
-        mode="create"
-        action={createFeedAction}
-        initialValues={EMPTY_FEED_FORM_VALUES}
-      />
+      <FeedForm action={createFeedAction} initialValues={EMPTY_FEED_FORM_VALUES} />
     </PageContainer>
   );
 }

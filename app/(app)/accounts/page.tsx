@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { AccountCard } from "@/components/accounts/account-card";
 import { AccountEmptyState } from "@/components/accounts/account-empty-state";
-import { AccountsIcon, PlusIcon } from "@/components/icons";
+import { AccountsIcon } from "@/components/icons";
 import { MetricCard } from "@/components/metric-card";
 import { PageContainer } from "@/components/page-container";
-import { PageIntro } from "@/components/page-intro";
 import { getAccountsOverview } from "@/server/accounts/service";
 
 export const metadata: Metadata = {
@@ -20,23 +19,6 @@ export default async function AccountsPage() {
 
   return (
     <PageContainer>
-      <PageIntro
-        eyebrow="Connected destinations"
-        title="Manage the accounts REZZUM can publish to"
-        description="Manage publishing accounts for LinkedIn and X."
-        actions={
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            className="button-primary inline-flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold disabled:opacity-70"
-          >
-            <PlusIcon className="h-4 w-4" />
-            Connect new account
-          </button>
-        }
-      />
-
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Connected"

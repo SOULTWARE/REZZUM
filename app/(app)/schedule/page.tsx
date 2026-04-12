@@ -4,7 +4,6 @@ import { ScheduleErrorState } from "@/components/schedule/schedule-error-state";
 import { ScheduleList } from "@/components/schedule/schedule-list";
 import { MetricCard } from "@/components/metric-card";
 import { PageContainer } from "@/components/page-container";
-import { PageIntro } from "@/components/page-intro";
 import { getScheduleOverview } from "@/server/schedule/service";
 
 export const metadata: Metadata = {
@@ -30,12 +29,6 @@ export default async function SchedulePage() {
 
   return (
     <PageContainer>
-      <PageIntro
-        eyebrow="Publishing pipeline"
-        title="Scheduled drafts and publish outcomes"
-        description="Track scheduled, published, and failed posts."
-      />
-
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Scheduled"
