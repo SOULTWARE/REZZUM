@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Intelligent Feed | RSS to Social Media AI</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#faf8fc",
+                        "secondary-fixed-dim": "#d5d3d8",
+                        "on-primary-container": "#0048bf",
+                        "error-dim": "#4e0309",
+                        "on-tertiary-container": "#4f4964",
+                        "on-tertiary-fixed-variant": "#59526e",
+                        "outline-variant": "#a9b4b9",
+                        "primary": "#0053da",
+                        "error-container": "#fe8983",
+                        "secondary": "#5f5f62",
+                        "inverse-surface": "#0b0f10",
+                        "on-error-container": "#752121",
+                        "secondary-fixed": "#e4e2e6",
+                        "inverse-primary": "#618bff",
+                        "primary-dim": "#0048c1",
+                        "secondary-container": "#e4e2e6",
+                        "surface": "#f7f9fb",
+                        "surface-dim": "#cfdce3",
+                        "inverse-on-surface": "#9a9d9f",
+                        "surface-container-low": "#f0f4f7",
+                        "primary-fixed-dim": "#c7d3ff",
+                        "tertiary-container": "#dfd5f7",
+                        "surface-bright": "#f7f9fb",
+                        "secondary-dim": "#535356",
+                        "surface-tint": "#0053da",
+                        "tertiary": "#625b77",
+                        "outline": "#717c82",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#dfd5f7",
+                        "on-surface": "#2a3439",
+                        "on-tertiary": "#fdf7ff",
+                        "on-background": "#2a3439",
+                        "background": "#f7f9fb",
+                        "on-primary": "#f8f7ff",
+                        "on-secondary-fixed": "#3f3f43",
+                        "surface-container-high": "#e1e9ee",
+                        "on-tertiary-fixed": "#3c3650",
+                        "surface-variant": "#d9e4ea",
+                        "on-primary-fixed-variant": "#0050d4",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-container": "#e8eff3",
+                        "on-secondary-fixed-variant": "#5b5b5f",
+                        "primary-container": "#dbe1ff",
+                        "on-surface-variant": "#566166",
+                        "tertiary-fixed-dim": "#d0c7e8",
+                        "on-primary-fixed": "#003798",
+                        "on-secondary-container": "#515155",
+                        "on-error": "#fff7f6",
+                        "tertiary-dim": "#564f6b",
+                        "error": "#9f403d",
+                        "surface-container-highest": "#d9e4ea"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .ai-gradient {
+            background: linear-gradient(145deg, #0053da 0%, #0048c1 100%);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(24px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<nav class="fixed top-0 w-full z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-sm">
+<div class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-8">
+<span class="font-['Manrope'] text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">The Intelligent Feed</span>
+<div class="hidden md:flex gap-6 items-center">
+<a class="font-['Inter'] text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors" href="#features">Features</a>
+<a class="font-['Inter'] text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors" href="#pricing">Pricing</a>
+<a class="font-['Inter'] text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors" href="#about">About</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="font-['Inter'] text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 transition-colors scale-95 active:duration-100">Log In</button>
+<button class="ai-gradient text-on-primary font-['Inter'] text-sm font-medium px-5 py-2.5 rounded-lg shadow-sm hover:shadow-md transition-all scale-95 active:duration-100">Get Started</button>
+</div>
+</div>
+</nav>
+<main class="pt-24">
+<!-- Hero Section -->
+<section class="relative overflow-hidden pt-20 pb-32">
+<div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
+<div class="space-y-8">
+<div class="inline-flex items-center gap-2 px-3 py-1 bg-tertiary-container rounded-full text-on-tertiary-fixed text-[10px] font-bold uppercase tracking-wider">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                        AI-Powered Curation
+                    </div>
+<h1 class="font-headline text-5xl md:text-7xl font-bold tracking-tight leading-[1.1] text-on-surface">
+                        Turn RSS feeds into <span class="text-primary">high-performing</span> social content
+                    </h1>
+<p class="text-on-surface-variant text-xl leading-relaxed max-w-lg">
+                        Automate your RSS to LinkedIn, X, and Facebook posts with AI. Stop manual rewriting and start scaling your distribution in seconds.
+                    </p>
+<div class="flex flex-col sm:flex-row gap-4 pt-4">
+<button class="ai-gradient text-on-primary px-8 py-4 rounded-lg font-semibold text-lg shadow-xl hover:shadow-2xl transition-all">Start Free</button>
+<button class="bg-surface-container-highest text-on-surface px-8 py-4 rounded-lg font-semibold text-lg hover:bg-surface-dim transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">play_circle</span> View Demo
+                        </button>
+</div>
+</div>
+<div class="relative">
+<div class="absolute -top-20 -right-20 w-80 h-80 bg-primary/10 blur-[100px] rounded-full"></div>
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-2xl relative border border-outline-variant/10">
+<img alt="Dashboard Preview" class="rounded-lg w-full h-auto grayscale-[0.2]" data-alt="Clean dashboard UI showing a feed of technological news articles with AI generation buttons and platform icons next to each entry" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBH8u8fyGNa-IskXIxdmJFeoMXuAFtDfJE4U4C9Ov25dCuWxZK5yM4aWrsS-xE8VyJXdlKDX7qTYjMy_b_pEOAvkT1oZRcE5LH55Iu_h3RWPnmMQSlshFb05IQ4rAS3-J0NHD3JNu4o2I5eUynPfbgl1w1Y4OTEbfLrIFJjGy3dmJoPq47m6gxOo_itV2TQICnbXr6HEaW3irowmhpIxQh0-l9gIdn2B77tEaLhVzNryJ2oZ0IOOaGCIQcNApPcyKJQn2di39e_9g"/>
+<div class="absolute -bottom-6 -left-6 bg-white p-4 rounded-lg shadow-lg border border-outline-variant/10 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-tertiary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-tertiary-container">sync</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Sync Active</p>
+<p class="text-sm font-medium">12 Feeds connected</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- How It Works Section -->
+<section class="py-24 bg-surface-container-low" id="features">
+<div class="max-w-7xl mx-auto px-6">
+<div class="text-center mb-20">
+<h2 class="font-headline text-3xl md:text-4xl font-bold mb-4">Your editorial workflow, automated</h2>
+<p class="text-on-surface-variant max-w-2xl mx-auto">Three simple steps to bridge the gap between information and distribution.</p>
+</div>
+<div class="grid md:grid-cols-3 gap-12">
+<div class="space-y-6">
+<div class="text-primary font-headline text-6xl font-extrabold opacity-20">01</div>
+<h3 class="font-headline text-xl font-bold">Add RSS</h3>
+<p class="text-on-surface-variant leading-relaxed">Connect any RSS or Atom feed. Whether it's your blog, industry news, or niche curators, we ingest it all.</p>
+<div class="h-1 w-12 bg-primary rounded-full"></div>
+</div>
+<div class="space-y-6">
+<div class="text-primary font-headline text-6xl font-extrabold opacity-20">02</div>
+<h3 class="font-headline text-xl font-bold">AI Rewrite</h3>
+<p class="text-on-surface-variant leading-relaxed">Our AI analyzes the article and drafts platform-specific posts that maintain your brand's unique tone of voice.</p>
+<div class="h-1 w-12 bg-primary rounded-full"></div>
+</div>
+<div class="space-y-6">
+<div class="text-primary font-headline text-6xl font-extrabold opacity-20">03</div>
+<h3 class="font-headline text-xl font-bold">Publish</h3>
+<p class="text-on-surface-variant leading-relaxed">Approve the drafts and schedule them for auto-posting to LinkedIn, X, and Facebook simultaneously.</p>
+<div class="h-1 w-12 bg-primary rounded-full"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Visual Preview / Transformation Section -->
+<section class="py-24">
+<div class="max-w-7xl mx-auto px-6">
+<div class="grid md:grid-cols-5 gap-8 items-start">
+<!-- Source Card -->
+<div class="md:col-span-2 space-y-6">
+<div class="label-sm text-primary mb-2 uppercase font-bold tracking-widest">Source Material</div>
+<div class="bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-outline-variant/10">
+<div class="w-full h-40 bg-surface-container mb-6 rounded-lg overflow-hidden">
+<img alt="Tech Article Image" class="w-full h-full object-cover" data-alt="Futuristic glowing circuit board representation with blue and cyan lighting effects in a professional tech style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFHPTJ7Ok_cTmEQEArnMn8W9TCbKY1-iQX_i5DxSr43KAf7SJ_TehLB__2j4BFws4-kd7UzViqhZ8mpKn3h-S5vaf8nbanD85J883iA6acseVtQUe2cis28nsNnDkD3ysFOGY-sKNqwjsLpu9B3Waa1cQ05R5ANqNRCZ1l6THZ7KgRcYp_W36TfZqrjTHB7vCCHA3C_WfWR6-MzHxwm0Bbwio46MAvJycpgXY5HeRVXf8J8fb3jsMEPyK2ckB7ckeDBkY1HhIUTQ"/>
+</div>
+<h4 class="font-headline text-lg font-bold mb-3">The Future of Edge Computing in 2024</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed line-clamp-3">
+                                As we move further into the digital age, edge computing is becoming the backbone of real-time data processing...
+                            </p>
+</div>
+<div class="flex justify-center md:justify-start">
+<span class="material-symbols-outlined text-primary text-5xl animate-pulse">arrow_forward</span>
+</div>
+</div>
+<!-- AI Results -->
+<div class="md:col-span-3 space-y-6">
+<div class="label-sm text-tertiary mb-2 uppercase font-bold tracking-widest">AI Generated Social Posts</div>
+<!-- LinkedIn -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded bg-[#0077b5] flex items-center justify-center text-white">
+<span class="material-symbols-outlined">work</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface-variant mb-1">LinkedIn Draft</p>
+<p class="text-sm leading-relaxed">Edge computing isn't just a trend—it's the new standard for enterprise efficiency. Here's why your infrastructure needs an upgrade in 2024. 🧵 #EdgeComputing #TechTrends</p>
+</div>
+</div>
+<!-- X (Twitter) -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded bg-black flex items-center justify-center text-white font-black italic">X</div>
+<div>
+<p class="text-xs font-bold text-on-surface-variant mb-1">X Draft</p>
+<p class="text-sm leading-relaxed">The future of data processing is local. Edge computing is 🚀 in 2024. Don't let latency kill your app. Read more: [link]</p>
+</div>
+</div>
+<!-- Facebook -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex gap-4">
+<div class="flex-shrink-0 w-10 h-10 rounded bg-[#1877F2] flex items-center justify-center text-white">
+<span class="material-symbols-outlined">group</span>
+</div>
+<div>
+<p class="text-xs font-bold text-on-surface-variant mb-1">Facebook Draft</p>
+<p class="text-sm leading-relaxed">Thinking about the next wave of tech? We just published a deep dive into Edge Computing and what it means for consumers this year. Check it out! 🌐</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Pricing Section -->
+<section class="py-24 bg-surface-container-low" id="pricing">
+<div class="max-w-7xl mx-auto px-6">
+<div class="text-center mb-16">
+<h2 class="font-headline text-3xl font-bold mb-4">Simple, transparent pricing</h2>
+<p class="text-on-surface-variant">Choose the plan that fits your content volume.</p>
+</div>
+<div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+<!-- Starter Plan -->
+<div class="bg-surface-container-lowest p-10 rounded-xl shadow-sm border border-outline-variant/10 hover:shadow-md transition-shadow flex flex-col">
+<div class="mb-8">
+<h3 class="font-headline text-xl font-bold mb-2">Starter</h3>
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-bold tracking-tight">$29</span>
+<span class="text-on-surface-variant">/month</span>
+</div>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Up to 5 RSS feeds
+                            </li>
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                100 AI posts / month
+                            </li>
+<li class="flex items-center gap-3 text-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-outline-variant">check_circle</span>
+                                Standard AI templates
+                            </li>
+</ul>
+<button class="w-full py-3 rounded-lg bg-surface-container-highest text-on-surface font-bold hover:bg-surface-dim transition-colors">Select Starter</button>
+</div>
+<!-- Pro Plan -->
+<div class="bg-surface-container-lowest p-10 rounded-xl shadow-xl border-2 border-primary relative flex flex-col">
+<div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wider">Most Popular</div>
+<div class="mb-8">
+<h3 class="font-headline text-xl font-bold mb-2">Pro</h3>
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-bold tracking-tight">$79</span>
+<span class="text-on-surface-variant">/month</span>
+</div>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Unlimited RSS feeds
+                            </li>
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Unlimited AI posts
+                            </li>
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Custom Tone of Voice
+                            </li>
+<li class="flex items-center gap-3 text-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+                                Team Collaboration
+                            </li>
+</ul>
+<button class="w-full py-3 rounded-lg ai-gradient text-on-primary font-bold shadow-lg hover:shadow-xl transition-all">Go Pro</button>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-24">
+<div class="max-w-7xl mx-auto px-6">
+<div class="ai-gradient rounded-3xl p-12 md:p-20 text-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+<div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2)_0%,transparent_50%)]"></div>
+</div>
+<h2 class="font-headline text-4xl md:text-5xl font-bold text-white mb-8 relative z-10 leading-tight">Ready to automate your social presence?</h2>
+<div class="flex flex-col sm:flex-row gap-4 justify-center relative z-10">
+<button class="bg-white text-primary px-8 py-4 rounded-lg font-bold text-lg hover:bg-surface-bright transition-all">Get Started for Free</button>
+<button class="bg-transparent border border-white/30 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white/10 transition-all">Schedule a Demo</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="w-full border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+<div class="flex flex-col md:flex-row justify-between items-center py-8 px-6 max-w-7xl mx-auto">
+<div class="mb-4 md:mb-0">
+<span class="font-['Manrope'] font-bold text-slate-900 dark:text-slate-50">The Intelligent Feed</span>
+<p class="font-['Inter'] text-xs text-slate-500 mt-2">© 2024 The Intelligent Feed. All rights reserved.</p>
+</div>
+<div class="flex gap-8">
+<a class="font-['Inter'] text-xs text-slate-500 hover:text-blue-600 transition-colors" href="#">Privacy Policy</a>
+<a class="font-['Inter'] text-xs text-slate-500 hover:text-blue-600 transition-colors" href="#">Terms of Service</a>
+<a class="font-['Inter'] text-xs text-slate-500 hover:text-blue-600 transition-colors" href="#">Contact</a>
+</div>
+</div>
+</footer>
+</body></html>

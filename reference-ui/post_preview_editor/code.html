@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Post Preview &amp; Editor | The Intelligent Feed</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary": "#faf8fc",
+                        "secondary-fixed-dim": "#d5d3d8",
+                        "on-primary-container": "#0048bf",
+                        "error-dim": "#4e0309",
+                        "on-tertiary-container": "#4f4964",
+                        "on-tertiary-fixed-variant": "#59526e",
+                        "outline-variant": "#a9b4b9",
+                        "primary": "#0053da",
+                        "error-container": "#fe8983",
+                        "secondary": "#5f5f62",
+                        "inverse-surface": "#0b0f10",
+                        "on-error-container": "#752121",
+                        "secondary-fixed": "#e4e2e6",
+                        "inverse-primary": "#618bff",
+                        "primary-dim": "#0048c1",
+                        "secondary-container": "#e4e2e6",
+                        "surface": "#f7f9fb",
+                        "surface-dim": "#cfdce3",
+                        "inverse-on-surface": "#9a9d9f",
+                        "surface-container-low": "#f0f4f7",
+                        "primary-fixed-dim": "#c7d3ff",
+                        "tertiary-container": "#dfd5f7",
+                        "surface-bright": "#f7f9fb",
+                        "secondary-dim": "#535356",
+                        "surface-tint": "#0053da",
+                        "tertiary": "#625b77",
+                        "outline": "#717c82",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#dfd5f7",
+                        "on-surface": "#2a3439",
+                        "on-tertiary": "#fdf7ff",
+                        "on-background": "#2a3439",
+                        "background": "#f7f9fb",
+                        "on-primary": "#f8f7ff",
+                        "on-secondary-fixed": "#3f3f43",
+                        "surface-container-high": "#e1e9ee",
+                        "on-tertiary-fixed": "#3c3650",
+                        "surface-variant": "#d9e4ea",
+                        "on-primary-fixed-variant": "#0050d4",
+                        "primary-fixed": "#dbe1ff",
+                        "surface-container": "#e8eff3",
+                        "on-secondary-fixed-variant": "#5b5b5f",
+                        "primary-container": "#dbe1ff",
+                        "on-surface-variant": "#566166",
+                        "tertiary-fixed-dim": "#d0c7e8",
+                        "on-primary-fixed": "#003798",
+                        "on-secondary-container": "#515155",
+                        "on-error": "#fff7f6",
+                        "tertiary-dim": "#564f6b",
+                        "error": "#9f403d",
+                        "surface-container-highest": "#d9e4ea"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+            color: #2a3439;
+        }
+        h1, h2, h3 {
+            font-family: 'Manrope', sans-serif;
+        }
+        .glass-nav {
+            background-color: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(24px);
+        }
+        textarea:focus {
+            box-shadow: inset 0 0 0 2px rgba(0, 83, 218, 0.2);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm">
+<nav class="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
+<div class="flex items-center gap-8">
+<span class="font-['Manrope'] text-xl font-bold tracking-tight text-slate-900">The Intelligent Feed</span>
+<div class="hidden md:flex gap-6">
+<a class="font-['Inter'] text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors" href="#">Features</a>
+<a class="font-['Inter'] text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors" href="#">Pricing</a>
+<a class="font-['Inter'] text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors" href="#">About</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="font-['Inter'] text-sm font-medium text-slate-600 hover:text-blue-600 transition-colors">Log In</button>
+<button class="bg-primary text-on-primary font-['Inter'] text-sm font-medium px-4 py-2 rounded-lg hover:bg-primary-dim transition-all shadow-sm">Get Started</button>
+</div>
+</nav>
+</header>
+<!-- SideNavBar (Shared Component - Hidden on focused Editor as per Relevance Check, but kept as context if needed. Here we suppress for Task-Focused journey) -->
+<main class="pt-24 pb-12 px-6 max-w-7xl mx-auto min-h-screen">
+<div class="flex flex-col lg:flex-row gap-8 items-start">
+<!-- Left Side: Original Article Preview (High signal editorial look) -->
+<section class="w-full lg:w-5/12 sticky top-24">
+<div class="space-y-6">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary" data-icon="article">article</span>
+<span class="text-xs font-bold tracking-widest text-on-surface-variant uppercase font-label">Source Content</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl p-8 shadow-sm">
+<img alt="Article Visual" class="w-full h-48 object-cover rounded-lg mb-6" data-alt="Conceptual visualization of AI neural networks glowing with soft blue and white light in a minimalist dark environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCXYkfrK1_5YSgk0iwOBBAcL_PBouOO7aCLZy6VIigpXFvDpqIyNPxHoHLdnlEqViQU-gU5WNGUjS33uShFDDf9CW_VkDlohSL5IVgQd8SlGWcQ8asKwa-ePXCQLgZk-tN6jKOC_9O5GkXbTxp274wLXjtCkxmWAoxLYhKxw-r2vyuUMqZ3BiWpQz5QmxAnyPTg3ehuv8TEjPREstWekUZOdHgNd0diaPusx78iyXyws_l8CfWjpDjos4X3SJZh7sPeNrAlBlC9iw"/>
+<h1 class="text-2xl font-bold leading-tight text-on-surface mb-4">The Future of Generative AI in Professional Workflows</h1>
+<div class="space-y-4 text-on-surface-variant leading-relaxed text-sm">
+<p>As large language models continue to evolve, the distinction between human-driven strategy and AI-driven execution is becoming increasingly blurred. For modern agencies, the challenge isn't just adopting AI, but integrating it in a way that preserves brand voice...</p>
+<p>Recent studies suggest that organizations leveraging AI-curated content feeds see a 40% increase in social media engagement compared to manual curation. However, the risk of "content homogenization" remains a primary concern for high-end boutique firms...</p>
+</div>
+<div class="mt-8 pt-6 border-t border-surface-container-high flex justify-between items-center">
+<span class="text-xs text-on-surface-variant">Source: <span class="font-semibold">TechTrends Digest</span></span>
+<a class="text-primary text-xs font-bold flex items-center gap-1" href="#">Read Full <span class="material-symbols-outlined text-[16px]" data-icon="open_in_new">open_in_new</span></a>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Side: AI-Generated Posts Editor -->
+<section class="w-full lg:w-7/12">
+<div class="bg-surface-container-low rounded-xl p-1 overflow-hidden">
+<!-- Platform Tabs -->
+<div class="flex bg-surface-container-high rounded-lg p-1 mb-6">
+<button class="flex-1 py-2 px-4 rounded-md text-sm font-semibold bg-surface-container-lowest text-primary shadow-sm flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="share">share</span> LinkedIn
+                        </button>
+<button class="flex-1 py-2 px-4 rounded-md text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="close">close</span> X (Twitter)
+                        </button>
+<button class="flex-1 py-2 px-4 rounded-md text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="facebook">social_leaderboard</span> Facebook
+                        </button>
+</div>
+<!-- Editor Workspace -->
+<div class="space-y-6 px-4 pb-4">
+<div class="flex justify-between items-end">
+<div>
+<h2 class="text-xl font-bold text-on-surface">Curated Draft</h2>
+<p class="text-xs text-on-surface-variant">Tone: Professional &amp; Authoritative</p>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary-container text-on-tertiary-fixed text-xs font-bold">
+<span class="material-symbols-outlined text-[16px]" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                                    AI Pulse
+                                </button>
+</div>
+</div>
+<!-- Main Editor Textarea -->
+<div class="relative group">
+<textarea class="w-full h-80 bg-surface-container-lowest rounded-lg p-6 text-base leading-relaxed text-on-surface border-none shadow-sm resize-none" placeholder="Write your post here...">🚀 The integration of AI into professional workflows is no longer optional—it's a strategic necessity.
+
+In our latest deep dive, we explore how modern agencies are leveraging Large Language Models to boost engagement by up to 40% while maintaining a consistent brand voice. 
+
+The secret? Editorial oversight combined with high-signal AI curation. 
+
+How is your team tackling the balance between human creativity and AI efficiency? 👇
+
+#GenerativeAI #AgencyGrowth #DigitalTransformation</textarea>
+<div class="absolute bottom-4 right-4 flex gap-2">
+<span class="bg-surface-container-low text-[10px] px-2 py-1 rounded font-mono text-on-surface-variant">342 / 3000 chars</span>
+</div>
+</div>
+<!-- Action Bar: Contextual Secondary Actions -->
+<div class="flex flex-wrap items-center gap-3 py-2">
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-container-highest text-on-surface text-sm font-medium hover:bg-surface-dim transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="refresh">refresh</span> Regenerate
+                            </button>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-surface-container-highest text-on-surface text-sm font-medium hover:bg-surface-dim transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="architecture">architecture</span> Change Angle
+                            </button>
+<div class="flex-grow"></div>
+<button class="flex items-center gap-2 px-4 py-2 rounded-lg text-on-surface-variant text-sm font-medium hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="save">save</span> Save Draft
+                            </button>
+</div>
+<!-- Primary Footer Actions -->
+<div class="pt-6 border-t border-surface-container-high flex flex-col sm:flex-row justify-between gap-4">
+<button class="flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-secondary-container text-on-secondary-container font-semibold hover:bg-secondary-fixed-dim transition-all">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_month">calendar_month</span> Schedule Post
+                            </button>
+<button class="flex items-center justify-center gap-2 px-8 py-3 rounded-lg bg-gradient-to-br from-primary to-primary-dim text-on-primary font-bold shadow-lg hover:shadow-xl active:scale-95 transition-all">
+<span class="material-symbols-outlined text-[20px]" data-icon="send">send</span> Publish Now
+                            </button>
+</div>
+</div>
+</div>
+<!-- Suggested Variations (Editorial Asymmetry) -->
+<div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="space-y-4">
+<h3 class="text-xs font-bold tracking-widest text-on-surface-variant uppercase font-label">Alternate Hooks</h3>
+<div class="p-4 bg-surface-container-lowest rounded-lg shadow-sm border-l-4 border-primary">
+<p class="text-sm italic text-on-surface">"Is 40% more engagement worth the risk of sounding like a robot? Let's discuss..."</p>
+</div>
+<div class="p-4 bg-surface-container-lowest rounded-lg shadow-sm border-l-4 border-tertiary">
+<p class="text-sm italic text-on-surface">"The distinction between human and AI is blurring. Here is what agencies need to know."</p>
+</div>
+</div>
+<div class="bg-primary/5 rounded-xl p-6 flex flex-col justify-center items-center text-center">
+<span class="material-symbols-outlined text-primary text-4xl mb-2" data-icon="lightbulb" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+<h4 class="font-bold text-on-surface mb-2">Editorial Tip</h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">LinkedIn posts with a question in the first 2 lines get 22% more comments. Try starting with a 'How' or 'Why'.</p>
+</div>
+</div>
+</section>
+</div>
+</main>
+<!-- Footer (Shared Component) -->
+<footer class="w-full border-t border-slate-100 mt-20">
+<div class="flex flex-col md:flex-row justify-between items-center py-8 px-6 max-w-7xl mx-auto">
+<div class="mb-4 md:mb-0">
+<span class="font-['Manrope'] font-bold text-slate-900">The Intelligent Feed</span>
+<p class="font-['Inter'] text-xs text-slate-500 mt-1">© 2024 The Intelligent Feed. All rights reserved.</p>
+</div>
+<div class="flex gap-6">
+<a class="font-['Inter'] text-xs text-slate-500 hover:text-blue-600 transition-colors" href="#">Privacy Policy</a>
+<a class="font-['Inter'] text-xs text-slate-500 hover:text-blue-600 transition-colors" href="#">Terms of Service</a>
+<a class="font-['Inter'] text-xs text-slate-500 hover:text-blue-600 transition-colors" href="#">Contact</a>
+</div>
+</div>
+</footer>
+</body></html>
