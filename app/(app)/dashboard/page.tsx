@@ -1,16 +1,16 @@
 import type { Metadata } from "next";
+import { GeneratedPostStatus } from "@prisma/client";
 import Link from "next/link";
-import { MetricCard } from "@/components/metric-card";
 import { PageContainer } from "@/components/page-container";
-import { PageEmptyState } from "@/components/page-empty-state";
-import { FeedStatusBadge, getFeedStatusLabel } from "@/components/feeds/feed-status-badge";
 import {
+  AccountsIcon,
   FeedsIcon,
   QueueIcon,
+  ReviewIcon,
   ScheduleIcon,
   SparkIcon,
 } from "@/components/icons";
-import { getRefreshIntervalLabel, joinKeywordList } from "@/lib/feeds/constants";
+import { getGeneratedPostStatusLabel, getSocialPlatformLabel } from "@/lib/review-queue/constants";
 import { getDashboardOverview } from "@/server/dashboard/overview";
 
 export const metadata: Metadata = {
@@ -40,249 +40,430 @@ function formatRelativeDate(value: Date | null) {
   return formatter.format(Math.round(diffHours / 24), "day");
 }
 
-function getFeedContext(feed: Awaited<ReturnType<typeof getDashboardOverview>>["feeds"][number]) {
-  const keywords = joinKeywordList(feed.filter?.includeKeywords ?? []);
-
-  if (feed.status === "ERROR") {
-    return feed.syncError ?? "The last sync attempt needs attention.";
+function formatFeedTime(value: Date | null) {
+  if (!value) {
+    return "No upcoming sync";
   }
 
-  if (feed.status === "PAUSED") {
-    return "Paused while the source strategy is being reviewed.";
+  const formatter = new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+
+  return formatter.format(value);
+}
+
+function formatActivityTime(value: Date | null) {
+  if (!value) {
+    return "No recent activity";
   }
 
-  if (keywords) {
-    return `Watching for ${keywords}.`;
+  const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+  const diffMinutes = Math.round((value.getTime() - Date.now()) / 60_000);
+
+  if (Math.abs(diffMinutes) < 60) {
+    return formatter.format(diffMinutes, "minute");
   }
 
-  return "Broad monitoring mode with no include keywords applied.";
+  const diffHours = Math.round(diffMinutes / 60);
+
+  if (Math.abs(diffHours) < 24) {
+    return formatter.format(diffHours, "hour");
+  }
+
+  return formatter.format(Math.round(diffHours / 24), "day");
+}
+
+function getSourceAvatarTone(name: string) {
+  const tones = [
+    "bg-slate-200 text-slate-700",
+    "bg-blue-100 text-blue-700",
+    "bg-emerald-100 text-emerald-700",
+    "bg-amber-100 text-amber-700",
+  ] as const;
+
+  return tones[name.length % tones.length];
+}
+
+function getStatusClassName(status: GeneratedPostStatus) {
+  if (status === GeneratedPostStatus.PUBLISHED) {
+    return "bg-[var(--primary-soft)] text-[var(--primary-strong)]";
+  }
+
+  if (status === GeneratedPostStatus.SCHEDULED) {
+    return "bg-[var(--tertiary-soft)] text-[rgb(79_73_100)]";
+  }
+
+  if (status === GeneratedPostStatus.APPROVED) {
+    return "bg-emerald-100 text-emerald-700";
+  }
+
+  if (status === GeneratedPostStatus.FAILED || status === GeneratedPostStatus.REJECTED) {
+    return "bg-rose-100 text-rose-700";
+  }
+
+  return "bg-slate-200 text-slate-600";
 }
 
 export default async function DashboardPage() {
   const overview = await getDashboardOverview();
   const hasFeeds = overview.totalFeeds > 0;
-
-  const overviewCards = [
-    {
-      label: "Configured feeds",
-      value: String(overview.totalFeeds),
-      detail: hasFeeds
-        ? `${overview.activeFeedCount} active feed${overview.activeFeedCount === 1 ? "" : "s"}`
-        : "No RSS sources configured",
-      tone: hasFeeds ? "Live" : "Empty",
-      icon: FeedsIcon,
-    },
-    {
-      label: "Feeds needing attention",
-      value: String(overview.attentionFeedCount),
-      detail:
-        overview.attentionFeedCount > 0
-          ? "Paused or errored feeds need review"
-          : "No feed issues right now",
-      tone: overview.attentionFeedCount > 0 ? "Review" : "Stable",
-      icon: SparkIcon,
-    },
-    {
-      label: "Upcoming sync slots",
-      value: String(overview.upcomingSyncCount),
-      detail: overview.nextFeedForSync
-        ? `${overview.nextFeedForSync.name} is due ${formatRelativeDate(
-            overview.nextFeedForSync.nextSyncAt,
-          )}`
-        : "No syncs scheduled",
-      tone: overview.nextFeedForSync ? "Queued" : "Empty",
-      icon: ScheduleIcon,
-    },
-  ];
+  const hasActivity = overview.recentActivity.length > 0;
 
   return (
     <PageContainer>
-      <section className="grid gap-4 md:grid-cols-3">
-        {overviewCards.map(({ label, value, detail, tone, icon: Icon }) => (
-          <MetricCard
-            key={label}
-            label={label}
-            value={value}
-            detail={detail}
-            badge={tone}
-            icon={<Icon className="h-5 w-5" />}
-          />
-        ))}
+      <section className="grid gap-6 xl:grid-cols-12">
+        <article className="xl:col-span-3 rounded-xl bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--surface-low)] text-[var(--primary)]">
+              <ScheduleIcon className="h-5 w-5" />
+            </div>
+            <span className="rounded-full bg-[var(--surface-low)] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+              Queue
+            </span>
+          </div>
+          <p className="font-[var(--font-display)] text-3xl font-bold text-slate-900">
+            {overview.upcomingSyncCount}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">Pending syncs</p>
+          <p className="mt-4 text-xs leading-6 text-slate-500">
+            {overview.nextFeedForSync
+              ? `${overview.nextFeedForSync.name} is due ${formatRelativeDate(
+                  overview.nextFeedForSync.nextSyncAt,
+                )}.`
+              : "No feeds are waiting for the next polling cycle."}
+          </p>
+        </article>
+
+        <article className="xl:col-span-3 rounded-xl bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--surface-low)] text-[var(--primary)]">
+              <ReviewIcon className="h-5 w-5" />
+            </div>
+            <span className="rounded-full bg-[var(--tertiary-soft)] px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[rgb(79_73_100)]">
+              AI Ready
+            </span>
+          </div>
+          <p className="font-[var(--font-display)] text-3xl font-bold text-slate-900">
+            {overview.queueCount}
+          </p>
+          <p className="mt-1 text-xs text-slate-500">Ready for review</p>
+          <p className="mt-4 text-xs leading-6 text-slate-500">
+            {overview.approvedPostCount} approved and {overview.draftPostCount} draft posts are in
+            the review flow.
+          </p>
+        </article>
+
+        <article className="relative overflow-hidden rounded-xl bg-[linear-gradient(145deg,_#0053da_0%,_#0048c1_100%)] p-6 text-white shadow-sm xl:col-span-6">
+          <div className="relative z-10">
+            <p className="text-xs font-bold uppercase tracking-[0.24em] text-white/75">
+              Pipeline impact
+            </p>
+            <p className="mt-2 font-[var(--font-display)] text-4xl font-bold tracking-[-0.04em]">
+              {overview.activeFeedCount} live sources
+            </p>
+            <div className="mt-5 flex flex-wrap gap-6">
+              <div className="min-w-[96px]">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-white/65">
+                  Attention
+                </p>
+                <p className="mt-1 text-lg font-bold">{overview.attentionFeedCount}</p>
+              </div>
+              <div className="min-w-[96px]">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-white/65">
+                  Scheduled
+                </p>
+                <p className="mt-1 text-lg font-bold">{overview.scheduledPostCount}</p>
+              </div>
+              <div className="min-w-[96px]">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-white/65">
+                  Published
+                </p>
+                <p className="mt-1 text-lg font-bold">{overview.publishedPostCount}</p>
+              </div>
+              <div className="min-w-[96px]">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-white/65">
+                  Accounts
+                </p>
+                <p className="mt-1 text-lg font-bold">{overview.connectedAccountCount}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="pointer-events-none absolute -right-5 -top-6 text-white/10">
+            <SparkIcon className="h-44 w-44" />
+          </div>
+        </article>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.9fr)]">
-        {hasFeeds ? (
-          <section className="surface-card rounded-[1.5rem] p-6 sm:p-8">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                  Feed health
-                </p>
-                <h2 className="mt-3 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-                  Recently configured sources
-                </h2>
-              </div>
-              <Link
-                href="/feeds"
-                className="inline-flex items-center text-sm font-semibold text-[var(--primary)] hover:opacity-80"
-              >
-                Open feed library
-              </Link>
+      <section className="overflow-hidden rounded-xl bg-white shadow-sm">
+        <div className="flex flex-col gap-4 border-b border-slate-200/80 px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-6">
+            <span className="border-b-2 border-[var(--primary)] pb-4 text-sm font-semibold text-[var(--primary)] -mb-4">
+              Recent Activity
+            </span>
+            <Link
+              href="/feeds"
+              className="pb-4 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 -mb-4"
+            >
+              Feed Library
+            </Link>
+            <Link
+              href="/schedule"
+              className="pb-4 text-sm font-medium text-slate-500 transition-colors hover:text-slate-900 -mb-4"
+            >
+              Publishing Schedule
+            </Link>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/queue"
+              className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+            >
+              <QueueIcon className="h-4 w-4" />
+              Open queue
+            </Link>
+            <Link
+              href="/feeds/new"
+              className="button-primary inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold"
+            >
+              <FeedsIcon className="h-4 w-4" />
+              Add feed
+            </Link>
+          </div>
+        </div>
+
+        {hasActivity ? (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="bg-slate-50/80">
+                    <th className="px-6 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                      Title
+                    </th>
+                    <th className="px-6 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                      Source
+                    </th>
+                    <th className="px-6 py-3 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-right text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200/70">
+                  {overview.recentActivity.map((item) => (
+                    <tr
+                      key={item.id}
+                      className="group transition-colors hover:bg-slate-50/60"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="max-w-2xl">
+                          <p className="truncate text-sm font-semibold text-slate-900">
+                            {item.article.title}
+                          </p>
+                          <p className="mt-1 text-[11px] text-slate-500">
+                            {formatActivityTime(item.updatedAt)} •{" "}
+                            {getSocialPlatformLabel(item.platform)}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${getSourceAvatarTone(
+                              item.article.feed.name,
+                            )}`}
+                          >
+                            {item.article.feed.name.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-xs font-medium text-slate-700">
+                            {item.article.feed.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-bold ${getStatusClassName(
+                            item.status,
+                          )}`}
+                        >
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {getGeneratedPostStatusLabel(item.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                          <Link
+                            href={`/queue/${item.id}`}
+                            className="rounded px-3 py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                          >
+                            Review
+                          </Link>
+                          <Link
+                            href={item.article.sourceUrl}
+                            className="rounded bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90"
+                          >
+                            Source
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            <div className="mt-6 grid gap-4">
-              {overview.recentFeeds.map((feed) => (
-                <article
-                  key={feed.id}
-                  className="rounded-[1.25rem] bg-[var(--surface-low)] p-5"
+            <div className="flex flex-col gap-3 bg-slate-50/40 px-6 py-4 text-xs text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+              <p>
+                Showing {overview.recentActivity.length} recent queue items across{" "}
+                {overview.activePlatformCount} active publishing platform
+                {overview.activePlatformCount === 1 ? "" : "s"}.
+              </p>
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/queue"
+                  className="rounded border border-slate-200 bg-white px-3 py-1.5 font-bold transition-colors hover:bg-slate-100"
                 >
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <h3 className="font-[var(--font-display)] text-xl font-semibold text-[var(--foreground)]">
-                          {feed.name}
-                        </h3>
-                        <FeedStatusBadge status={feed.status} />
-                      </div>
-                      <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-                        {getFeedContext(feed)}
-                      </p>
-                    </div>
-                    <div className="rounded-full bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--muted-soft)]">
-                      {getRefreshIntervalLabel(feed.refreshIntervalMinutes)}
-                    </div>
-                  </div>
-
-                  <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                    <div>
-                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                        Status
-                      </p>
-                      <p className="mt-2 text-sm text-[var(--foreground)]">
-                        {getFeedStatusLabel(feed.status)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                        Next sync slot
-                      </p>
-                      <p className="mt-2 text-sm text-[var(--foreground)]">
-                        {formatRelativeDate(feed.nextSyncAt)}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                        Minimum length
-                      </p>
-                      <p className="mt-2 text-sm text-[var(--foreground)]">
-                        {feed.filter?.minimumWordCount ?? 0} words
-                      </p>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-        ) : (
-          <PageEmptyState
-            eyebrow="Pipeline overview"
-            title="Add a feed to get started"
-            description="Feed activity and publishing status will appear here after setup."
-            icon={<QueueIcon className="h-6 w-6" />}
-            actions={
-              <>
+                  View queue
+                </Link>
                 <Link
                   href="/feeds"
-                  className="button-primary inline-flex items-center rounded-full px-4 py-2.5 text-sm font-semibold"
+                  className="rounded border border-slate-200 bg-white px-3 py-1.5 font-bold transition-colors hover:bg-slate-100"
                 >
-                  Add your first feed
+                  Manage feeds
+                </Link>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="px-6 py-16">
+            <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--surface-low)] text-[var(--primary)]">
+                <QueueIcon className="h-6 w-6" />
+              </div>
+              <h2 className="mt-6 font-[var(--font-display)] text-3xl font-semibold tracking-[-0.03em] text-slate-900">
+                {hasFeeds ? "Queue activity will appear here" : "Add a feed to start the pipeline"}
+              </h2>
+              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-500">
+                {hasFeeds
+                  ? "As drafts move through review, scheduling, and publishing, the latest activity will fill this dashboard table."
+                  : "Configure a source, connect accounts, and the dashboard will start showing review and publishing activity in this layout."}
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <Link
+                  href="/feeds/new"
+                  className="button-primary inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold"
+                >
+                  <FeedsIcon className="h-4 w-4" />
+                  Add first feed
                 </Link>
                 <Link
                   href="/accounts"
-                  className="button-secondary inline-flex items-center rounded-full px-4 py-2.5 text-sm font-semibold"
+                  className="button-secondary inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold"
                 >
-                  Connect accounts
+                  <AccountsIcon className="h-4 w-4" />
+                  Open accounts
                 </Link>
-              </>
-            }
-          />
-        )}
-
-        <aside className="surface-card rounded-[1.5rem] p-6">
-          <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-            Overview
-          </p>
-          <h2 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-            Work areas
-          </h2>
-          <div className="mt-6 space-y-4 text-sm text-[var(--muted)]">
-            <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-              <p className="font-semibold text-[var(--foreground)]">1. Configure feeds</p>
-              <p className="mt-1 leading-6">
-                Add sources, set filters, and manage refresh cadence.
-              </p>
-            </div>
-            <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-              <p className="font-semibold text-[var(--foreground)]">2. Review queue</p>
-              <p className="mt-1 leading-6">
-                Review drafts, compare platform variants, and make edits.
-              </p>
-            </div>
-            <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-              <p className="font-semibold text-[var(--foreground)]">3. Scheduling</p>
-              <p className="mt-1 leading-6">
-                Track scheduled, published, and failed posts.
-              </p>
+              </div>
             </div>
           </div>
-          <Link
-            href="/feeds"
-            className="mt-6 inline-flex items-center text-sm font-semibold text-[var(--primary)] hover:opacity-80"
-          >
-            Review feed setup
-          </Link>
-        </aside>
+        )}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <PageEmptyState
-          eyebrow="Review queue"
-          title="Open the review queue"
-          description="Review drafts, compare platform variants, and keep edits in one place."
-          icon={<QueueIcon className="h-6 w-6" />}
-          actions={
-            <Link
-              href="/queue"
-              className="button-secondary inline-flex items-center rounded-full px-4 py-2.5 text-sm font-semibold"
-            >
-              Open review queue
-            </Link>
-          }
-        />
-
-        <section className="surface-card rounded-[1.5rem] p-6 sm:p-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+        <section className="rounded-xl bg-white p-6 shadow-sm">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Accounts
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                Feed library
               </p>
-              <h2 className="mt-3 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-                Connect publishing accounts
+              <h2 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-[-0.03em] text-slate-900">
+                Source coverage
               </h2>
             </div>
+            <Link
+              href="/feeds"
+              className="text-sm font-semibold text-[var(--primary)] hover:opacity-80"
+            >
+              Open feeds
+            </Link>
           </div>
-          <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-            Manage LinkedIn and X destinations from the accounts page.
-          </p>
-          <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-              Next step
-            </p>
-            <p className="mt-3 text-sm leading-7 text-[var(--foreground)]">
-              Connect an account before scheduling or publishing posts.
-            </p>
+
+          <div className="mt-6 grid gap-4">
+            {overview.recentFeeds.length > 0 ? (
+              overview.recentFeeds.map((feed) => (
+                <article
+                  key={feed.id}
+                  className="rounded-xl bg-slate-50/80 p-5"
+                >
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h3 className="text-lg font-semibold text-slate-900">{feed.name}</h3>
+                        <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">
+                          {feed.status.toLowerCase()}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-slate-500">
+                        Next sync: {formatFeedTime(feed.nextSyncAt)}
+                      </p>
+                    </div>
+                    <div className="rounded-full bg-white px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+                      {feed.refreshIntervalMinutes} min cadence
+                    </div>
+                  </div>
+                </article>
+              ))
+            ) : (
+              <div className="rounded-xl bg-slate-50/80 p-6 text-sm text-slate-500">
+                No sources configured yet.
+              </div>
+            )}
           </div>
         </section>
+
+        <aside className="rounded-xl bg-white p-6 shadow-sm">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+            Workspace
+          </p>
+          <h2 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-[-0.03em] text-slate-900">
+            Operating notes
+          </h2>
+          <div className="mt-6 space-y-4 text-sm text-slate-500">
+            <div className="rounded-xl bg-slate-50/80 p-4">
+              <p className="font-semibold text-slate-900">Connected accounts</p>
+              <p className="mt-1 leading-6">
+                {overview.connectedAccountCount} connected account
+                {overview.connectedAccountCount === 1 ? "" : "s"} across{" "}
+                {overview.activePlatformCount} platform
+                {overview.activePlatformCount === 1 ? "" : "s"}.
+              </p>
+            </div>
+            <div className="rounded-xl bg-slate-50/80 p-4">
+              <p className="font-semibold text-slate-900">Publishing flow</p>
+              <p className="mt-1 leading-6">
+                {overview.scheduledPostCount} scheduled and {overview.publishedPostCount} published
+                posts remain visible for follow-up.
+              </p>
+            </div>
+            <div className="rounded-xl bg-slate-50/80 p-4">
+              <p className="font-semibold text-slate-900">Next source sync</p>
+              <p className="mt-1 leading-6">
+                {overview.nextFeedForSync
+                  ? `${overview.nextFeedForSync.name} is due ${formatRelativeDate(
+                      overview.nextFeedForSync.nextSyncAt,
+                    )}.`
+                  : "No feed syncs are queued right now."}
+              </p>
+            </div>
+          </div>
+        </aside>
       </section>
     </PageContainer>
   );

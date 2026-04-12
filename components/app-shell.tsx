@@ -16,9 +16,9 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
         onClose={() => setMobileOpen(false)}
         pathname={pathname}
       />
-      <div className="min-h-screen lg:pl-72">
+      <div className="min-h-screen lg:pl-64">
         <AppHeader pathname={pathname} onMenuClick={() => setMobileOpen(true)} />
-        <main className="px-4 pb-10 pt-6 sm:px-6 lg:px-10 lg:pb-14 lg:pt-8">
+        <main className="px-4 pb-10 pt-6 sm:px-6 lg:px-8 lg:pb-14 lg:pt-8">
           {children}
         </main>
       </div>

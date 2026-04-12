@@ -58,31 +58,31 @@ export function AppHeader({ pathname, onMenuClick }: Readonly<AppHeaderProps>) {
   const page = getShellPage(pathname);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-[var(--ghost-line)] bg-white/84 backdrop-blur-xl">
-      <div className="px-4 py-4 sm:px-6 sm:py-5 lg:px-10">
-        <div className="flex items-start justify-between gap-4">
+    <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur-2xl">
+      <div className="px-4 py-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex min-w-0 items-start gap-3">
             <button
               type="button"
               onClick={onMenuClick}
-              className="mt-0.5 flex h-11 w-11 items-center justify-center rounded-full bg-[var(--surface-low)] text-[var(--foreground)] lg:hidden"
+              className="mt-0.5 flex h-11 w-11 items-center justify-center rounded-lg bg-slate-100 text-slate-700 lg:hidden"
               aria-label="Open navigation"
             >
               <MenuIcon className="h-5 w-5" />
             </button>
 
             <div className="lg:hidden">
-              <RezzumLogo className="h-11 w-11" />
+              <RezzumLogo className="h-10 w-10" />
             </div>
 
             <div className="min-w-0">
-              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.2em] text-[var(--muted-soft)]">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-slate-500">
                 {page.section.label}
               </p>
-              <h1 className="mt-2 truncate font-[var(--font-display)] text-2xl font-semibold tracking-[-0.03em] text-[var(--foreground)] sm:text-[2rem]">
+              <h1 className="mt-2 truncate font-[var(--font-display)] text-2xl font-semibold tracking-[-0.03em] text-slate-900 sm:text-[2rem]">
                 {page.title}
               </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--muted)]">
+              <p className="mt-1 text-sm font-medium text-slate-500">
                 {page.description}
               </p>
             </div>
