@@ -78,14 +78,13 @@ export function AppSidebar({
           <div className="space-y-6">
             <div className="surface-card rounded-[1.5rem] p-4">
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Workflow
+                Workspace
               </p>
               <p className="mt-3 font-[var(--font-display)] text-lg font-semibold text-[var(--foreground)]">
-                RSS to publish
+                Content pipeline
               </p>
               <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                Feeds, review, scheduling, and connected destinations share one consistent MVP
-                workspace.
+                Feeds, queue, schedule, and accounts in one place.
               </p>
             </div>
 

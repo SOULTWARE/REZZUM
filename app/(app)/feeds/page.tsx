@@ -23,7 +23,7 @@ export default async function FeedsPage() {
       <PageIntro
         eyebrow="Feed management"
         title="Configure and manage RSS sources"
-        description="Define the sources REZZUM watches, the filters that decide what qualifies, and the cadence later sync jobs will use."
+        description="Add sources, set filters, and choose a refresh cadence."
         actions={
           <Link
             href="/feeds/new"
@@ -38,17 +38,17 @@ export default async function FeedsPage() {
         <MetricCard
           label="Total feeds"
           value={String(feeds.length)}
-          detail="All configured RSS sources in the current workspace."
+          detail="All configured RSS sources."
         />
         <MetricCard
           label="Active feeds"
           value={String(activeFeedCount)}
-          detail="Feeds ready for future sync execution."
+          detail="Feeds currently active."
         />
         <MetricCard
           label="Next sync slots"
           value={String(queuedSyncCount)}
-          detail="Scheduled placeholders based on each feed’s refresh interval."
+          detail="Feeds with a scheduled refresh time."
         />
       </section>
 

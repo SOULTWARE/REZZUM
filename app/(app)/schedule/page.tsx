@@ -33,14 +33,7 @@ export default async function SchedulePage() {
       <PageIntro
         eyebrow="Publishing pipeline"
         title="Scheduled drafts and publish outcomes"
-        description="Keep the MVP simple: scheduled time, platform, and publish state stay visible without introducing a calendar interface before it is needed."
-        badge={
-          overview.isDemoData ? (
-            <span className="rounded-full bg-[var(--tertiary-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(79_73_100)]">
-              Demo publish state
-            </span>
-          ) : undefined
-        }
+        description="Track scheduled, published, and failed posts."
       />
 
       <section className="grid gap-4 md:grid-cols-3">
@@ -52,18 +45,18 @@ export default async function SchedulePage() {
               ? `${overview.nextScheduledItem.article.title} is set for ${formatDateTime(
                   overview.nextScheduledItem.scheduledFor,
                 )}`
-              : "No posts are reserved for future publishing windows."
+              : "No posts are scheduled."
           }
         />
         <MetricCard
           label="Published"
           value={String(overview.publishedItems.length)}
-          detail="Delivered posts remain visible so operators can distinguish successful sends from scheduled or failed ones."
+          detail="Delivered posts remain visible in the timeline."
         />
         <MetricCard
           label="Failed"
           value={String(overview.failedItems.length)}
-          detail="Failed sends keep their publish context visible so future retry flows can be added without redesigning this page."
+          detail="Failed sends stay visible with their latest error."
         />
       </section>
 
@@ -81,16 +74,16 @@ export default async function SchedulePage() {
 
           <aside className="surface-card rounded-[1.5rem] p-6">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-              Scheduling model
+              States
             </p>
             <h2 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-              MVP publishing states
+              Publish states
             </h2>
             <div className="mt-6 space-y-3">
               {[
-                "Draft and approved posts can remain unscheduled while editing continues.",
-                "Scheduled posts reserve a future publish time but remain editable until delivery.",
-                "Published and failed states stay visible so future queue workers can attach without changing the UI.",
+                "Draft and approved posts can stay unscheduled while editing continues.",
+                "Scheduled posts keep a reserved publish time until delivery.",
+                "Published and failed posts stay visible for follow-up.",
               ].map((item) => (
                 <div
                   key={item}

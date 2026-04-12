@@ -134,8 +134,7 @@ export function DraftEditorWorkspace({
             {platform === "LINKEDIN" ? "LinkedIn" : "X"} review draft
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">
-            Review the generated copy, compare platform variants, and prepare the draft for
-            approval, scheduling, or publishing.
+            Review the draft, compare variants, and make edits.
           </p>
         </div>
         <PostStatusBadge status={status} />
@@ -213,8 +212,8 @@ export function DraftEditorWorkspace({
             </p>
             <p className="mt-2 text-sm text-[var(--muted)]">
               {hasEdits
-                ? "This version already includes editorial changes."
-                : "Editing is available now. Persistence will connect when review mutations are added."}
+                ? "This version includes edits."
+                : "Make changes before approval or scheduling."}
             </p>
           </div>
           <span className="rounded-full bg-white px-3 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
@@ -264,9 +263,7 @@ export function DraftEditorWorkspace({
         </div>
       ) : null}
 
-      <div className="mt-6 rounded-[1.25rem] bg-[var(--tertiary-soft)] p-4 text-sm leading-7 text-[rgb(79_73_100)]">
-        Actions stay disabled in this MVP build until review and publishing mutations are wired.
-      </div>
+      <p className="mt-6 text-sm text-[var(--muted)]">Actions are disabled in this view.</p>
 
       <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-[var(--ghost-line)] pt-6">
         {footerActions.map((action) => (

@@ -91,8 +91,7 @@ export function FeedForm({
             {mode === "create" ? "Configure a new feed" : "Edit feed settings"}
           </h1>
           <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-            Save the source URL, define the filters that determine what qualifies,
-            and set the refresh cadence future sync jobs will use.
+            Save the source URL, define filters, and choose a refresh cadence.
           </p>
         </div>
 
@@ -306,8 +305,7 @@ export function FeedForm({
                     className="w-full rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm leading-7 text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   />
                   <p className="text-xs leading-6 text-[var(--muted)]">
-                    Use exclusions to stop low-signal content from entering later
-                    review and generation steps.
+                    Use exclusions to skip low-signal content.
                   </p>
                   <FieldError
                     id="feed-exclude-keywords-error"
@@ -371,14 +369,13 @@ export function FeedForm({
 
           <aside className="surface-card rounded-[1.75rem] p-6 sm:p-8">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-              Sync readiness
+              Sync settings
             </p>
             <h2 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-              Ready for future sync jobs
+              Feed status
             </h2>
             <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-              This milestone stores feed configuration only. Article ingestion and
-              scheduled sync execution will attach to these settings later.
+              Review the saved cadence, filters, and status for this source.
             </p>
 
             {metadata ? (
@@ -415,8 +412,7 @@ export function FeedForm({
             ) : (
               <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-low)] p-4">
                 <p className="text-sm leading-7 text-[var(--muted)]">
-                  New feeds are created as active and receive their first future sync
-                  slot based on the selected refresh interval.
+                  New feeds start active and use the selected refresh interval.
                 </p>
               </div>
             )}

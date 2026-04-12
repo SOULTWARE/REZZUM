@@ -23,7 +23,7 @@ export default async function AccountsPage() {
       <PageIntro
         eyebrow="Connected destinations"
         title="Manage the accounts REZZUM can publish to"
-        description="LinkedIn and X are the first supported platforms. The data model is ready for future OAuth tokens, provider IDs, reconnection, and account validation flows."
+        description="Manage publishing accounts for LinkedIn and X."
         actions={
           <button
             type="button"
@@ -41,17 +41,17 @@ export default async function AccountsPage() {
         <MetricCard
           label="Connected"
           value={String(overview.connectedCount)}
-          detail="Destinations currently ready for future publish jobs."
+          detail="Accounts ready to publish."
         />
         <MetricCard
           label="Needs attention"
           value={String(overview.attentionCount)}
-          detail="Pending and expired accounts that need OAuth follow-up."
+          detail="Accounts that need reconnection or setup."
         />
         <MetricCard
           label="Live platforms"
           value={String(overview.activePlatformCount)}
-          detail="The MVP starts with LinkedIn and X only."
+          detail="LinkedIn and X."
         />
       </section>
 
@@ -72,11 +72,11 @@ export default async function AccountsPage() {
           {[
             {
               title: "LinkedIn",
-              detail: "Primary network for professional publishing and long-form post distribution.",
+              detail: "Professional publishing and long-form distribution.",
             },
             {
               title: "X",
-              detail: "Short-form distribution for faster publishing cadence and timely commentary.",
+              detail: "Short-form distribution and fast updates.",
             },
           ].map((platform) => (
             <article key={platform.title} className="surface-card rounded-[1.5rem] p-6">

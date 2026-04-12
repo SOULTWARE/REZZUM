@@ -6,7 +6,7 @@ export function AccountEmptyState() {
     <PageEmptyState
       eyebrow="Connected destinations"
       title="No social accounts are connected yet"
-      description="REZZUM needs at least one active destination before drafts can move into scheduling or publishing. The MVP starts with LinkedIn and X."
+      description="Connect at least one account before scheduling or publishing drafts."
       icon={<AccountsIcon className="h-6 w-6" />}
       actions={
         <button

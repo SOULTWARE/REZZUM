@@ -7,7 +7,7 @@ export function ScheduleEmptyState() {
     <PageEmptyState
       eyebrow="Publishing schedule"
       title="There are no posts in the scheduling pipeline"
-      description="Drafts will appear here once review moves them toward approval, scheduling, and eventual publishing."
+      description="Approved and scheduled posts will appear here."
       icon={<ScheduleIcon className="h-6 w-6" />}
       actions={
         <Link

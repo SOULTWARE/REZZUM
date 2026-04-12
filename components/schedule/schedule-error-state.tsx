@@ -26,9 +26,6 @@ export function ScheduleErrorState({
         <h2 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
           No failed publishes right now
         </h2>
-        <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-          Failed sends will surface here with enough context for a future retry flow.
-        </p>
       </aside>
     );
   }

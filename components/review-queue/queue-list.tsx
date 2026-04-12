@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRightIcon, QueueIcon } from "@/components/icons";
+import { ArrowRightIcon } from "@/components/icons";
 import { PostStatusBadge } from "@/components/review-queue/post-status-badge";
 import { getSocialPlatformLabel } from "@/lib/review-queue/constants";
 import type { ReviewQueueItem } from "@/server/review-queue/service";
@@ -74,13 +74,6 @@ export function QueueList({ items }: Readonly<{ items: ReviewQueueItem[] }>) {
           </div>
         </Link>
       ))}
-
-      {items.length > 0 ? (
-        <div className="flex items-center gap-2 px-1 text-sm text-[var(--muted)]">
-          <QueueIcon className="h-4 w-4 text-[var(--muted-soft)]" />
-          Generated posts stay linked to their source article, feed, and platform variant.
-        </div>
-      ) : null}
     </section>
   );
 }

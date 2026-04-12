@@ -19,17 +19,17 @@ export default function SettingsPage() {
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(280px,0.9fr)]">
         <PageEmptyState
           eyebrow="Workspace settings"
-          title="Settings are not configured yet"
-          description="This area is reserved for workspace-level defaults once the supporting domains are implemented."
+          title="Settings"
+          description="Workspace defaults and publishing preferences will appear here."
           icon={<SettingsIcon className="h-6 w-6" />}
         />
 
         <aside className="surface-card rounded-[1.5rem] p-6">
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-            Reserved areas
+            Areas
           </p>
           <h2 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-            Future settings groups
+            Planned settings
           </h2>
           <div className="mt-6 space-y-3">
             {settingsAreas.map((item) => (

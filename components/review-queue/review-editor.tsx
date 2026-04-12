@@ -34,11 +34,9 @@ function formatArticleStatus(status: ReviewQueueItem["article"]["status"]) {
 export function ReviewEditor({
   post,
   siblingPosts,
-  isDemoData,
 }: Readonly<{
   post: ReviewQueueItem;
   siblingPosts: ReviewQueueItem[];
-  isDemoData: boolean;
 }>) {
   const currentDraftText = getCurrentDraftText(post);
   const hasEdits = Boolean(post.editedText && post.editedText !== post.generatedText);
@@ -142,12 +140,6 @@ export function ReviewEditor({
           </a>
         </div>
 
-        {isDemoData ? (
-          <div className="mt-6 rounded-[1.25rem] bg-[var(--tertiary-soft)] p-4 text-sm leading-7 text-[rgb(79_73_100)]">
-            This editor is using development review data until article ingestion and generation
-            are connected to the real backend.
-          </div>
-        ) : null}
       </aside>
 
       <section className="grid gap-6">
@@ -169,10 +161,10 @@ export function ReviewEditor({
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.85fr)]">
           <article className="surface-card rounded-[1.75rem] p-6">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-              Generation context
+              Details
             </p>
             <h3 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-              Lifecycle details
+              Post details
             </h3>
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
@@ -212,14 +204,13 @@ export function ReviewEditor({
 
           <article className="surface-card rounded-[1.75rem] p-6">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-              Workflow handoff
+              Actions
             </p>
             <h3 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-              Publishing controls
+              Review actions
             </h3>
             <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-              Approval, rejection, scheduling, and publish-now controls are already placed here.
-              They remain disabled until the review mutations are connected.
+              Approve, reject, schedule, or publish from here.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <span className="rounded-full bg-[var(--surface-low)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]">

@@ -38,14 +38,14 @@ function getItemContext(post: ScheduleItem) {
   }
 
   if (post.status === "SCHEDULED") {
-    return "Still editable until the scheduled send is processed.";
+    return "Scheduled and awaiting delivery.";
   }
 
   if (post.status === "APPROVED") {
     return "Ready to be scheduled or published immediately.";
   }
 
-  return "Still in draft and not reserved for a publish window yet.";
+  return "Draft with no publish time set.";
 }
 
 export function ScheduleList({ items }: Readonly<{ items: ScheduleItem[] }>) {

@@ -5,7 +5,6 @@ import { PageContainer } from "@/components/page-container";
 import { PageEmptyState } from "@/components/page-empty-state";
 import { FeedStatusBadge, getFeedStatusLabel } from "@/components/feeds/feed-status-badge";
 import {
-  AccountsIcon,
   FeedsIcon,
   QueueIcon,
   ScheduleIcon,
@@ -68,8 +67,8 @@ export default async function DashboardPage() {
       label: "Configured feeds",
       value: String(overview.totalFeeds),
       detail: hasFeeds
-        ? `${overview.activeFeedCount} active feed${overview.activeFeedCount === 1 ? "" : "s"} ready for future sync jobs`
-        : "No RSS sources configured yet",
+        ? `${overview.activeFeedCount} active feed${overview.activeFeedCount === 1 ? "" : "s"}`
+        : "No RSS sources configured",
       tone: hasFeeds ? "Live" : "Empty",
       icon: FeedsIcon,
     },
@@ -78,8 +77,8 @@ export default async function DashboardPage() {
       value: String(overview.attentionFeedCount),
       detail:
         overview.attentionFeedCount > 0
-          ? "Paused or errored feeds should be reviewed before sync automation is added"
-          : "No feed configuration issues are visible right now",
+          ? "Paused or errored feeds need review"
+          : "No feed issues right now",
       tone: overview.attentionFeedCount > 0 ? "Review" : "Stable",
       icon: SparkIcon,
     },
@@ -90,7 +89,7 @@ export default async function DashboardPage() {
         ? `${overview.nextFeedForSync.name} is due ${formatRelativeDate(
             overview.nextFeedForSync.nextSyncAt,
           )}`
-        : "No future sync windows are scheduled yet",
+        : "No syncs scheduled",
       tone: overview.nextFeedForSync ? "Queued" : "Empty",
       icon: ScheduleIcon,
     },
@@ -187,8 +186,8 @@ export default async function DashboardPage() {
         ) : (
           <PageEmptyState
             eyebrow="Pipeline overview"
-            title="Your publishing pipeline has not started yet"
-            description="REZZUM will surface ingested articles, drafted posts, and publishing activity here once feeds and accounts are connected."
+            title="Add a feed to get started"
+            description="Feed activity and publishing status will appear here after setup."
             icon={<QueueIcon className="h-6 w-6" />}
             actions={
               <>
@@ -211,30 +210,28 @@ export default async function DashboardPage() {
 
         <aside className="surface-card rounded-[1.5rem] p-6">
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-            Workflow state
+            Overview
           </p>
           <h2 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-            What exists now
+            Work areas
           </h2>
           <div className="mt-6 space-y-4 text-sm text-[var(--muted)]">
             <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
               <p className="font-semibold text-[var(--foreground)]">1. Configure feeds</p>
               <p className="mt-1 leading-6">
-                Feed setup is live with validation, statuses, and refresh cadence.
+                Add sources, set filters, and manage refresh cadence.
               </p>
             </div>
             <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
               <p className="font-semibold text-[var(--foreground)]">2. Review queue</p>
               <p className="mt-1 leading-6">
-                The queue UI is available now with development review records aligned to the
-                generated-post schema.
+                Review drafts, compare platform variants, and make edits.
               </p>
             </div>
             <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
               <p className="font-semibold text-[var(--foreground)]">3. Scheduling</p>
               <p className="mt-1 leading-6">
-                Publish states and scheduled windows are already represented so the later queue
-                integration has a stable UI target.
+                Track scheduled, published, and failed posts.
               </p>
             </div>
           </div>
@@ -250,8 +247,8 @@ export default async function DashboardPage() {
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <PageEmptyState
           eyebrow="Review queue"
-          title="Review workflow is ready for the next backend step"
-          description="The moderation UI is already in place with development draft records, so operators can review the workflow shape before ingestion and generation are connected."
+          title="Open the review queue"
+          description="Review drafts, compare platform variants, and keep edits in one place."
           icon={<QueueIcon className="h-6 w-6" />}
           actions={
             <Link
@@ -267,28 +264,22 @@ export default async function DashboardPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                Publishing readiness
+                Accounts
               </p>
               <h2 className="mt-3 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-                Connected publishing is still empty
+                Connect publishing accounts
               </h2>
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-[var(--tertiary-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)]">
-              <AccountsIcon className="h-4 w-4" />
-              MVP state model
             </div>
           </div>
           <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-            Scheduling, publish states, and connected destinations are represented in the UI
-            while real publishing workers and provider integrations remain out of scope.
+            Manage LinkedIn and X destinations from the accounts page.
           </p>
           <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-low)] p-4">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-              Current demo state
+              Next step
             </p>
             <p className="mt-3 text-sm leading-7 text-[var(--foreground)]">
-              Useful for demos: feed health is data-backed, and the later workflow stages stay
-              honest about what is modeled versus what is live.
+              Connect an account before scheduling or publishing posts.
             </p>
           </div>
         </section>

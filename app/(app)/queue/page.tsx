@@ -34,32 +34,25 @@ export default async function QueuePage({
     <PageContainer>
       <PageIntro
         eyebrow="Review workflow"
-        title="Generated drafts waiting on moderation"
-        description="Review generated posts before they move into scheduling or publish-now actions. Source context, platform variant, and draft state stay visible in one place."
-        badge={
-          queue.isDemoData ? (
-            <span className="rounded-full bg-[var(--tertiary-soft)] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[rgb(79_73_100)]">
-              Demo queue data
-            </span>
-          ) : undefined
-        }
+        title="Review drafts"
+        description="Compare platform variants, edit copy, and keep source context close."
       />
 
       <section className="grid gap-4 md:grid-cols-3">
         <MetricCard
           label="Visible drafts"
           value={String(queue.items.length)}
-          detail={`${queue.totalItems} review records aligned to the generated-post schema.`}
+          detail={`${queue.totalItems} drafts in the review queue.`}
         />
         <MetricCard
           label="Platforms"
           value={String(platformCount)}
-          detail="LinkedIn and X variants stay grouped by source article."
+          detail="Platform variants grouped by source article."
         />
         <MetricCard
           label="Source feeds"
           value={String(feedCount)}
-          detail="Queue filters can narrow drafts by the originating RSS source."
+          detail="Filter drafts by the originating feed."
         />
       </section>
 
@@ -77,8 +70,8 @@ export default async function QueuePage({
           }
           description={
             hasActiveFilters
-              ? "Adjust the platform, status, or feed filters to widen the queue again."
-              : "The queue will populate here once article ingestion and generation create real reviewable drafts."
+              ? "Adjust the platform, status, or feed filters."
+              : "Drafts ready for review will appear here."
           }
           icon={<QueueIcon className="h-6 w-6" />}
           actions={

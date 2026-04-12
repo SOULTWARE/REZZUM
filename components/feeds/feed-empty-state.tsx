@@ -7,7 +7,7 @@ export function FeedEmptyState() {
     <PageEmptyState
       eyebrow="Feed library"
       title="Add your first RSS source"
-      description="Start the REZZUM pipeline by connecting a feed, defining its keyword filters, and choosing the cadence future sync jobs should follow."
+      description="Connect a feed, define its filters, and choose a refresh cadence."
       icon={<FeedsIcon className="h-6 w-6" />}
       actions={
         <Link

@@ -61,8 +61,7 @@ export function QueueFilters({ filters, options }: Readonly<QueueFiltersProps>) 
           </h2>
         </div>
         <p className="max-w-xl text-sm leading-6 text-[var(--muted)]">
-          Filter drafts by destination, review state, or source feed while the ingestion
-          and generation services are still being wired.
+          Filter drafts by destination, status, or source feed.
         </p>
       </div>
 

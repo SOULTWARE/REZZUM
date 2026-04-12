@@ -135,15 +135,13 @@ export default function HomePage() {
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 rounded-full bg-[var(--tertiary-soft)] px-3 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-[var(--foreground)]">
                 <SparkIcon className="h-3.5 w-3.5" />
-                Built for the REZZUM MVP
+                Editorial review built in
               </div>
               <h1 className="mt-8 max-w-4xl font-[var(--font-display)] text-5xl font-semibold leading-[1.02] tracking-[-0.05em] text-[var(--foreground)] sm:text-6xl lg:text-7xl">
                 Turn RSS feeds into <span className="text-gradient">review-ready social posts</span>
               </h1>
               <p className="mt-8 max-w-2xl text-lg leading-8 text-[var(--muted)] sm:text-xl">
-                REZZUM is an RSS-to-social content transformation platform. It ingests
-                articles, drafts platform-aware posts, and keeps publishing in a controlled
-                human review workflow.
+                REZZUM turns RSS feeds into social drafts with review and scheduling built in.
               </p>
               <div className="mt-10 flex flex-col gap-3 sm:flex-row">
                 <Link
@@ -186,9 +184,6 @@ export default function HomePage() {
                       <h2 className="mt-2 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
                         Source to scheduled draft
                       </h2>
-                    </div>
-                    <div className="rounded-full bg-white px-3 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
-                      MVP
                     </div>
                   </div>
 
@@ -281,8 +276,7 @@ export default function HomePage() {
                 One workflow from feed intake to publish-ready content
               </h2>
               <p className="mt-4 text-lg leading-8 text-[var(--muted)]">
-                REZZUM is designed around the MVP pipeline: feed configuration, draft
-                generation, human review, and controlled scheduling.
+                Configure feeds, generate drafts, review them, and publish on your schedule.
               </p>
             </div>
 
@@ -318,8 +312,7 @@ export default function HomePage() {
                   Built for credible RSS-to-social operations
                 </h2>
                 <p className="mt-4 text-lg leading-8 text-[var(--muted)]">
-                  The MVP focuses on the pieces that make the workflow real: ingestion,
-                  generation, review, scheduling, and multi-platform delivery.
+                  Ingestion, generation, review, scheduling, and publishing in one place.
                 </p>
                 <div className="mt-8 rounded-[1.75rem] bg-[var(--surface-low)] p-6">
                   <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
@@ -367,8 +360,7 @@ export default function HomePage() {
                     Build a cleaner path from article intake to social distribution
                   </h2>
                   <p className="mt-4 text-lg leading-8 text-white/82">
-                    Start with the REZZUM workspace and lay the foundation for feeds,
-                    generation, review, scheduling, and connected publishing.
+                    Move from feed intake to review and publishing in one workspace.
                   </p>
                 </div>
 
@@ -403,7 +395,7 @@ export default function HomePage() {
                   REZZUM
                 </p>
                 <p className="text-sm text-[var(--muted)]">
-                  RSS-to-social transformation for the MVP workflow.
+                  RSS-to-social publishing workflow.
                 </p>
               </div>
             </div>
