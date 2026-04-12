@@ -81,7 +81,7 @@ export function FeedForm({
       {state.status === "error" && state.message ? (
         <div
           role="alert"
-          className="rounded-[1.25rem] bg-[rgb(159_64_61_/_0.08)] px-4 py-3 text-sm text-[rgb(117_33_33)]"
+          className="rounded-xl bg-[rgb(159_64_61_/_0.08)] px-4 py-3 text-sm text-[rgb(117_33_33)]"
         >
           {state.message}
         </div>
@@ -97,10 +97,10 @@ export function FeedForm({
               </h2>
             </div>
 
-            <div className="surface-card rounded-[1.75rem] p-6 sm:p-8">
+            <div className="surface-card rounded-xl p-6 sm:p-8">
               <div className="space-y-6">
                 <label className="block space-y-2">
-                  <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     Feed name
                   </span>
                   <input
@@ -113,13 +113,13 @@ export function FeedForm({
                     placeholder="e.g. Product Updates"
                     aria-invalid={Boolean(state.fieldErrors?.name)}
                     aria-describedby={state.fieldErrors?.name ? "feed-name-error" : undefined}
-                    className="w-full rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   />
                   <FieldError id="feed-name-error" errors={state.fieldErrors?.name} />
                 </label>
 
                 <label className="block space-y-2">
-                  <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     RSS URL
                   </span>
                   <input
@@ -132,7 +132,7 @@ export function FeedForm({
                     placeholder="https://example.com/feed.xml"
                     aria-invalid={Boolean(state.fieldErrors?.rssUrl)}
                     aria-describedby={state.fieldErrors?.rssUrl ? "feed-rss-url-error" : undefined}
-                    className="w-full rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   />
                   <FieldError id="feed-rss-url-error" errors={state.fieldErrors?.rssUrl} />
                 </label>
@@ -148,10 +148,10 @@ export function FeedForm({
               </h2>
             </div>
 
-            <div className="surface-card rounded-[1.75rem] p-6 sm:p-8">
+            <div className="surface-card rounded-xl p-6 sm:p-8">
               <div className="grid gap-6 sm:grid-cols-2">
                 <label className="block space-y-2">
-                  <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     Minimum word count
                   </span>
                   <input
@@ -171,7 +171,7 @@ export function FeedForm({
                         ? "feed-minimum-word-count-error"
                         : undefined
                     }
-                    className="w-full rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   />
                   <FieldError
                     id="feed-minimum-word-count-error"
@@ -180,7 +180,7 @@ export function FeedForm({
                 </label>
 
                 <label className="block space-y-2">
-                  <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     Refresh interval
                   </span>
                   <select
@@ -201,7 +201,7 @@ export function FeedForm({
                         ? "feed-refresh-interval-error"
                         : undefined
                     }
-                    className="w-full appearance-none rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full appearance-none rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   >
                     {FEED_REFRESH_INTERVAL_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -218,7 +218,7 @@ export function FeedForm({
 
               <div className="mt-6 space-y-6">
                 <label className="block space-y-2">
-                  <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     Include keywords
                   </span>
                   <textarea
@@ -238,7 +238,7 @@ export function FeedForm({
                         ? "feed-include-keywords-error"
                         : undefined
                     }
-                    className="w-full rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm leading-7 text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm leading-7 text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   />
                   <p className="text-xs leading-6 text-[var(--muted)]">
                     Separate keywords with commas or new lines. Articles must match
@@ -251,7 +251,7 @@ export function FeedForm({
                 </label>
 
                 <label className="block space-y-2">
-                  <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     Exclude keywords
                   </span>
                   <textarea
@@ -271,7 +271,7 @@ export function FeedForm({
                         ? "feed-exclude-keywords-error"
                         : undefined
                     }
-                    className="w-full rounded-2xl bg-[var(--surface-low)] px-4 py-3 text-sm leading-7 text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm leading-7 text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
                   />
                   <p className="text-xs leading-6 text-[var(--muted)]">
                     Use exclusions to skip low-signal content.
@@ -287,8 +287,8 @@ export function FeedForm({
         </div>
 
         <div className="space-y-6 lg:col-span-5">
-          <aside className="surface-card rounded-[1.75rem] p-6 sm:p-8">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+          <aside className="surface-card rounded-xl p-6 sm:p-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
               Feed preview
             </p>
             <h2 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
@@ -299,8 +299,8 @@ export function FeedForm({
             </p>
 
             <div className="mt-6 space-y-4">
-              <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+              <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                   Refresh cadence
                 </p>
                 <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
@@ -311,8 +311,8 @@ export function FeedForm({
                 </p>
               </div>
 
-              <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+              <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                   Filter snapshot
                 </p>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -336,8 +336,8 @@ export function FeedForm({
             </div>
           </aside>
 
-          <aside className="surface-card rounded-[1.75rem] p-6 sm:p-8">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+          <aside className="surface-card rounded-xl p-6 sm:p-8">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
               Sync settings
             </p>
             <h2 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
@@ -349,28 +349,28 @@ export function FeedForm({
 
             {metadata ? (
               <div className="mt-6 space-y-4">
-                <div className="flex items-center justify-between rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+                <div className="flex items-center justify-between rounded-xl bg-[var(--surface-low)] p-4">
                   <span className="text-sm font-medium text-[var(--muted)]">Status</span>
                   <FeedStatusBadge status={metadata.status} />
                 </div>
-                <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+                <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     Created
                   </p>
                   <p className="mt-2 text-sm text-[var(--foreground)]">
                     {formatDateTime(metadata.createdAt)}
                   </p>
                 </div>
-                <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+                <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     Updated
                   </p>
                   <p className="mt-2 text-sm text-[var(--foreground)]">
                     {formatDateTime(metadata.updatedAt)}
                   </p>
                 </div>
-                <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-                  <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+                <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     Next sync slot
                   </p>
                   <p className="mt-2 text-sm text-[var(--foreground)]">
@@ -379,7 +379,7 @@ export function FeedForm({
                 </div>
               </div>
             ) : (
-              <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+              <div className="mt-6 rounded-xl bg-[var(--surface-low)] p-4">
                 <p className="text-sm leading-7 text-[var(--muted)]">
                   New feeds start active and use the selected refresh interval.
                 </p>
