@@ -106,3 +106,10 @@ button:disabled {
 .button-secondary:hover {
   background: #d8e3e8;
 }
+
+.text-gradient {
+  background: linear-gradient(145deg, var(--primary) 0%, var(--primary-strong) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

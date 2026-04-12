@@ -143,3 +143,40 @@ export function MenuCloseIcon(props: Readonly<IconProps>) {
     </BaseIcon>
   );
 }
+
+export function SparkIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M12 3.5L13.75 8.25L18.5 10L13.75 11.75L12 16.5L10.25 11.75L5.5 10L10.25 8.25L12 3.5Z" />
+      <path d="M18.5 3.5L19.2 5.3L21 6L19.2 6.7L18.5 8.5L17.8 6.7L16 6L17.8 5.3L18.5 3.5Z" />
+    </BaseIcon>
+  );
+}
+
+export function ReviewIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M4.5 19.5L8 18.75L17.75 9C18.4404 8.30964 18.4404 7.19036 17.75 6.5V6.5C17.0596 5.80964 15.9404 5.80964 15.25 6.5L5.5 16.25L4.5 19.5Z" />
+      <path d="M13.5 8.5L16.5 11.5" />
+      <path d="M12 19.5H19.5" />
+    </BaseIcon>
+  );
+}
+
+export function PublishIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M20 4L11 13" />
+      <path d="M20 4L14 20L11 13L4 10L20 4Z" />
+    </BaseIcon>
+  );
+}
+
+export function ArrowRightIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M5 12H19" />
+      <path d="M12.5 5.5L19 12L12.5 18.5" />
+    </BaseIcon>
+  );
+}
