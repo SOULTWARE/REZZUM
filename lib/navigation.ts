@@ -59,5 +59,8 @@ export const secondaryNavigation: NavigationItem[] = [
 const navigation = [...primaryNavigation, ...secondaryNavigation];
 
 export function getNavigationItem(pathname: string) {
-  return navigation.find((item) => item.href === pathname) ?? primaryNavigation[0];
+  return (
+    navigation.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`)) ??
+    primaryNavigation[0]
+  );
 }

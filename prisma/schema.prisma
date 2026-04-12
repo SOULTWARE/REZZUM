@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum FeedStatus {
+  ACTIVE
+  PAUSED
+  ERROR
+  ARCHIVED
+}
+
+model RssFeed {
+  id                     String      @id @default(cuid())
+  name                   String      @db.VarChar(120)
+  rssUrl                 String      @map("rss_url") @db.Text
+  normalizedRssUrl       String      @unique @map("normalized_rss_url") @db.Text
+  status                 FeedStatus  @default(ACTIVE)
+  refreshIntervalMinutes Int         @map("refresh_interval_minutes")
+  lastSyncedAt           DateTime?   @map("last_synced_at")
+  lastSyncAttemptAt      DateTime?   @map("last_sync_attempt_at")
+  nextSyncAt             DateTime?   @map("next_sync_at")
+  syncError              String?     @map("sync_error") @db.Text
+  createdAt              DateTime    @default(now()) @map("created_at")
+  updatedAt              DateTime    @updatedAt @map("updated_at")
+  archivedAt             DateTime?   @map("archived_at")
+  filter                 FeedFilter?
+
+  @@index([status])
+  @@index([nextSyncAt])
+  @@map("rss_feeds")
+}
+
+model FeedFilter {
+  id               String   @id @default(cuid())
+  feedId           String   @unique @map("feed_id")
+  includeKeywords  String[] @default([]) @map("include_keywords")
+  excludeKeywords  String[] @default([]) @map("exclude_keywords")
+  minimumWordCount Int      @default(0) @map("minimum_word_count")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  feed             RssFeed  @relation(fields: [feedId], references: [id], onDelete: Cascade)
+
+  @@map("feed_filters")
+}
