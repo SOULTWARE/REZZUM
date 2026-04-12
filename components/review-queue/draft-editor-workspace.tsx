@@ -86,7 +86,7 @@ function ActionIcon({
 
 function ActionButton({ action }: Readonly<{ action: ReviewEditorAction }>) {
   const baseClassName =
-    "inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60";
+    "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60";
 
   return (
     <button
@@ -124,7 +124,7 @@ export function DraftEditorWorkspace({
   const characterCountId = `character-count-${platform.toLowerCase()}`;
 
   return (
-    <section className="surface-card rounded-[1.75rem] p-5 sm:p-6">
+    <section className="surface-card rounded-xl p-5 sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
@@ -140,7 +140,7 @@ export function DraftEditorWorkspace({
         <PostStatusBadge status={status} />
       </div>
 
-      <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-low)] p-1">
+      <div className="mt-6 rounded-xl bg-[var(--surface-low)] p-1">
         <div className="grid gap-1 sm:grid-cols-2">
           {platformTabs.map((tab) => {
             if (tab.href) {
@@ -149,7 +149,7 @@ export function DraftEditorWorkspace({
                   key={tab.platform}
                   href={tab.href}
                   aria-current={tab.active ? "page" : undefined}
-                  className={`inline-flex items-center justify-center gap-2 rounded-[1rem] px-4 py-3 text-sm font-semibold ${
+                  className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold ${
                     tab.active
                       ? "bg-white text-[var(--primary)] shadow-[var(--shadow-soft)]"
                       : "text-[var(--muted)] hover:bg-white/70 hover:text-[var(--foreground)]"
@@ -165,7 +165,7 @@ export function DraftEditorWorkspace({
               <span
                 key={tab.platform}
                 aria-disabled="true"
-                className="inline-flex items-center justify-center gap-2 rounded-[1rem] px-4 py-3 text-sm font-semibold text-[var(--muted-soft)] opacity-75"
+                className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-semibold text-[var(--muted-soft)] opacity-75"
               >
                 <PlatformIcon platform={tab.platform} className="h-4 w-4" />
                 {tab.label}
@@ -176,7 +176,7 @@ export function DraftEditorWorkspace({
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-4">
-        <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+        <div className="rounded-xl bg-[var(--surface-low)] p-4">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
             Tone
           </p>
@@ -184,19 +184,19 @@ export function DraftEditorWorkspace({
             {getGenerationToneLabel(tone)}
           </p>
         </div>
-        <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+        <div className="rounded-xl bg-[var(--surface-low)] p-4">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
             Prompt version
           </p>
           <p className="mt-2 text-sm font-medium text-[var(--foreground)]">{promptVersion}</p>
         </div>
-        <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+        <div className="rounded-xl bg-[var(--surface-low)] p-4">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
             Model
           </p>
           <p className="mt-2 text-sm font-medium text-[var(--foreground)]">{generationModel}</p>
         </div>
-        <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+        <div className="rounded-xl bg-[var(--surface-low)] p-4">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
             Last updated
           </p>
@@ -204,7 +204,7 @@ export function DraftEditorWorkspace({
         </div>
       </div>
 
-      <div className="mt-6 rounded-[1.5rem] bg-[var(--surface-low)] p-4 sm:p-5">
+      <div className="mt-6 rounded-xl bg-[var(--surface-low)] p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
@@ -216,7 +216,7 @@ export function DraftEditorWorkspace({
                 : "Make changes before approval or scheduling."}
             </p>
           </div>
-          <span className="rounded-full bg-white px-3 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+          <span className="rounded-lg bg-white px-3 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
             Version {versionNumber}
           </span>
         </div>
@@ -229,13 +229,13 @@ export function DraftEditorWorkspace({
             aria-describedby={characterCountId}
             aria-invalid={isOverLimit}
             placeholder="Draft content will appear here."
-            className="h-[24rem] w-full resize-none rounded-[1.25rem] bg-white p-5 text-sm leading-8 text-[var(--foreground)] shadow-[var(--shadow-soft)] outline-none focus:shadow-[0_0_0_2px_var(--ring-soft)]"
+            className="h-[24rem] w-full resize-none rounded-xl bg-white p-5 text-sm leading-8 text-[var(--foreground)] shadow-[var(--shadow-soft)] outline-none focus:shadow-[0_0_0_2px_var(--ring-soft)]"
           />
 
           <div
             id={characterCountId}
             aria-live="polite"
-            className={`pointer-events-none absolute bottom-4 right-4 rounded-full px-3 py-1 text-[0.72rem] font-semibold ${
+            className={`pointer-events-none absolute bottom-4 right-4 rounded-lg px-3 py-1 text-[0.72rem] font-semibold ${
               isOverLimit
                 ? "bg-[rgb(159_64_61_/_0.12)] text-[rgb(117_33_33)]"
                 : "bg-[var(--surface-low)] text-[var(--muted-soft)]"
@@ -253,7 +253,7 @@ export function DraftEditorWorkspace({
       </div>
 
       {hasEdits ? (
-        <div className="mt-4 rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+        <div className="mt-4 rounded-xl bg-[var(--surface-low)] p-4">
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
             Original generation
           </p>

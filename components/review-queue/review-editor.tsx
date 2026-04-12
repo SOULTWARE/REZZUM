@@ -2,11 +2,7 @@ import Link from "next/link";
 import type { SocialPlatform } from "@prisma/client";
 import { QueueIcon } from "@/components/icons";
 import { DraftEditorWorkspace } from "@/components/review-queue/draft-editor-workspace";
-import {
-  getGeneratedPostStatusLabel,
-  getSocialPlatformLabel,
-  SUPPORTED_REVIEW_PLATFORMS,
-} from "@/lib/review-queue/constants";
+import { getSocialPlatformLabel, SUPPORTED_REVIEW_PLATFORMS } from "@/lib/review-queue/constants";
 import { getReviewEditorActions } from "@/lib/review-queue/editor-actions";
 import type { ReviewQueueItem } from "@/server/review-queue/service";
 
@@ -57,7 +53,7 @@ export function ReviewEditor({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(320px,0.86fr)_minmax(0,1.14fr)]">
-      <aside className="surface-card rounded-[1.75rem] p-6 sm:p-8 xl:sticky xl:top-32">
+      <aside className="surface-card rounded-xl p-6 sm:p-8 xl:sticky xl:top-32">
         <Link
           href="/queue"
           className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--primary)] hover:opacity-80"
@@ -74,7 +70,7 @@ export function ReviewEditor({
         </h1>
 
         <div className="mt-6 grid gap-4">
-          <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+          <div className="rounded-xl bg-[var(--surface-low)] p-4">
             <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
               Feed
             </p>
@@ -82,7 +78,7 @@ export function ReviewEditor({
               {post.article.feed.name}
             </p>
           </div>
-          <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+          <div className="rounded-xl bg-[var(--surface-low)] p-4">
             <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
               Article status
             </p>
@@ -91,7 +87,7 @@ export function ReviewEditor({
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-            <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+            <div className="rounded-xl bg-[var(--surface-low)] p-4">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
                 Published
               </p>
@@ -99,7 +95,7 @@ export function ReviewEditor({
                 {formatDateTime(post.article.publishedAt)}
               </p>
             </div>
-            <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+            <div className="rounded-xl bg-[var(--surface-low)] p-4">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
                 Discovered
               </p>
@@ -110,7 +106,7 @@ export function ReviewEditor({
           </div>
         </div>
 
-        <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+        <div className="mt-6 rounded-xl bg-[var(--surface-low)] p-4">
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
             Excerpt
           </p>
@@ -119,7 +115,7 @@ export function ReviewEditor({
           </p>
         </div>
 
-        <div className="mt-4 rounded-[1.25rem] bg-[var(--surface-low)] p-4">
+        <div className="mt-4 rounded-xl bg-[var(--surface-low)] p-4">
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
             Content preview
           </p>
@@ -128,7 +124,7 @@ export function ReviewEditor({
           </p>
         </div>
 
-        <div className="mt-6 rounded-[1.25rem] bg-[var(--surface-low)] p-4 text-sm leading-7 text-[var(--muted)]">
+        <div className="mt-6 rounded-xl bg-[var(--surface-low)] p-4 text-sm leading-7 text-[var(--muted)]">
           <p className="font-semibold text-[var(--foreground)]">Source URL</p>
           <a
             href={post.article.sourceUrl}
@@ -157,74 +153,6 @@ export function ReviewEditor({
           platformTabs={platformTabs}
           actions={actions}
         />
-
-        <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(300px,0.85fr)]">
-          <article className="surface-card rounded-[1.75rem] p-6">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-              Details
-            </p>
-            <h3 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-              Post details
-            </h3>
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                  Status
-                </p>
-                <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
-                  {getGeneratedPostStatusLabel(post.status)}
-                </p>
-              </div>
-              <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                  Generated at
-                </p>
-                <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
-                  {formatDateTime(post.generatedAt)}
-                </p>
-              </div>
-              <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                  Reviewed at
-                </p>
-                <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
-                  {formatDateTime(post.reviewedAt)}
-                </p>
-              </div>
-              <div className="rounded-[1.25rem] bg-[var(--surface-low)] p-4">
-                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-                  Scheduled for
-                </p>
-                <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
-                  {formatDateTime(post.scheduledFor)}
-                </p>
-              </div>
-            </div>
-          </article>
-
-          <article className="surface-card rounded-[1.75rem] p-6">
-            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-              Actions
-            </p>
-            <h3 className="mt-4 font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
-              Review actions
-            </h3>
-            <p className="mt-4 text-sm leading-7 text-[var(--muted)]">
-              Approve, reject, schedule, or publish from here.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <span className="rounded-full bg-[var(--surface-low)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
-                Approve
-              </span>
-              <span className="rounded-full bg-[var(--surface-low)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
-                Reject
-              </span>
-              <span className="rounded-full bg-[var(--surface-low)] px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
-                Schedule
-              </span>
-            </div>
-          </article>
-        </section>
       </section>
     </div>
   );
