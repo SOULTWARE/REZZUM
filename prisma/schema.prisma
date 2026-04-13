@@ -59,6 +59,15 @@ model RssFeed {
   rssUrl                 String      @map("rss_url") @db.Text
   normalizedRssUrl       String      @unique @map("normalized_rss_url") @db.Text
   status                 FeedStatus  @default(ACTIVE)
+  defaultLanguage        String?     @map("default_language") @db.VarChar(64)
+  defaultFeel            String?     @map("default_feel") @db.VarChar(120)
+  styleNotes             String?     @map("style_notes") @db.Text
+  generateLinkedIn       Boolean     @default(true) @map("generate_linkedin")
+  generateX              Boolean     @default(true) @map("generate_x")
+  linkedinAccountId      String?     @map("linkedin_account_id")
+  xAccountId             String?     @map("x_account_id")
+  autoPublishEnabled     Boolean     @default(false) @map("auto_publish_enabled")
+  autoPublishIntervalMinutes Int?    @map("auto_publish_interval_minutes")
   refreshIntervalMinutes Int         @map("refresh_interval_minutes")
   lastSyncedAt           DateTime?   @map("last_synced_at")
   lastSyncAttemptAt      DateTime?   @map("last_sync_attempt_at")
@@ -69,6 +78,8 @@ model RssFeed {
   archivedAt             DateTime?   @map("archived_at")
   filter                 FeedFilter?
   articles               Article[]
+  linkedinAccount        SocialAccount? @relation("FeedLinkedInAccount", fields: [linkedinAccountId], references: [id], onDelete: SetNull)
+  xAccount               SocialAccount? @relation("FeedXAccount", fields: [xAccountId], references: [id], onDelete: SetNull)
 
   @@index([status])
   @@index([nextSyncAt])
@@ -118,6 +129,7 @@ model Article {
 model GeneratedPost {
   id                  String              @id @default(cuid())
   articleId           String              @map("article_id")
+  socialAccountId     String?             @map("social_account_id")
   platform            SocialPlatform
   tone                GenerationTone
   status              GeneratedPostStatus @default(DRAFT)
@@ -140,11 +152,13 @@ model GeneratedPost {
   createdAt           DateTime            @default(now()) @map("created_at")
   updatedAt           DateTime            @updatedAt @map("updated_at")
   article             Article             @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  socialAccount       SocialAccount?      @relation(fields: [socialAccountId], references: [id], onDelete: SetNull)
   previousVersion     GeneratedPost?      @relation("GeneratedPostVersions", fields: [previousVersionId], references: [id], onDelete: SetNull)
   nextVersions        GeneratedPost[]     @relation("GeneratedPostVersions")
   publishAttempts     PublishAttempt[]
 
   @@index([articleId, platform])
+  @@index([socialAccountId])
   @@index([status])
   @@index([scheduledFor])
   @@index([publishedAt])
@@ -188,11 +202,34 @@ model SocialAccount {
   lastValidatedAt       DateTime?           @map("last_validated_at")
   connectedAt           DateTime?           @map("connected_at")
   disconnectedAt        DateTime?           @map("disconnected_at")
+  externalUrn           String?             @map("external_urn") @db.VarChar(191)
+  metadataJson          Json?               @map("metadata_json")
   createdAt             DateTime            @default(now()) @map("created_at")
   updatedAt             DateTime            @updatedAt @map("updated_at")
+  linkedinFeeds         RssFeed[]           @relation("FeedLinkedInAccount")
+  xFeeds                RssFeed[]           @relation("FeedXAccount")
+  generatedPosts        GeneratedPost[]
+  workspaceDefaultLinkedInFor WorkspaceSettings[] @relation("WorkspaceDefaultLinkedInAccount")
+  workspaceDefaultXFor  WorkspaceSettings[] @relation("WorkspaceDefaultXAccount")
 
   @@unique([platform, providerAccountId])
   @@index([platform, status])
   @@index([status])
   @@map("social_accounts")
+}
+
+model WorkspaceSettings {
+  id                               String        @id @default("singleton")
+  defaultLanguage                  String        @default("English") @map("default_language") @db.VarChar(64)
+  defaultFeel                      String        @default("Professional") @map("default_feel") @db.VarChar(120)
+  defaultStyle                     String        @default("") @map("default_style") @db.Text
+  defaultAutoPublishIntervalMinutes Int?         @map("default_auto_publish_interval_minutes")
+  defaultLinkedInAccountId         String?       @map("default_linkedin_account_id")
+  defaultXAccountId                String?       @map("default_x_account_id")
+  createdAt                        DateTime      @default(now()) @map("created_at")
+  updatedAt                        DateTime      @updatedAt @map("updated_at")
+  defaultLinkedInAccount           SocialAccount? @relation("WorkspaceDefaultLinkedInAccount", fields: [defaultLinkedInAccountId], references: [id], onDelete: SetNull)
+  defaultXAccount                  SocialAccount? @relation("WorkspaceDefaultXAccount", fields: [defaultXAccountId], references: [id], onDelete: SetNull)
+
+  @@map("workspace_settings")
 }

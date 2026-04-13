@@ -1,0 +1,142 @@
+import { XMLParser } from "fast-xml-parser";
+
+export type ParsedRssItem = {
+  sourceEntryId: string | null;
+  title: string;
+  sourceUrl: string;
+  canonicalUrl: string | null;
+  excerpt: string | null;
+  contentText: string | null;
+  authorName: string | null;
+  publishedAt: Date | null;
+};
+
+const parser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: "",
+  removeNSPrefix: true,
+  trimValues: true,
+});
+
+function ensureArray<T>(value: T | T[] | undefined): T[] {
+  if (!value) {
+    return [];
+  }
+
+  return Array.isArray(value) ? value : [value];
+}
+
+function stripHtml(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  return value
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function parseDate(value: unknown) {
+  if (typeof value !== "string" || !value.trim()) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function pickFirstString(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  return null;
+}
+
+function parseAtomEntries(feed: Record<string, unknown>) {
+  return ensureArray(feed.entry).map((entry) => {
+    const record = entry as Record<string, unknown>;
+    const links = ensureArray(record.link as Record<string, unknown> | Array<Record<string, unknown>>);
+    const alternateLink =
+      links.find((link) => typeof link?.rel !== "string" || link.rel === "alternate") ?? links[0];
+    const content = pickFirstString(
+      record.content as string,
+      (record.content as Record<string, unknown> | undefined)?.["#text"],
+      record.summary as string,
+    );
+
+    return {
+      sourceEntryId: pickFirstString(record.id, record.guid),
+      title: pickFirstString(record.title) ?? "Untitled article",
+      sourceUrl: pickFirstString(alternateLink?.href, record.id) ?? "",
+      canonicalUrl: pickFirstString(alternateLink?.href),
+      excerpt: stripHtml(pickFirstString(record.summary, record.subtitle)),
+      contentText: stripHtml(content),
+      authorName: pickFirstString(
+        (record.author as Record<string, unknown> | undefined)?.name,
+        record.author,
+      ),
+      publishedAt: parseDate(record.updated ?? record.published),
+    } satisfies ParsedRssItem;
+  });
+}
+
+function parseRssItems(channel: Record<string, unknown>) {
+  return ensureArray(channel.item).map((item) => {
+    const record = item as Record<string, unknown>;
+    const content = pickFirstString(
+      record["content:encoded"],
+      record.encoded,
+      record.description,
+      record.content,
+    );
+
+    return {
+      sourceEntryId: pickFirstString(record.guid, record.id),
+      title: pickFirstString(record.title) ?? "Untitled article",
+      sourceUrl: pickFirstString(record.link) ?? "",
+      canonicalUrl: pickFirstString(record.link),
+      excerpt: stripHtml(record.description as string),
+      contentText: stripHtml(content),
+      authorName: pickFirstString(record.creator, record.author),
+      publishedAt: parseDate(record.pubDate ?? record.published),
+    } satisfies ParsedRssItem;
+  });
+}
+
+export async function fetchAndParseFeed(feedUrl: string) {
+  const response = await fetch(feedUrl, {
+    headers: {
+      "user-agent": "REZZUM RSS Ingestion/1.0",
+      accept: "application/rss+xml, application/atom+xml, text/xml, application/xml;q=0.9, */*;q=0.8",
+    },
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(`Feed request failed with ${response.status}.`);
+  }
+
+  const payload = await response.text();
+  const parsed = parser.parse(payload) as Record<string, unknown>;
+
+  if (parsed.rss && typeof parsed.rss === "object") {
+    const channel = (parsed.rss as Record<string, unknown>).channel as Record<string, unknown>;
+
+    return parseRssItems(channel).filter((item) => item.sourceUrl);
+  }
+
+  if (parsed.feed && typeof parsed.feed === "object") {
+    return parseAtomEntries(parsed.feed as Record<string, unknown>).filter((item) => item.sourceUrl);
+  }
+
+  throw new Error("Feed payload is not a supported RSS or Atom document.");
+}

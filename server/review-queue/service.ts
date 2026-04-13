@@ -4,9 +4,14 @@ import {
   type ReviewQueueFilters,
 } from "@/lib/review-queue/validation";
 import { getGeneratedPostStatusLabel, getSocialPlatformLabel } from "@/lib/review-queue/constants";
-import { getReviewQueueMockData, type ReviewQueueRecord } from "@/server/review-queue/mock-data";
+import {
+  getGeneratedPostById,
+  listLatestGeneratedPosts,
+  listLatestSiblingPosts,
+  type GeneratedPostRecord,
+} from "@/server/posts/repository";
 
-export type ReviewQueueItem = ReviewQueueRecord;
+export type ReviewQueueItem = GeneratedPostRecord;
 
 type ReviewQueueOption = {
   value: string;
@@ -78,21 +83,30 @@ function buildFeedOptions(items: ReviewQueueItem[]): ReviewQueueOption[] {
     .map(([value, label]) => ({ value, label }));
 }
 
-function getReviewQueueRecords() {
-  return getReviewQueueMockData().sort(
-    (left, right) => right.updatedAt.getTime() - left.updatedAt.getTime(),
-  );
+function getQueueWhereInput() {
+  return {
+    status: {
+      in: [
+        GeneratedPostStatus.DRAFT,
+        GeneratedPostStatus.APPROVED,
+        GeneratedPostStatus.REJECTED,
+        GeneratedPostStatus.SCHEDULED,
+        GeneratedPostStatus.FAILED,
+        GeneratedPostStatus.PUBLISHED,
+      ],
+    },
+  };
 }
 
 export async function getReviewQueue(filters: ReviewQueueFilters) {
-  const allItems = getReviewQueueRecords();
+  const allItems = await listLatestGeneratedPosts(getQueueWhereInput());
   const items = allItems.filter((item) => matchesFilters(item, filters));
 
   return {
     filters,
     items,
     totalItems: allItems.length,
-    isDemoData: true,
+    isDemoData: false,
     filterOptions: {
       platforms: buildPlatformOptions(allItems),
       statuses: buildStatusOptions(allItems),
@@ -102,20 +116,17 @@ export async function getReviewQueue(filters: ReviewQueueFilters) {
 }
 
 export async function getReviewQueuePost(postId: string) {
-  const items = getReviewQueueRecords();
-  const post = items.find((item) => item.id === postId) ?? null;
+  const post = await getGeneratedPostById(postId);
 
   if (!post) {
     return null;
   }
 
-  const siblingPosts = items
-    .filter((item) => item.article.id === post.article.id)
-    .sort((left, right) => comparePlatforms(left.platform, right.platform));
+  const siblingPosts = await listLatestSiblingPosts(post.article.id);
 
   return {
     post,
     siblingPosts,
-    isDemoData: true,
+    isDemoData: false,
   };
 }

@@ -3,7 +3,6 @@ import type { SocialPlatform } from "@prisma/client";
 import { QueueIcon } from "@/components/icons";
 import { DraftEditorWorkspace } from "@/components/review-queue/draft-editor-workspace";
 import { getSocialPlatformLabel, SUPPORTED_REVIEW_PLATFORMS } from "@/lib/review-queue/constants";
-import { getReviewEditorActions } from "@/lib/review-queue/editor-actions";
 import type { ReviewQueueItem } from "@/server/review-queue/service";
 
 function formatDateTime(value: Date | null) {
@@ -30,9 +29,23 @@ function formatArticleStatus(status: ReviewQueueItem["article"]["status"]) {
 export function ReviewEditor({
   post,
   siblingPosts,
+  accountOptions,
+  saveAction,
+  approveAction,
+  rejectAction,
+  scheduleAction,
+  publishNowAction,
+  regenerateAction,
 }: Readonly<{
   post: ReviewQueueItem;
   siblingPosts: ReviewQueueItem[];
+  accountOptions: Array<{ value: string; label: string }>;
+  saveAction: (formData: FormData) => Promise<void>;
+  approveAction: (formData: FormData) => Promise<void>;
+  rejectAction: (formData: FormData) => Promise<void>;
+  scheduleAction: (formData: FormData) => Promise<void>;
+  publishNowAction: (formData: FormData) => Promise<void>;
+  regenerateAction: (formData: FormData) => Promise<void>;
 }>) {
   const currentDraftText = getCurrentDraftText(post);
   const hasEdits = Boolean(post.editedText && post.editedText !== post.generatedText);
@@ -49,7 +62,11 @@ export function ReviewEditor({
       active: platform === post.platform,
     };
   });
-  const actions = getReviewEditorActions();
+  const defaultScheduledFor = post.scheduledFor
+    ? new Date(post.scheduledFor.getTime() - post.scheduledFor.getTimezoneOffset() * 60_000)
+        .toISOString()
+        .slice(0, 16)
+    : "";
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(320px,0.86fr)_minmax(0,1.14fr)]">
@@ -151,7 +168,15 @@ export function ReviewEditor({
           hasEdits={hasEdits}
           originalGeneratedText={post.generatedText}
           platformTabs={platformTabs}
-          actions={actions}
+          socialAccountId={post.socialAccountId ?? ""}
+          accountOptions={accountOptions}
+          defaultScheduledFor={defaultScheduledFor}
+          saveAction={saveAction}
+          approveAction={approveAction}
+          rejectAction={rejectAction}
+          scheduleAction={scheduleAction}
+          publishNowAction={publishNowAction}
+          regenerateAction={regenerateAction}
         />
       </section>
     </div>

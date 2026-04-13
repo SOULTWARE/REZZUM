@@ -1,7 +1,7 @@
 import { GeneratedPostStatus, SocialPlatform } from "@prisma/client";
-import { getReviewQueueMockData, type ReviewQueueRecord } from "@/server/review-queue/mock-data";
+import { listLatestGeneratedPosts, type GeneratedPostRecord } from "@/server/posts/repository";
 
-export type ScheduleItem = ReviewQueueRecord;
+export type ScheduleItem = GeneratedPostRecord;
 
 function comparePlatforms(left: SocialPlatform, right: SocialPlatform) {
   const order = [SocialPlatform.LINKEDIN, SocialPlatform.X];
@@ -52,7 +52,7 @@ export async function getScheduleOverview() {
     GeneratedPostStatus.FAILED,
   ]);
 
-  const items = getReviewQueueMockData()
+  const items = (await listLatestGeneratedPosts())
     .filter((post) => supportedStatuses.has(post.status))
     .sort(compareByPublishTime);
 
@@ -71,6 +71,6 @@ export async function getScheduleOverview() {
     publishedItems,
     pendingItems,
     nextScheduledItem: scheduledItems[0] ?? null,
-    isDemoData: true,
+    isDemoData: false,
   };
 }

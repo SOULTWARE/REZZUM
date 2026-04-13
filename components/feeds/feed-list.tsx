@@ -3,6 +3,7 @@ import { FeedsIcon, ScheduleIcon, SparkIcon } from "@/components/icons";
 import type { FeedRecord } from "@/server/feeds/repository";
 import { FeedStatusBadge } from "@/components/feeds/feed-status-badge";
 import { getRefreshIntervalLabel } from "@/lib/feeds/constants";
+import { syncFeedNowAction } from "@/server/feeds/actions";
 
 function formatDateTime(value: Date | null) {
   if (!value) {
@@ -109,6 +110,14 @@ export function FeedList({ feeds }: Readonly<{ feeds: FeedRecord[] }>) {
                 >
                   Edit feed
                 </Link>
+                <form action={syncFeedNowAction.bind(null, feed.id)}>
+                  <button
+                    type="submit"
+                    className="button-primary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold"
+                  >
+                    Sync now
+                  </button>
+                </form>
               </div>
 
               <section className="mt-6">
@@ -201,6 +210,61 @@ export function FeedList({ feeds }: Readonly<{ feeds: FeedRecord[] }>) {
                     </p>
                     <p className="mt-2 text-sm leading-6 text-slate-500">
                       Shorter items stay out of the generation pipeline.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="mt-8">
+                <div className="flex items-center gap-2">
+                  <span className="h-6 w-1 rounded-full bg-[var(--primary)]" />
+                  <h3 className="font-[var(--font-display)] text-xl font-semibold text-slate-900">
+                    Publishing
+                  </h3>
+                </div>
+
+                <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                  <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                      Personalization
+                    </p>
+                    <p className="mt-3 text-lg font-semibold text-slate-900">
+                      {feed.defaultLanguage ?? "Default"} • {feed.defaultFeel ?? "Default"}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      {feed.styleNotes?.trim() || "Uses workspace style defaults."}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                      Destinations
+                    </p>
+                    <p className="mt-3 text-lg font-semibold text-slate-900">
+                      {feed.generateLinkedIn ? "LinkedIn" : null}
+                      {feed.generateLinkedIn && feed.generateX ? " + " : null}
+                      {feed.generateX ? "X" : null}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      LinkedIn: {feed.linkedinAccount?.displayName ?? "Workspace default / none"}
+                      <br />
+                      X: {feed.xAccount?.displayName ?? "Workspace default / none"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                      Delivery mode
+                    </p>
+                    <p className="mt-3 text-lg font-semibold text-slate-900">
+                      {feed.autoPublishEnabled
+                        ? `Every ${feed.autoPublishIntervalMinutes ?? feed.refreshIntervalMinutes} min`
+                        : "Manual"}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      {feed.autoPublishEnabled
+                        ? "Generated posts are auto-approved and scheduled."
+                        : "Posts stay in review until you approve or schedule them."}
                     </p>
                   </div>
                 </div>

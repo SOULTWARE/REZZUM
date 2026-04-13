@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { SocialPlatform } from "@prisma/client";
 import {
   DisconnectIcon,
@@ -5,6 +6,7 @@ import {
   XIcon,
 } from "@/components/icons";
 import { AccountStatusBadge } from "@/components/accounts/account-status-badge";
+import { disconnectAccountAction } from "@/server/accounts/actions";
 import type { SocialAccountRecord } from "@/server/accounts/repository";
 
 function PlatformIcon({
@@ -75,7 +77,7 @@ function getPrimaryActionLabel(account: SocialAccountRecord) {
     return "Finish setup";
   }
 
-  return "Settings";
+  return "Open profile";
 }
 
 export function AccountCard({
@@ -129,26 +131,31 @@ export function AccountCard({
         </div>
 
         <div className="mt-5 flex items-center gap-3">
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            className={`flex-1 rounded-lg py-2 text-xs font-semibold transition-colors disabled:opacity-70 ${
-              account.status === "PENDING"
-                ? "button-primary text-white"
-                : "bg-[var(--surface-low)] text-slate-500 hover:bg-[var(--surface-high)]"
-            }`}
-          >
-            {getPrimaryActionLabel(account)}
-          </button>
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--surface-low)] text-slate-500 transition-colors hover:bg-[rgb(159_64_61_/_0.14)] hover:text-[rgb(117_33_33)] disabled:opacity-70"
-          >
-            <DisconnectIcon className="h-4 w-4" />
-          </button>
+          {account.profileUrl ? (
+            <Link
+              href={account.profileUrl}
+              target="_blank"
+              className={`flex-1 rounded-lg py-2 text-center text-xs font-semibold transition-colors ${
+                account.status === "PENDING"
+                  ? "button-primary text-white"
+                  : "bg-[var(--surface-low)] text-slate-500 hover:bg-[var(--surface-high)]"
+              }`}
+            >
+              {getPrimaryActionLabel(account)}
+            </Link>
+          ) : (
+            <span className="flex-1 rounded-lg bg-[var(--surface-low)] py-2 text-center text-xs font-semibold text-slate-400">
+              {getPrimaryActionLabel(account)}
+            </span>
+          )}
+          <form action={disconnectAccountAction.bind(null, account.id)}>
+            <button
+              type="submit"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--surface-low)] text-slate-500 transition-colors hover:bg-[rgb(159_64_61_/_0.14)] hover:text-[rgb(117_33_33)]"
+            >
+              <DisconnectIcon className="h-4 w-4" />
+            </button>
+          </form>
         </div>
       </div>
     </article>

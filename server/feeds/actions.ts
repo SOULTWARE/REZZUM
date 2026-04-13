@@ -9,6 +9,7 @@ import {
   FeedConflictError,
   updateManagedFeed,
 } from "@/server/feeds/service";
+import { syncFeedNow } from "@/server/pipeline/service";
 
 function buildConflictState(): FeedActionState {
   return {
@@ -75,4 +76,13 @@ export async function updateFeedAction(
   revalidatePath("/feeds");
   revalidatePath(`/feeds/${feedId}/edit`);
   redirect("/feeds");
+}
+
+export async function syncFeedNowAction(feedId: string) {
+  await syncFeedNow(feedId);
+
+  revalidatePath("/feeds");
+  revalidatePath("/dashboard");
+  revalidatePath("/queue");
+  revalidatePath("/schedule");
 }
