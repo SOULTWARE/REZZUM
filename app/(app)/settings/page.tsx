@@ -149,7 +149,18 @@ export default async function SettingsPage() {
                 Due publishes: <code>/api/cron/publish</code>
               </p>
               <p>
-                Send <code>Authorization: Bearer $CRON_SECRET</code> on both requests.
+                Both cron endpoints accept <code>GET</code> and <code>POST</code>.
+              </p>
+              <p>
+                Local development uses the built-in cron worker from <code>pnpm dev</code>.
+              </p>
+              <p>
+                Linux and AWS deployments should run <code>pnpm cron:worker</code> as a separate
+                background process.
+              </p>
+              <p>
+                Send <code>Authorization: Bearer $CRON_SECRET</code> only if you use the HTTP cron
+                endpoints.
               </p>
             </div>
           </section>

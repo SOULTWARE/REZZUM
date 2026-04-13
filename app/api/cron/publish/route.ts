@@ -1,19 +1,16 @@
 import { NextResponse } from "next/server";
 import { publishDuePosts } from "@/server/publishing/service";
+import {
+  getUnauthorizedCronResponse,
+  isAuthorizedCronRequest,
+} from "@/server/cron/auth";
 
-function isAuthorized(request: Request) {
-  const secret = process.env.CRON_SECRET?.trim();
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-  if (!secret) {
-    return false;
-  }
-
-  return request.headers.get("authorization") === `Bearer ${secret}`;
-}
-
-export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+async function handleCronRequest(request: Request) {
+  if (!isAuthorizedCronRequest(request)) {
+    return getUnauthorizedCronResponse();
   }
 
   const results = await publishDuePosts();
@@ -21,5 +18,9 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     results,
+    processedAt: new Date().toISOString(),
   });
 }
+
+export const GET = handleCronRequest;
+export const POST = handleCronRequest;
