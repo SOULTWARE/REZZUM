@@ -13,11 +13,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function NewFeedPage() {
-  const [linkedinAccounts, xAccounts, workspace] = await Promise.all([
-    getConnectedAccountOptions("LINKEDIN"),
-    getConnectedAccountOptions("X"),
-    getWorkspaceSettings(),
-  ]);
+  const linkedinAccounts = await getConnectedAccountOptions("LINKEDIN");
+  const xAccounts = await getConnectedAccountOptions("X");
+  const workspace = await getWorkspaceSettings();
 
   return (
     <PageContainer>

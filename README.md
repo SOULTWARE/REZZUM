@@ -119,6 +119,10 @@ Copy `.env.example` to `.env` and fill in the values you need.
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
+| `POSTGRES_DB` | No | Database name used by the local Docker Postgres service. Default `rezzum`. |
+| `POSTGRES_USER` | No | Database user used by the local Docker Postgres service. Default `postgres`. |
+| `POSTGRES_PASSWORD` | No | Database password used by the local Docker Postgres service. Default `postgres`. |
+| `POSTGRES_PORT` | No | Local host port bound to the Docker Postgres container. Default `5432`. |
 | `DATABASE_URL` | Yes | PostgreSQL connection string for Prisma. |
 | `OPENAI_API_KEY` | Yes | Required for AI draft generation. |
 | `OPENAI_MODEL` | No | Overrides the default model. Current default is `gpt-5.4-mini`. |
@@ -157,26 +161,34 @@ pnpm install
 cp .env.example .env
 ```
 
-3. Set at minimum:
+3. Start the local database.
+
+```bash
+docker compose up -d postgres
+```
+
+4. Set at minimum:
 
 - `DATABASE_URL`
 - `OPENAI_API_KEY`
 - `NEXT_PUBLIC_APP_URL`
 - `APP_ENCRYPTION_KEY`
 
-4. Sync the database schema.
+The shipped `.env.example` already points `DATABASE_URL` at the Docker database on `localhost`.
+
+5. Sync the database schema.
 
 ```bash
 pnpm db:push
 ```
 
-5. Seed workspace defaults.
+6. Seed workspace defaults.
 
 ```bash
 pnpm db:seed
 ```
 
-6. Start development.
+7. Start development.
 
 ```bash
 pnpm dev
@@ -216,7 +228,21 @@ ALLOWED_DEV_ORIGINS=your-tunnel.example
 
 ## Database workflow
 
-This repo currently works best with schema sync for local bootstrap.
+This repo currently uses a local Docker PostgreSQL service for development bootstrap.
+
+Start or restart the database:
+
+```bash
+docker compose up -d postgres
+```
+
+Stop it:
+
+```bash
+docker compose down
+```
+
+The database data is stored in the named Docker volume `rezzum_postgres_data`.
 
 Useful commands:
 
@@ -387,4 +413,3 @@ server/               Domain services, repositories, and integrations
 - LinkedIn and X first
 - No billing, analytics, media generation, or team workflows
 - No queue system yet beyond the current polling-worker architecture
-

@@ -1,7 +1,10 @@
 import { createHash, randomBytes } from "node:crypto";
 
 function getBaseUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") || "http://localhost:3000";
+  return (
+    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ||
+    "https://heroic-solely-amoeba.ngrok-free.app"
+  );
 }
 
 export function getAbsoluteUrl(pathname: string) {

@@ -26,6 +26,21 @@ function resolveAllowedDevOrigins() {
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: resolveAllowedDevOrigins(),
+  images: {
+    qualities: [75],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**.twimg.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "**.licdn.com",
+        pathname: "/**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

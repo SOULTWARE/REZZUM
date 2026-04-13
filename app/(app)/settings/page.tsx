@@ -11,11 +11,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const [settings, linkedinAccounts, xAccounts] = await Promise.all([
-    getWorkspaceSettings(),
-    getConnectedAccountOptions("LINKEDIN"),
-    getConnectedAccountOptions("X"),
-  ]);
+  const settings = await getWorkspaceSettings();
+  const linkedinAccounts = await getConnectedAccountOptions("LINKEDIN");
+  const xAccounts = await getConnectedAccountOptions("X");
 
   return (
     <PageContainer>

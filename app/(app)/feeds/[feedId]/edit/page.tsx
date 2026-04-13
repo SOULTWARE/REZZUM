@@ -19,11 +19,9 @@ export default async function EditFeedPage({
   params: Promise<{ feedId: string }>;
 }>) {
   const { feedId } = await params;
-  const [feed, linkedinAccounts, xAccounts] = await Promise.all([
-    getManagedFeed(feedId),
-    getConnectedAccountOptions("LINKEDIN"),
-    getConnectedAccountOptions("X"),
-  ]);
+  const feed = await getManagedFeed(feedId);
+  const linkedinAccounts = await getConnectedAccountOptions("LINKEDIN");
+  const xAccounts = await getConnectedAccountOptions("X");
 
   if (!feed) {
     notFound();

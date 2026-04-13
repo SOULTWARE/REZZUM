@@ -8,10 +8,8 @@ export const socialAccountDefaultSelect = {
   displayName: true,
   handle: true,
   profileUrl: true,
-  providerAccountId: true,
   providerUsername: true,
   tokenExpiresAt: true,
-  scopes: true,
   externalUrn: true,
   metadataJson: true,
   lastValidatedAt: true,
@@ -23,6 +21,8 @@ export const socialAccountDefaultSelect = {
 
 export const socialAccountInternalSelect = {
   ...socialAccountDefaultSelect,
+  providerAccountId: true,
+  scopes: true,
   accessTokenEncrypted: true,
   refreshTokenEncrypted: true,
 } satisfies Prisma.SocialAccountSelect;

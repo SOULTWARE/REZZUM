@@ -1,5 +1,6 @@
+import Image from "next/image";
 import Link from "next/link";
-import type { SocialPlatform } from "@prisma/client";
+import type { Prisma, SocialPlatform } from "@prisma/client";
 import {
   DisconnectIcon,
   LinkedInIcon,
@@ -80,6 +81,33 @@ function getPrimaryActionLabel(account: SocialAccountRecord) {
   return "Open profile";
 }
 
+function getProfileImageUrl(account: SocialAccountRecord) {
+  if (!account.metadataJson || typeof account.metadataJson !== "object") {
+    return null;
+  }
+
+  const metadata = account.metadataJson as Prisma.JsonObject;
+  const profileImageUrl = metadata["profileImageUrl"];
+
+  if (typeof profileImageUrl === "string" && profileImageUrl.trim()) {
+    return profileImageUrl;
+  }
+
+  const member = metadata["member"];
+
+  if (!member || typeof member !== "object" || Array.isArray(member)) {
+    return null;
+  }
+
+  const memberPicture = (member as Prisma.JsonObject)["picture"];
+
+  if (typeof memberPicture === "string" && memberPicture.trim()) {
+    return memberPicture;
+  }
+
+  return null;
+}
+
 export function AccountCard({
   account,
   showPlatformLabel = false,
@@ -87,14 +115,26 @@ export function AccountCard({
   account: SocialAccountRecord;
   showPlatformLabel?: boolean;
 }>) {
+  const profileImageUrl = getProfileImageUrl(account);
+
   return (
     <article className="group rounded-xl border border-transparent bg-white p-6 shadow-sm transition-all duration-300 hover:border-[rgb(0_83_218_/_0.1)]">
       <div className="mb-6 flex items-start justify-between gap-4">
         <div className="relative">
-          <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-[var(--surface-high)] ring-4 ring-[var(--surface-low)]">
-            <span className="font-[var(--font-display)] text-xl font-bold text-slate-900">
-              {getInitials(account.displayName)}
-            </span>
+          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg bg-[var(--surface-high)] ring-4 ring-[var(--surface-low)]">
+            {profileImageUrl ? (
+              <Image
+                src={profileImageUrl}
+                alt={`${account.displayName} profile`}
+                fill
+                sizes="64px"
+                className="object-cover"
+              />
+            ) : (
+              <span className="font-[var(--font-display)] text-xl font-bold text-slate-900">
+                {getInitials(account.displayName)}
+              </span>
+            )}
           </div>
           <div
             className={`absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-md border-2 border-white ${getPlatformAccent(
@@ -122,12 +162,6 @@ export function AccountCard({
 
         <div className="mt-4 rounded-xl bg-[var(--surface-low)] p-4">
           <p className="text-sm leading-6 text-slate-500">{getAccountContext(account)}</p>
-          <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[11px] font-medium text-slate-400">
-            <span>Provider: {account.providerAccountId ?? "Not assigned"}</span>
-            <span>
-              Scopes: {account.scopes.length > 0 ? account.scopes.length : "Pending"}
-            </span>
-          </div>
         </div>
 
         <div className="mt-5 flex items-center gap-3">
