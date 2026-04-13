@@ -129,3 +129,14 @@ export async function disconnectSocialAccount(accountId: string) {
     select: socialAccountDefaultSelect,
   });
 }
+
+export async function updateSocialAccountRecord(
+  accountId: string,
+  data: Prisma.SocialAccountUncheckedUpdateInput,
+) {
+  return db.socialAccount.update({
+    where: { id: accountId },
+    data,
+    select: socialAccountInternalSelect,
+  });
+}

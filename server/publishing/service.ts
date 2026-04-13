@@ -91,7 +91,7 @@ async function publishPost(postId: string) {
             text: postText,
           })
         : await publishToX({
-            accessTokenEncrypted: account.accessTokenEncrypted,
+            account,
             text: postText,
           });
 
