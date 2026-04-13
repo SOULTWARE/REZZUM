@@ -50,29 +50,29 @@ export function LandingHeader({ primaryNavLinks }: Readonly<LandingHeaderProps>)
           </div>
         </Link>
 
-        <nav className="hidden items-center gap-7 md:flex" aria-label="Primary">
-          {primaryNavLinks.map((link) =>
-            link.href.startsWith("#") ? (
-              <a
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-slate-600 hover:text-slate-900"
-              >
-                {link.label}
-              </a>
-            ) : (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="text-sm font-medium text-slate-600 hover:text-slate-900"
-              >
-                {link.label}
-              </Link>
-            ),
-          )}
-        </nav>
+        <div className="ml-auto flex items-center gap-6">
+          <nav className="hidden items-center gap-7 md:flex" aria-label="Primary">
+            {primaryNavLinks.map((link) =>
+              link.href.startsWith("#") ? (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm font-medium text-slate-600 hover:text-slate-900"
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-sm font-medium text-slate-600 hover:text-slate-900"
+                >
+                  {link.label}
+                </Link>
+              ),
+            )}
+          </nav>
 
-        <div className="flex items-center gap-3">
           <Link
             href="/dashboard"
             className="hidden text-sm font-medium text-slate-600 hover:text-slate-900 sm:inline-flex"

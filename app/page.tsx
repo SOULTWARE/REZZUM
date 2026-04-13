@@ -112,7 +112,6 @@ const footerLinks = [
 
 const primaryNavLinks = [
   { href: "#pricing", label: "Pricing" },
-  { href: "/dashboard", label: "Get started" },
   { href: "#about", label: "About" },
 ];
 
