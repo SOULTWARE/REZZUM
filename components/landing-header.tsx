@@ -80,7 +80,7 @@ export function LandingHeader({ primaryNavLinks }: Readonly<LandingHeaderProps>)
             Open app
           </Link>
           <Link
-            href="/dashboard"
+            href="/signup"
             className="button-primary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold"
           >
             Get started
