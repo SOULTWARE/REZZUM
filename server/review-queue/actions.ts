@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { GeneratedPostStatus } from "@prisma/client";
+import type { ActionResult } from "@/lib/actions";
 import { generateSocialPost } from "@/server/generation/service";
 import { publishPostNow } from "@/server/publishing/service";
 import {
@@ -45,97 +45,207 @@ function revalidateQueuePaths(postId: string) {
   revalidatePath("/schedule");
 }
 
-export async function saveDraftAction(postId: string, formData: FormData) {
-  await updateGeneratedPost(postId, {
-    editedText: getDraftText(formData) || null,
-    socialAccountId: getSocialAccountId(formData),
-    reviewedAt: new Date(),
-  });
+function buildActionError(message: string, error: unknown) {
+  return {
+    status: "error",
+    message,
+    detail: error instanceof Error ? error.message : "Unknown action failure.",
+    refresh: false,
+  } satisfies ActionResult;
+}
 
-  revalidateQueuePaths(postId);
+export async function saveDraftAction(postId: string, formData: FormData) {
+  try {
+    await updateGeneratedPost(postId, {
+      editedText: getDraftText(formData) || null,
+      socialAccountId: getSocialAccountId(formData),
+      reviewedAt: new Date(),
+    });
+
+    revalidateQueuePaths(postId);
+
+    return {
+      status: "success",
+      message: "Draft saved.",
+      detail: "Your edits are stored and ready for review.",
+      refresh: true,
+    } satisfies ActionResult;
+  } catch (error) {
+    revalidateQueuePaths(postId);
+
+    return buildActionError("Draft save failed.", error);
+  }
 }
 
 export async function approveDraftAction(postId: string, formData: FormData) {
-  await updateGeneratedPost(postId, {
-    editedText: getDraftText(formData) || null,
-    socialAccountId: getSocialAccountId(formData),
-    status: GeneratedPostStatus.APPROVED,
-    reviewedAt: new Date(),
-    approvedAt: new Date(),
-    rejectedAt: null,
-  });
+  try {
+    await updateGeneratedPost(postId, {
+      editedText: getDraftText(formData) || null,
+      socialAccountId: getSocialAccountId(formData),
+      status: GeneratedPostStatus.APPROVED,
+      reviewedAt: new Date(),
+      approvedAt: new Date(),
+      rejectedAt: null,
+    });
 
-  revalidateQueuePaths(postId);
+    revalidateQueuePaths(postId);
+
+    return {
+      status: "success",
+      message: "Draft approved.",
+      detail: "The post is now ready to schedule or publish.",
+      refresh: true,
+    } satisfies ActionResult;
+  } catch (error) {
+    revalidateQueuePaths(postId);
+
+    return buildActionError("Draft approval failed.", error);
+  }
 }
 
 export async function rejectDraftAction(postId: string, formData: FormData) {
-  await updateGeneratedPost(postId, {
-    editedText: getDraftText(formData) || null,
-    socialAccountId: getSocialAccountId(formData),
-    status: GeneratedPostStatus.REJECTED,
-    reviewedAt: new Date(),
-    rejectedAt: new Date(),
-  });
+  try {
+    await updateGeneratedPost(postId, {
+      editedText: getDraftText(formData) || null,
+      socialAccountId: getSocialAccountId(formData),
+      status: GeneratedPostStatus.REJECTED,
+      reviewedAt: new Date(),
+      rejectedAt: new Date(),
+    });
 
-  revalidateQueuePaths(postId);
+    revalidateQueuePaths(postId);
+
+    return {
+      status: "success",
+      message: "Draft rejected.",
+      detail: "The current version was marked as rejected.",
+      refresh: true,
+    } satisfies ActionResult;
+  } catch (error) {
+    revalidateQueuePaths(postId);
+
+    return buildActionError("Draft rejection failed.", error);
+  }
 }
 
 export async function scheduleDraftAction(postId: string, formData: FormData) {
-  const scheduledFor = getScheduledFor(formData);
+  try {
+    const scheduledFor = getScheduledFor(formData);
 
-  if (!scheduledFor) {
-    throw new Error("Select a schedule time before scheduling.");
+    if (!scheduledFor) {
+      return {
+        status: "error",
+        message: "Schedule time required.",
+        detail: "Select a schedule time before scheduling this draft.",
+        refresh: false,
+      } satisfies ActionResult;
+    }
+
+    await updateGeneratedPost(postId, {
+      editedText: getDraftText(formData) || null,
+      socialAccountId: getSocialAccountId(formData),
+      status: GeneratedPostStatus.SCHEDULED,
+      reviewedAt: new Date(),
+      approvedAt: new Date(),
+      scheduledFor,
+    });
+
+    revalidateQueuePaths(postId);
+
+    return {
+      status: "success",
+      message: "Draft scheduled.",
+      detail: `Scheduled for ${scheduledFor.toLocaleString("en", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })}.`,
+      refresh: true,
+    } satisfies ActionResult;
+  } catch (error) {
+    revalidateQueuePaths(postId);
+
+    return buildActionError("Draft scheduling failed.", error);
   }
-
-  await updateGeneratedPost(postId, {
-    editedText: getDraftText(formData) || null,
-    socialAccountId: getSocialAccountId(formData),
-    status: GeneratedPostStatus.SCHEDULED,
-    reviewedAt: new Date(),
-    approvedAt: new Date(),
-    scheduledFor,
-  });
-
-  revalidateQueuePaths(postId);
 }
 
 export async function publishDraftNowAction(postId: string, formData: FormData) {
-  await updateGeneratedPost(postId, {
-    editedText: getDraftText(formData) || null,
-    socialAccountId: getSocialAccountId(formData),
-    reviewedAt: new Date(),
-  });
+  try {
+    await updateGeneratedPost(postId, {
+      editedText: getDraftText(formData) || null,
+      socialAccountId: getSocialAccountId(formData),
+      reviewedAt: new Date(),
+    });
 
-  await publishPostNow(postId);
-  revalidateQueuePaths(postId);
+    const publishedPost = await publishPostNow(postId);
+    revalidateQueuePaths(postId);
+
+    if (publishedPost.status === GeneratedPostStatus.FAILED) {
+      return {
+        status: "error",
+        message: "Publish failed.",
+        detail: publishedPost.failureReason ?? "The provider rejected the publish request.",
+        refresh: true,
+      } satisfies ActionResult;
+    }
+
+    return {
+      status: "success",
+      message: "Draft published.",
+      detail: "The post was sent to the connected social account.",
+      refresh: true,
+    } satisfies ActionResult;
+  } catch (error) {
+    revalidateQueuePaths(postId);
+
+    return buildActionError("Publish action failed.", error);
+  }
 }
 
 export async function regenerateDraftAction(postId: string, formData: FormData) {
-  const post = await getGeneratedPostById(postId);
+  try {
+    const post = await getGeneratedPostById(postId);
 
-  if (!post) {
-    throw new Error("Post not found.");
+    if (!post) {
+      return {
+        status: "error",
+        message: "Draft not found.",
+        detail: "The selected post no longer exists.",
+        refresh: false,
+      } satisfies ActionResult;
+    }
+
+    const workspace = await getWorkspaceSettings();
+    const draft = await generateSocialPost({
+      article: post.article,
+      feed: post.article.feed,
+      workspace,
+      platform: post.platform,
+    });
+    const regenerated = await createRegeneratedPostVersion({
+      previousPostId: post.id,
+      articleId: post.articleId,
+      socialAccountId: getSocialAccountId(formData) ?? post.socialAccountId,
+      platform: post.platform,
+      tone: draft.tone,
+      promptVersion: draft.promptVersion,
+      generationModel: draft.generationModel,
+      generatedText: draft.generatedText,
+      versionNumber: post.versionNumber + 1,
+    });
+
+    revalidateQueuePaths(postId);
+    revalidateQueuePaths(regenerated.id);
+
+    return {
+      status: "success",
+      message: "Draft regenerated.",
+      detail: "A new version is ready for review.",
+      redirectTo: `/queue/${regenerated.id}`,
+      refresh: false,
+    } satisfies ActionResult;
+  } catch (error) {
+    revalidateQueuePaths(postId);
+
+    return buildActionError("Draft regeneration failed.", error);
   }
-
-  const workspace = await getWorkspaceSettings();
-  const draft = await generateSocialPost({
-    article: post.article,
-    feed: post.article.feed,
-    workspace,
-    platform: post.platform,
-  });
-  const regenerated = await createRegeneratedPostVersion({
-    previousPostId: post.id,
-    articleId: post.articleId,
-    socialAccountId: getSocialAccountId(formData) ?? post.socialAccountId,
-    platform: post.platform,
-    tone: draft.tone,
-    promptVersion: draft.promptVersion,
-    generationModel: draft.generationModel,
-    generatedText: draft.generatedText,
-    versionNumber: post.versionNumber + 1,
-  });
-
-  revalidateQueuePaths(postId);
-  redirect(`/queue/${regenerated.id}`);
 }

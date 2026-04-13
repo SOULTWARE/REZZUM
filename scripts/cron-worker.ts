@@ -46,7 +46,8 @@ async function tick(reason: "startup" | "interval" | "once") {
       import("../server/publishing/service"),
       import("../server/pipeline/service"),
     ]);
-    const [feedResults, publishResults] = await Promise.all([syncDueFeeds(), publishDuePosts()]);
+    const feedResults = await syncDueFeeds();
+    const publishResults = await publishDuePosts();
 
     console.log(
       `[cron-worker] ${reason} tick complete ${JSON.stringify({

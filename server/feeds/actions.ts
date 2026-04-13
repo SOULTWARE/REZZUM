@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import type { ActionResult } from "@/lib/actions";
 import type { FeedActionState } from "@/lib/feeds/validation";
 import { validateFeedFormData } from "@/lib/feeds/validation";
 import {
@@ -29,6 +30,17 @@ function buildGenericErrorState(): FeedActionState {
     status: "error",
     message: "REZZUM could not save the feed right now. Try again.",
   };
+}
+
+function revalidateFeedPaths(feedId?: string) {
+  revalidatePath("/feeds");
+  revalidatePath("/dashboard");
+  revalidatePath("/queue");
+  revalidatePath("/schedule");
+
+  if (feedId) {
+    revalidatePath(`/feeds/${feedId}/edit`);
+  }
 }
 
 export async function createFeedAction(
@@ -87,33 +99,113 @@ export async function updateFeedAction(
 }
 
 export async function syncFeedNowAction(feedId: string) {
-  await syncFeedNow(feedId);
+  try {
+    const result = await syncFeedNow(feedId);
 
-  revalidatePath("/feeds");
-  revalidatePath("/dashboard");
-  revalidatePath("/queue");
-  revalidatePath("/schedule");
+    if (result.articleIssues.length > 0) {
+      const firstIssue = result.articleIssues[0];
+
+      revalidateFeedPaths(feedId);
+
+      return {
+        status: "warning",
+        message: `Feed synced with ${result.articleIssues.length} article issue${
+          result.articleIssues.length === 1 ? "" : "s"
+        }.`,
+        detail: `${firstIssue.articleTitle}: ${firstIssue.message}`,
+        refresh: true,
+      } satisfies ActionResult;
+    }
+
+    revalidateFeedPaths(feedId);
+
+    return {
+      status: "success",
+      message: `Feed sync completed. ${result.generatedPostCount} draft${
+        result.generatedPostCount === 1 ? "" : "s"
+      } updated.`,
+      detail: `${result.fetchedItemCount} article${
+        result.fetchedItemCount === 1 ? "" : "s"
+      } checked during this sync.`,
+      refresh: true,
+    } satisfies ActionResult;
+  } catch (error) {
+    revalidateFeedPaths(feedId);
+
+    return {
+      status: "error",
+      message: "Feed sync failed.",
+      detail: error instanceof Error ? error.message : "Unknown feed sync failure.",
+      refresh: true,
+    } satisfies ActionResult;
+  }
 }
 
 export async function pauseFeedAction(feedId: string) {
-  await pauseManagedFeed(feedId);
+  try {
+    await pauseManagedFeed(feedId);
+    revalidateFeedPaths(feedId);
 
-  revalidatePath("/feeds");
-  revalidatePath("/dashboard");
+    return {
+      status: "success",
+      message: "Feed paused.",
+      detail: "Automatic polling has been stopped for this source.",
+      refresh: true,
+    } satisfies ActionResult;
+  } catch (error) {
+    revalidateFeedPaths(feedId);
+
+    return {
+      status: "error",
+      message: "Feed pause failed.",
+      detail: error instanceof Error ? error.message : "Unknown feed pause failure.",
+      refresh: true,
+    } satisfies ActionResult;
+  }
 }
 
 export async function activateFeedAction(feedId: string) {
-  await activateManagedFeed(feedId);
+  try {
+    await activateManagedFeed(feedId);
+    revalidateFeedPaths(feedId);
 
-  revalidatePath("/feeds");
-  revalidatePath("/dashboard");
+    return {
+      status: "success",
+      message: "Feed activated.",
+      detail: "Polling is back on and the next sync window has been queued.",
+      refresh: true,
+    } satisfies ActionResult;
+  } catch (error) {
+    revalidateFeedPaths(feedId);
+
+    return {
+      status: "error",
+      message: "Feed activation failed.",
+      detail: error instanceof Error ? error.message : "Unknown feed activation failure.",
+      refresh: true,
+    } satisfies ActionResult;
+  }
 }
 
 export async function deleteFeedAction(feedId: string) {
-  await deleteManagedFeed(feedId);
+  try {
+    await deleteManagedFeed(feedId);
+    revalidateFeedPaths();
 
-  revalidatePath("/feeds");
-  revalidatePath("/dashboard");
-  revalidatePath("/queue");
-  revalidatePath("/schedule");
+    return {
+      status: "success",
+      message: "Feed deleted.",
+      detail: "The feed and its related workflow records were removed.",
+      refresh: true,
+    } satisfies ActionResult;
+  } catch (error) {
+    revalidateFeedPaths(feedId);
+
+    return {
+      status: "error",
+      message: "Feed deletion failed.",
+      detail: error instanceof Error ? error.message : "Unknown feed deletion failure.",
+      refresh: true,
+    } satisfies ActionResult;
+  }
 }

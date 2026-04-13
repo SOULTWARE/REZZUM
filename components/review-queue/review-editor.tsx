@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { SocialPlatform } from "@prisma/client";
 import { QueueIcon } from "@/components/icons";
 import { DraftEditorWorkspace } from "@/components/review-queue/draft-editor-workspace";
+import type { ActionResult } from "@/lib/actions";
 import { getSocialPlatformLabel, SUPPORTED_REVIEW_PLATFORMS } from "@/lib/review-queue/constants";
 import type { ReviewQueueItem } from "@/server/review-queue/service";
 
@@ -40,12 +41,12 @@ export function ReviewEditor({
   post: ReviewQueueItem;
   siblingPosts: ReviewQueueItem[];
   accountOptions: Array<{ value: string; label: string }>;
-  saveAction: (formData: FormData) => Promise<void>;
-  approveAction: (formData: FormData) => Promise<void>;
-  rejectAction: (formData: FormData) => Promise<void>;
-  scheduleAction: (formData: FormData) => Promise<void>;
-  publishNowAction: (formData: FormData) => Promise<void>;
-  regenerateAction: (formData: FormData) => Promise<void>;
+  saveAction: (formData: FormData) => Promise<ActionResult>;
+  approveAction: (formData: FormData) => Promise<ActionResult>;
+  rejectAction: (formData: FormData) => Promise<ActionResult>;
+  scheduleAction: (formData: FormData) => Promise<ActionResult>;
+  publishNowAction: (formData: FormData) => Promise<ActionResult>;
+  regenerateAction: (formData: FormData) => Promise<ActionResult>;
 }>) {
   const currentDraftText = getCurrentDraftText(post);
   const hasEdits = Boolean(post.editedText && post.editedText !== post.generatedText);

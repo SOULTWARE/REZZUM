@@ -1,9 +1,17 @@
-import { ArticleStatus, FeedStatus, GeneratedPostStatus, SocialPlatform } from "@prisma/client";
-import type { Article, Prisma } from "@prisma/client";
+import { ArticleStatus, FeedStatus, GeneratedPostStatus, Prisma, SocialPlatform } from "@prisma/client";
+import type { Article } from "@prisma/client";
 import { db } from "@/server/db/client";
-import { generateSocialPost, resolveFeedPersonalization } from "@/server/generation/service";
+import {
+  generateSocialPost,
+  GenerationError,
+  resolveFeedPersonalization,
+} from "@/server/generation/service";
 import { upsertInitialGeneratedPost, updateGeneratedPost, getLatestScheduledOrPublishedAt } from "@/server/posts/repository";
-import { fetchAndParseFeed, type ParsedRssItem } from "@/server/rss/service";
+import {
+  fetchAndParseFeed,
+  FeedFetchError,
+  type ParsedRssItem,
+} from "@/server/rss/service";
 import { sha256 } from "@/server/security/crypto";
 import { getWorkspaceSettings } from "@/server/settings/service";
 
@@ -29,6 +37,19 @@ type FeedForSync = {
 };
 
 type ArticleForEvaluation = Pick<Article, "title" | "excerpt" | "contentText">;
+
+type FeedSyncArticleIssue = {
+  articleTitle: string;
+  message: string;
+};
+
+type FeedSyncResult = {
+  feedId: string;
+  fetchedItemCount: number;
+  generatedArticleCount: number;
+  generatedPostCount: number;
+  articleIssues: FeedSyncArticleIssue[];
+};
 
 function normalizeUrl(value: string | null) {
   if (!value) {
@@ -134,6 +155,77 @@ function buildContentHash(item: ParsedRssItem) {
   return normalizedContent ? sha256(normalizedContent) : null;
 }
 
+function buildArticleDedupeWhere(params: {
+  feedId: string;
+  sourceUrl: string;
+  canonicalUrl: string | null;
+  contentHash: string | null;
+}) {
+  const dedupeWhere: Prisma.ArticleWhereInput[] = [
+    {
+      feedId: params.feedId,
+      sourceUrl: params.sourceUrl,
+    },
+  ];
+
+  if (params.canonicalUrl) {
+    dedupeWhere.push({ canonicalUrl: params.canonicalUrl });
+  }
+
+  if (params.contentHash) {
+    dedupeWhere.push({ contentHash: params.contentHash });
+  }
+
+  return dedupeWhere;
+}
+
+async function findExistingArticleByDedupe(dedupeWhere: Prisma.ArticleWhereInput[]) {
+  return db.article.findFirst({
+    where: {
+      OR: dedupeWhere,
+    },
+  });
+}
+
+async function reconcileExistingArticle(params: {
+  existing: Article;
+  item: ParsedRssItem;
+  feed: FeedForSync;
+}) {
+  const evaluation = evaluateContentAgainstFeed(params.existing, {
+    filter: params.feed.filter,
+  });
+  const nextTitle =
+    params.existing.title === "Untitled article" && params.item.title !== "Untitled article"
+      ? params.item.title
+      : params.existing.title;
+  const nextStatus =
+    params.existing.status === ArticleStatus.PROCESSED
+      ? params.existing.status
+      : evaluation.status;
+  const nextFilteredOutReason =
+    params.existing.status === ArticleStatus.PROCESSED
+      ? params.existing.filteredOutReason
+      : evaluation.filteredOutReason;
+
+  if (
+    nextTitle !== params.existing.title ||
+    nextStatus !== params.existing.status ||
+    nextFilteredOutReason !== params.existing.filteredOutReason
+  ) {
+    return db.article.update({
+      where: { id: params.existing.id },
+      data: {
+        title: nextTitle,
+        status: nextStatus,
+        filteredOutReason: nextFilteredOutReason,
+      },
+    });
+  }
+
+  return params.existing;
+}
+
 async function createOrReuseArticle(feed: FeedForSync | null, item: ParsedRssItem) {
   if (!feed) {
     return null;
@@ -141,79 +233,61 @@ async function createOrReuseArticle(feed: FeedForSync | null, item: ParsedRssIte
 
   const canonicalUrl = normalizeUrl(item.canonicalUrl ?? item.sourceUrl);
   const contentHash = buildContentHash(item);
-
-  const dedupeWhere: Prisma.ArticleWhereInput[] = [
-    {
-      feedId: feed.id,
-      sourceUrl: item.sourceUrl,
-    },
-  ];
-
-  if (canonicalUrl) {
-    dedupeWhere.push({ canonicalUrl });
-  }
-
-  if (contentHash) {
-    dedupeWhere.push({ contentHash });
-  }
-
-  const existing = await db.article.findFirst({
-    where: {
-      OR: dedupeWhere,
-    },
+  const dedupeWhere = buildArticleDedupeWhere({
+    feedId: feed.id,
+    sourceUrl: item.sourceUrl,
+    canonicalUrl,
+    contentHash,
   });
+  const existing = await findExistingArticleByDedupe(dedupeWhere);
 
   if (existing) {
-    const evaluation = evaluateContentAgainstFeed(existing, {
-      filter: feed.filter,
+    return reconcileExistingArticle({
+      existing,
+      item,
+      feed,
     });
-    const nextTitle =
-      existing.title === "Untitled article" && item.title !== "Untitled article"
-        ? item.title
-        : existing.title;
-    const nextStatus =
-      existing.status === ArticleStatus.PROCESSED ? existing.status : evaluation.status;
-    const nextFilteredOutReason =
-      existing.status === ArticleStatus.PROCESSED ? existing.filteredOutReason : evaluation.filteredOutReason;
-
-    if (
-      nextTitle !== existing.title ||
-      nextStatus !== existing.status ||
-      nextFilteredOutReason !== existing.filteredOutReason
-    ) {
-      return db.article.update({
-        where: { id: existing.id },
-        data: {
-          title: nextTitle,
-          status: nextStatus,
-          filteredOutReason: nextFilteredOutReason,
-        },
-      });
-    }
-
-    return existing;
   }
 
   const evaluation = evaluateArticleAgainstFeed(item, {
     filter: feed.filter,
   });
 
-  return db.article.create({
-    data: {
-      feedId: feed.id,
-      sourceEntryId: item.sourceEntryId,
-      title: item.title,
-      sourceUrl: item.sourceUrl,
-      canonicalUrl,
-      contentHash,
-      excerpt: item.excerpt,
-      contentText: item.contentText,
-      authorName: item.authorName,
-      publishedAt: item.publishedAt,
-      status: evaluation.status,
-      filteredOutReason: evaluation.filteredOutReason,
-    },
-  });
+  try {
+    return await db.article.create({
+      data: {
+        feedId: feed.id,
+        sourceEntryId: item.sourceEntryId,
+        title: item.title,
+        sourceUrl: item.sourceUrl,
+        canonicalUrl,
+        contentHash,
+        excerpt: item.excerpt,
+        contentText: item.contentText,
+        authorName: item.authorName,
+        publishedAt: item.publishedAt,
+        status: evaluation.status,
+        filteredOutReason: evaluation.filteredOutReason,
+      },
+    });
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const racedExisting = await findExistingArticleByDedupe(dedupeWhere);
+
+      if (racedExisting) {
+        return reconcileExistingArticle({
+          existing: racedExisting,
+          item,
+          feed,
+        });
+      }
+    }
+
+    throw error;
+  }
 }
 
 async function resolveTargetAccountId(params: {
@@ -255,6 +329,45 @@ async function maybeAutoSchedulePost(params: {
     approvedAt: new Date(),
     reviewedAt: new Date(),
   });
+}
+
+function formatArticleProcessingError(error: unknown) {
+  if (error instanceof GenerationError) {
+    return `Draft generation failed: ${error.message}`;
+  }
+
+  if (error instanceof FeedFetchError) {
+    return error.message;
+  }
+
+  if (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002"
+  ) {
+    return "Article ingestion conflicted with an existing record and will be retried automatically.";
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return "Unknown article processing failure.";
+}
+
+function buildFeedSyncFailureMessage(error: unknown) {
+  if (error instanceof FeedFetchError) {
+    return error.message;
+  }
+
+  if (error instanceof GenerationError) {
+    return `Feed sync reached OpenAI generation and failed: ${error.message}`;
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return `Feed sync failed: ${error.message}`;
+  }
+
+  return "Feed sync failed for an unknown reason.";
 }
 
 export async function generatePostsForArticle(articleId: string) {
@@ -330,7 +443,7 @@ export async function generatePostsForArticle(articleId: string) {
   return createdPosts;
 }
 
-async function ingestSingleFeed(feedId: string) {
+async function ingestSingleFeed(feedId: string): Promise<FeedSyncResult> {
   const feed = await db.rssFeed.findUnique({
     where: { id: feedId },
     include: {
@@ -356,12 +469,31 @@ async function ingestSingleFeed(feedId: string) {
 
   try {
     const items = await fetchAndParseFeed(feed.rssUrl);
+    const result: FeedSyncResult = {
+      feedId: feed.id,
+      fetchedItemCount: items.length,
+      generatedArticleCount: 0,
+      generatedPostCount: 0,
+      articleIssues: [],
+    };
 
     for (const item of items) {
-      const article = await createOrReuseArticle(feed, item);
+      try {
+        const article = await createOrReuseArticle(feed, item);
 
-      if (article?.status === ArticleStatus.READY) {
-        await generatePostsForArticle(article.id);
+        if (article?.status === ArticleStatus.READY) {
+          const posts = await generatePostsForArticle(article.id);
+
+          if (posts.length > 0) {
+            result.generatedArticleCount += 1;
+            result.generatedPostCount += posts.length;
+          }
+        }
+      } catch (error) {
+        result.articleIssues.push({
+          articleTitle: item.title,
+          message: formatArticleProcessingError(error),
+        });
       }
     }
 
@@ -374,8 +506,10 @@ async function ingestSingleFeed(feedId: string) {
         syncError: null,
       },
     });
+
+    return result;
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown feed sync failure.";
+    const message = buildFeedSyncFailureMessage(error);
 
     await db.rssFeed.update({
       where: { id: feed.id },
@@ -391,7 +525,7 @@ async function ingestSingleFeed(feedId: string) {
 }
 
 export async function syncFeedNow(feedId: string) {
-  await ingestSingleFeed(feedId);
+  return ingestSingleFeed(feedId);
 }
 
 export async function reevaluateExistingArticlesForFeed(feedId: string) {
@@ -477,13 +611,20 @@ export async function syncDueFeeds() {
 
   for (const feed of feeds) {
     try {
-      await ingestSingleFeed(feed.id);
-      results.push({ feedId: feed.id, status: "synced" as const });
+      const result = await ingestSingleFeed(feed.id);
+
+      results.push({
+        feedId: feed.id,
+        status: result.articleIssues.length > 0 ? ("partial" as const) : ("synced" as const),
+        fetchedItemCount: result.fetchedItemCount,
+        generatedPostCount: result.generatedPostCount,
+        articleIssueCount: result.articleIssues.length,
+      });
     } catch (error) {
       results.push({
         feedId: feed.id,
         status: "failed" as const,
-        error: error instanceof Error ? error.message : "Unknown failure.",
+        error: buildFeedSyncFailureMessage(error),
       });
     }
   }

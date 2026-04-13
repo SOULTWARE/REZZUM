@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState, useTransition } from "react";
 import type { GeneratedPostStatus, GenerationTone, SocialPlatform } from "@prisma/client";
 import {
   ApproveIcon,
@@ -13,6 +14,8 @@ import {
   SaveIcon,
   XIcon,
 } from "@/components/icons";
+import type { ActionResult } from "@/lib/actions";
+import { useToast } from "@/components/toast-provider";
 import { PostStatusBadge } from "@/components/review-queue/post-status-badge";
 import { getGenerationToneLabel, getSocialPlatformCharacterLimit } from "@/lib/review-queue/constants";
 
@@ -38,12 +41,12 @@ type DraftEditorWorkspaceProps = {
   socialAccountId: string;
   accountOptions: Array<{ value: string; label: string }>;
   defaultScheduledFor: string;
-  saveAction: (formData: FormData) => Promise<void>;
-  approveAction: (formData: FormData) => Promise<void>;
-  rejectAction: (formData: FormData) => Promise<void>;
-  scheduleAction: (formData: FormData) => Promise<void>;
-  publishNowAction: (formData: FormData) => Promise<void>;
-  regenerateAction: (formData: FormData) => Promise<void>;
+  saveAction: (formData: FormData) => Promise<ActionResult>;
+  approveAction: (formData: FormData) => Promise<ActionResult>;
+  rejectAction: (formData: FormData) => Promise<ActionResult>;
+  scheduleAction: (formData: FormData) => Promise<ActionResult>;
+  publishNowAction: (formData: FormData) => Promise<ActionResult>;
+  regenerateAction: (formData: FormData) => Promise<ActionResult>;
 };
 
 function PlatformIcon({
@@ -63,19 +66,22 @@ function PlatformIcon({
 function ActionButton({
   label,
   icon,
-  formAction,
+  onClick,
   className,
+  disabled,
 }: Readonly<{
   label: string;
   icon: React.ReactNode;
-  formAction: (formData: FormData) => Promise<void>;
+  onClick: () => void;
   className: string;
+  disabled?: boolean;
 }>) {
   return (
     <button
-      type="submit"
-      formAction={formAction}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold ${className}`}
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
     >
       {icon}
       {label}
@@ -105,15 +111,56 @@ export function DraftEditorWorkspace({
   publishNowAction,
   regenerateAction,
 }: Readonly<DraftEditorWorkspaceProps>) {
+  const router = useRouter();
+  const { pushToast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
   const [value, setValue] = useState(draftText);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const characterLimit = getSocialPlatformCharacterLimit(platform);
   const isOverLimit = value.length > characterLimit;
   const destinationLabel = useMemo(() => {
     return accountOptions.find((option) => option.value === socialAccountId)?.label ?? "Unassigned";
   }, [accountOptions, socialAccountId]);
 
+  function runAction(
+    actionName: string,
+    action: (formData: FormData) => Promise<ActionResult>,
+  ) {
+    if (!formRef.current) {
+      return;
+    }
+
+    setPendingAction(actionName);
+
+    startTransition(async () => {
+      try {
+        const result = await action(new FormData(formRef.current!));
+
+        pushToast(result);
+
+        if (result.redirectTo) {
+          router.push(result.redirectTo);
+          return;
+        }
+
+        if (result.refresh) {
+          router.refresh();
+        }
+      } catch (error) {
+        pushToast({
+          status: "error",
+          message: "Action failed.",
+          detail: error instanceof Error ? error.message : "Unknown action failure.",
+        });
+      }
+
+      setPendingAction(null);
+    });
+  }
+
   return (
-    <form className="surface-card rounded-xl p-5 sm:p-6">
+    <form ref={formRef} className="surface-card rounded-xl p-5 sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
@@ -267,14 +314,16 @@ export function DraftEditorWorkspace({
           <ActionButton
             label="Regenerate"
             icon={<RefreshIcon className="h-4 w-4" />}
-            formAction={regenerateAction}
+            onClick={() => runAction("regenerate", regenerateAction)}
             className="bg-[var(--surface-high)] text-[var(--foreground)]"
+            disabled={isPending}
           />
           <ActionButton
             label="Save Draft"
             icon={<SaveIcon className="h-4 w-4" />}
-            formAction={saveAction}
+            onClick={() => runAction("save", saveAction)}
             className="bg-transparent text-[var(--muted)]"
+            disabled={isPending}
           />
         </div>
       </div>
@@ -294,26 +343,30 @@ export function DraftEditorWorkspace({
         <ActionButton
           label="Reject"
           icon={<RejectIcon className="h-4 w-4" />}
-          formAction={rejectAction}
+          onClick={() => runAction("reject", rejectAction)}
           className="bg-[rgb(159_64_61_/_0.12)] text-[rgb(117_33_33)]"
+          disabled={isPending}
         />
         <ActionButton
           label="Approve"
           icon={<ApproveIcon className="h-4 w-4" />}
-          formAction={approveAction}
+          onClick={() => runAction("approve", approveAction)}
           className="bg-[var(--primary-soft)] text-[var(--primary-strong)]"
+          disabled={isPending}
         />
         <ActionButton
           label="Schedule"
           icon={<CalendarIcon className="h-4 w-4" />}
-          formAction={scheduleAction}
+          onClick={() => runAction("schedule", scheduleAction)}
           className="bg-[var(--surface-high)] text-[var(--foreground)]"
+          disabled={isPending}
         />
         <ActionButton
-          label="Publish Now"
+          label={pendingAction === "publish" ? "Publishing..." : "Publish Now"}
           icon={<PublishIcon className="h-4 w-4" />}
-          formAction={publishNowAction}
+          onClick={() => runAction("publish", publishNowAction)}
           className="button-primary text-white"
+          disabled={isPending}
         />
       </div>
     </form>

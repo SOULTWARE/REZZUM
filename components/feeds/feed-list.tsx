@@ -1,5 +1,11 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { FeedsIcon, ScheduleIcon, SparkIcon } from "@/components/icons";
+import { useToast } from "@/components/toast-provider";
+import type { ActionResult } from "@/lib/actions";
 import type { FeedRecord } from "@/server/feeds/repository";
 import { FeedStatusBadge } from "@/components/feeds/feed-status-badge";
 import { getRefreshIntervalLabel } from "@/lib/feeds/constants";
@@ -80,10 +86,40 @@ function KeywordGroup({
 }
 
 export function FeedList({ feeds }: Readonly<{ feeds: FeedRecord[] }>) {
+  const router = useRouter();
+  const { pushToast } = useToast();
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function runFeedAction(actionId: string, action: () => Promise<ActionResult>) {
+    setPendingActionId(actionId);
+
+    startTransition(async () => {
+      try {
+        const result = await action();
+
+        pushToast(result);
+
+        if (result.refresh) {
+          router.refresh();
+        }
+      } catch (error) {
+        pushToast({
+          status: "error",
+          message: "Action failed.",
+          detail: error instanceof Error ? error.message : "Unknown action failure.",
+        });
+      }
+
+      setPendingActionId(null);
+    });
+  }
+
   return (
     <div className="grid gap-5">
       {feeds.map((feed) => {
         const keywordSummary = formatKeywordSummary(feed);
+        const isBusy = isPending && pendingActionId?.startsWith(feed.id);
 
         return (
           <article
@@ -117,41 +153,48 @@ export function FeedList({ feeds }: Readonly<{ feeds: FeedRecord[] }>) {
                     Edit feed
                   </Link>
                   {feed.status === "ACTIVE" ? (
-                    <form action={pauseFeedAction.bind(null, feed.id)}>
-                      <button
-                        type="submit"
-                        className="inline-flex items-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                      >
-                        Pause
-                      </button>
-                    </form>
+                    <button
+                      type="button"
+                      disabled={isBusy}
+                      onClick={() =>
+                        runFeedAction(`${feed.id}:pause`, () => pauseFeedAction(feed.id))
+                      }
+                      className="inline-flex items-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Pause
+                    </button>
                   ) : (
-                    <form action={activateFeedAction.bind(null, feed.id)}>
-                      <button
-                        type="submit"
-                        className="inline-flex items-center rounded-lg border border-[rgb(0_83_218_/_0.14)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] transition hover:bg-[rgb(0_83_218_/_0.04)]"
-                      >
-                        Run
-                      </button>
-                    </form>
+                    <button
+                      type="button"
+                      disabled={isBusy}
+                      onClick={() =>
+                        runFeedAction(`${feed.id}:activate`, () => activateFeedAction(feed.id))
+                      }
+                      className="inline-flex items-center rounded-lg border border-[rgb(0_83_218_/_0.14)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] transition hover:bg-[rgb(0_83_218_/_0.04)] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Run
+                    </button>
                   )}
-                  <form action={syncFeedNowAction.bind(null, feed.id)}>
-                    <button
-                      type="submit"
-                      disabled={feed.status !== "ACTIVE"}
-                      className="button-primary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Sync now
-                    </button>
-                  </form>
-                  <form action={deleteFeedAction.bind(null, feed.id)}>
-                    <button
-                      type="submit"
-                      className="inline-flex items-center rounded-lg border border-[rgb(159_64_61_/_0.2)] px-4 py-2.5 text-sm font-semibold text-[rgb(117_33_33)] transition hover:bg-[rgb(159_64_61_/_0.06)]"
-                    >
-                      Delete
-                    </button>
-                  </form>
+                  <button
+                    type="button"
+                    disabled={feed.status !== "ACTIVE" || isBusy}
+                    onClick={() =>
+                      runFeedAction(`${feed.id}:sync`, () => syncFeedNowAction(feed.id))
+                    }
+                    className="button-primary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Sync now
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isBusy}
+                    onClick={() =>
+                      runFeedAction(`${feed.id}:delete`, () => deleteFeedAction(feed.id))
+                    }
+                    className="inline-flex items-center rounded-lg border border-[rgb(159_64_61_/_0.2)] px-4 py-2.5 text-sm font-semibold text-[rgb(117_33_33)] transition hover:bg-[rgb(159_64_61_/_0.06)] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
 

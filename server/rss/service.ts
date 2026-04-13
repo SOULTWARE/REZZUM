@@ -11,6 +11,13 @@ export type ParsedRssItem = {
   publishedAt: Date | null;
 };
 
+export class FeedFetchError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "FeedFetchError";
+  }
+}
+
 const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "",
@@ -131,20 +138,45 @@ function parseRssItems(channel: Record<string, unknown>) {
 }
 
 export async function fetchAndParseFeed(feedUrl: string) {
-  const response = await fetch(feedUrl, {
-    headers: {
-      "user-agent": "REZZUM RSS Ingestion/1.0",
-      accept: "application/rss+xml, application/atom+xml, text/xml, application/xml;q=0.9, */*;q=0.8",
-    },
-    cache: "no-store",
-  });
+  let response: Response;
 
-  if (!response.ok) {
-    throw new Error(`Feed request failed with ${response.status}.`);
+  try {
+    response = await fetch(feedUrl, {
+      headers: {
+        "user-agent": "REZZUM RSS Ingestion/1.0",
+        accept: "application/rss+xml, application/atom+xml, text/xml, application/xml;q=0.9, */*;q=0.8",
+      },
+      cache: "no-store",
+    });
+  } catch (error) {
+    throw new FeedFetchError("RSS fetch failed. The source feed could not be reached.", {
+      cause: error,
+    });
   }
 
-  const payload = await response.text();
-  const parsed = parser.parse(payload) as Record<string, unknown>;
+  if (!response.ok) {
+    throw new FeedFetchError(`RSS fetch failed with status ${response.status}.`);
+  }
+
+  let payload: string;
+
+  try {
+    payload = await response.text();
+  } catch (error) {
+    throw new FeedFetchError("RSS fetch succeeded, but the feed body could not be read.", {
+      cause: error,
+    });
+  }
+
+  let parsed: Record<string, unknown>;
+
+  try {
+    parsed = parser.parse(payload) as Record<string, unknown>;
+  } catch (error) {
+    throw new FeedFetchError("RSS payload could not be parsed.", {
+      cause: error,
+    });
+  }
 
   if (parsed.rss && typeof parsed.rss === "object") {
     const channel = (parsed.rss as Record<string, unknown>).channel as Record<string, unknown>;
@@ -156,5 +188,5 @@ export async function fetchAndParseFeed(feedUrl: string) {
     return parseAtomEntries(parsed.feed as Record<string, unknown>).filter((item) => item.sourceUrl);
   }
 
-  throw new Error("Feed payload is not a supported RSS or Atom document.");
+  throw new FeedFetchError("RSS payload is not a supported RSS or Atom document.");
 }

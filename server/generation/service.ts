@@ -26,6 +26,13 @@ type OpenAIResponsePayload = {
   }>;
 };
 
+export class GenerationError extends Error {
+  constructor(message: string, options?: { cause?: unknown }) {
+    super(message, options);
+    this.name = "GenerationError";
+  }
+}
+
 function extractGeneratedText(payload: OpenAIResponsePayload) {
   if (typeof payload.output_text === "string" && payload.output_text.trim()) {
     return payload.output_text.trim();
@@ -70,12 +77,16 @@ function extractGeneratedText(payload: OpenAIResponsePayload) {
   }
 
   if (refusals.length > 0) {
-    throw new Error(`OpenAI generation refused the request: ${refusals.join(" | ")}`);
+    throw new GenerationError(
+      `OpenAI generation refused the request: ${refusals.join(" | ")}`,
+    );
   }
 
   const outputTypes = outputItems.map((item) => item.type ?? "unknown").join(", ") || "none";
 
-  throw new Error(`OpenAI generation returned no text output. Output item types: ${outputTypes}.`);
+  throw new GenerationError(
+    `OpenAI generation returned no text output. Output item types: ${outputTypes}.`,
+  );
 }
 
 function getPlatformGuidance(platform: SocialPlatform) {
@@ -156,61 +167,72 @@ export async function generateSocialPost(params: {
     workspace: params.workspace,
   });
   const platformGuidance = getPlatformGuidance(params.platform);
-  const response = await fetch("https://api.openai.com/v1/responses", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model: DEFAULT_OPENAI_MODEL,
-      input: [
-        {
-          role: "system",
-          content: [
-            {
-              type: "input_text",
-              text:
-                "You are generating production social copy for a company publishing workflow. Return only the final post text with no surrounding commentary.",
-            },
-          ],
-        },
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: [
-                `Platform: ${params.platform}`,
-                `Feed name: ${params.feed.name}`,
-                `Language: ${personalization.language}`,
-                `Feel: ${personalization.feel}`,
-                `Style notes: ${personalization.style}`,
-                platformGuidance.instruction,
-                "The post must stay faithful to the article and should not invent facts.",
-                "Include the article URL naturally in the post body if the platform allows it.",
-                `Source title: ${params.article.title}`,
-                `Source excerpt: ${params.article.excerpt ?? "None"}`,
-                `Source content: ${params.article.contentText ?? "None"}`,
-                `Source URL: ${params.article.sourceUrl}`,
-              ].join("\n"),
-            },
-          ],
-        },
-      ],
-      text: {
-        format: {
-          type: "text",
-        },
+  let response: Response;
+
+  try {
+    response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
-      max_output_tokens: 500,
-    }),
-  });
+      body: JSON.stringify({
+        model: DEFAULT_OPENAI_MODEL,
+        input: [
+          {
+            role: "system",
+            content: [
+              {
+                type: "input_text",
+                text:
+                  "You are generating production social copy for a company publishing workflow. Return only the final post text with no surrounding commentary.",
+              },
+            ],
+          },
+          {
+            role: "user",
+            content: [
+              {
+                type: "input_text",
+                text: [
+                  `Platform: ${params.platform}`,
+                  `Feed name: ${params.feed.name}`,
+                  `Language: ${personalization.language}`,
+                  `Feel: ${personalization.feel}`,
+                  `Style notes: ${personalization.style}`,
+                  platformGuidance.instruction,
+                  "The post must stay faithful to the article and should not invent facts.",
+                  "Include the article URL naturally in the post body if the platform allows it.",
+                  `Source title: ${params.article.title}`,
+                  `Source excerpt: ${params.article.excerpt ?? "None"}`,
+                  `Source content: ${params.article.contentText ?? "None"}`,
+                  `Source URL: ${params.article.sourceUrl}`,
+                ].join("\n"),
+              },
+            ],
+          },
+        ],
+        text: {
+          format: {
+            type: "text",
+          },
+        },
+        max_output_tokens: 500,
+      }),
+    });
+  } catch (error) {
+    throw new GenerationError(
+      "OpenAI generation request failed before a response was received.",
+      {
+        cause: error,
+      },
+    );
+  }
 
   if (!response.ok) {
     const errorText = await response.text();
 
-    throw new Error(`OpenAI generation failed: ${response.status} ${errorText}`);
+    throw new GenerationError(`OpenAI generation failed: ${response.status} ${errorText}`);
   }
 
   const payload = (await response.json()) as OpenAIResponsePayload;
