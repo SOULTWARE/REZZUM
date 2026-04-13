@@ -125,6 +125,15 @@ export function XIcon(props: Readonly<IconProps>) {
   );
 }
 
+export function FacebookIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <path d="M13.5 9H16V5.5H13.5C11.567 5.5 10 7.067 10 9V11H8V14.5H10V18.5H13.5V14.5H16L16.5 11H13.5V9Z" />
+      <rect x="3.5" y="3.5" width="17" height="17" rx="3" />
+    </BaseIcon>
+  );
+}
+
 export function MenuIcon(props: Readonly<IconProps>) {
   return (
     <BaseIcon {...props}>
