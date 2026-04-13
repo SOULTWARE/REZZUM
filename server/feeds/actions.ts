@@ -5,11 +5,14 @@ import { redirect } from "next/navigation";
 import type { FeedActionState } from "@/lib/feeds/validation";
 import { validateFeedFormData } from "@/lib/feeds/validation";
 import {
+  activateManagedFeed,
   createManagedFeed,
+  deleteManagedFeed,
   FeedConflictError,
+  pauseManagedFeed,
   updateManagedFeed,
 } from "@/server/feeds/service";
-import { syncFeedNow } from "@/server/pipeline/service";
+import { reevaluateExistingArticlesForFeed, syncFeedNow } from "@/server/pipeline/service";
 
 function buildConflictState(): FeedActionState {
   return {
@@ -73,13 +76,41 @@ export async function updateFeedAction(
     return buildGenericErrorState();
   }
 
+  await reevaluateExistingArticlesForFeed(feedId);
+
   revalidatePath("/feeds");
   revalidatePath(`/feeds/${feedId}/edit`);
+  revalidatePath("/dashboard");
+  revalidatePath("/queue");
+  revalidatePath("/schedule");
   redirect("/feeds");
 }
 
 export async function syncFeedNowAction(feedId: string) {
   await syncFeedNow(feedId);
+
+  revalidatePath("/feeds");
+  revalidatePath("/dashboard");
+  revalidatePath("/queue");
+  revalidatePath("/schedule");
+}
+
+export async function pauseFeedAction(feedId: string) {
+  await pauseManagedFeed(feedId);
+
+  revalidatePath("/feeds");
+  revalidatePath("/dashboard");
+}
+
+export async function activateFeedAction(feedId: string) {
+  await activateManagedFeed(feedId);
+
+  revalidatePath("/feeds");
+  revalidatePath("/dashboard");
+}
+
+export async function deleteFeedAction(feedId: string) {
+  await deleteManagedFeed(feedId);
 
   revalidatePath("/feeds");
   revalidatePath("/dashboard");

@@ -3,7 +3,12 @@ import { FeedsIcon, ScheduleIcon, SparkIcon } from "@/components/icons";
 import type { FeedRecord } from "@/server/feeds/repository";
 import { FeedStatusBadge } from "@/components/feeds/feed-status-badge";
 import { getRefreshIntervalLabel } from "@/lib/feeds/constants";
-import { syncFeedNowAction } from "@/server/feeds/actions";
+import {
+  activateFeedAction,
+  deleteFeedAction,
+  pauseFeedAction,
+  syncFeedNowAction,
+} from "@/server/feeds/actions";
 
 function formatDateTime(value: Date | null) {
   if (!value) {
@@ -104,20 +109,50 @@ export function FeedList({ feeds }: Readonly<{ feeds: FeedRecord[] }>) {
                   </div>
                 </div>
 
-                <Link
-                  href={`/feeds/${feed.id}/edit`}
-                  className="button-secondary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold"
-                >
-                  Edit feed
-                </Link>
-                <form action={syncFeedNowAction.bind(null, feed.id)}>
-                  <button
-                    type="submit"
-                    className="button-primary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold"
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
+                    href={`/feeds/${feed.id}/edit`}
+                    className="button-secondary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold"
                   >
-                    Sync now
-                  </button>
-                </form>
+                    Edit feed
+                  </Link>
+                  {feed.status === "ACTIVE" ? (
+                    <form action={pauseFeedAction.bind(null, feed.id)}>
+                      <button
+                        type="submit"
+                        className="inline-flex items-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Pause
+                      </button>
+                    </form>
+                  ) : (
+                    <form action={activateFeedAction.bind(null, feed.id)}>
+                      <button
+                        type="submit"
+                        className="inline-flex items-center rounded-lg border border-[rgb(0_83_218_/_0.14)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] transition hover:bg-[rgb(0_83_218_/_0.04)]"
+                      >
+                        Run
+                      </button>
+                    </form>
+                  )}
+                  <form action={syncFeedNowAction.bind(null, feed.id)}>
+                    <button
+                      type="submit"
+                      disabled={feed.status !== "ACTIVE"}
+                      className="button-primary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Sync now
+                    </button>
+                  </form>
+                  <form action={deleteFeedAction.bind(null, feed.id)}>
+                    <button
+                      type="submit"
+                      className="inline-flex items-center rounded-lg border border-[rgb(159_64_61_/_0.2)] px-4 py-2.5 text-sm font-semibold text-[rgb(117_33_33)] transition hover:bg-[rgb(159_64_61_/_0.06)]"
+                    >
+                      Delete
+                    </button>
+                  </form>
+                </div>
               </div>
 
               <section className="mt-6">

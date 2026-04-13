@@ -1,5 +1,5 @@
 import { ArticleStatus, FeedStatus, GeneratedPostStatus, SocialPlatform } from "@prisma/client";
-import type { Prisma } from "@prisma/client";
+import type { Article, Prisma } from "@prisma/client";
 import { db } from "@/server/db/client";
 import { generateSocialPost, resolveFeedPersonalization } from "@/server/generation/service";
 import { upsertInitialGeneratedPost, updateGeneratedPost, getLatestScheduledOrPublishedAt } from "@/server/posts/repository";
@@ -27,6 +27,8 @@ type FeedForSync = {
     minimumWordCount: number;
   } | null;
 };
+
+type ArticleForEvaluation = Pick<Article, "title" | "excerpt" | "contentText">;
 
 function normalizeUrl(value: string | null) {
   if (!value) {
@@ -68,6 +70,16 @@ function matchesKeyword(value: string, keywords: string[]) {
 }
 
 function evaluateArticleAgainstFeed(item: ParsedRssItem, feed: {
+  filter: {
+    includeKeywords: string[];
+    excludeKeywords: string[];
+    minimumWordCount: number;
+  } | null;
+}) {
+  return evaluateContentAgainstFeed(item, feed);
+}
+
+function evaluateContentAgainstFeed(item: ArticleForEvaluation, feed: {
   filter: {
     includeKeywords: string[];
     excludeKeywords: string[];
@@ -152,16 +164,29 @@ async function createOrReuseArticle(feed: FeedForSync | null, item: ParsedRssIte
   });
 
   if (existing) {
+    const evaluation = evaluateContentAgainstFeed(existing, {
+      filter: feed.filter,
+    });
     const nextTitle =
       existing.title === "Untitled article" && item.title !== "Untitled article"
         ? item.title
         : existing.title;
+    const nextStatus =
+      existing.status === ArticleStatus.PROCESSED ? existing.status : evaluation.status;
+    const nextFilteredOutReason =
+      existing.status === ArticleStatus.PROCESSED ? existing.filteredOutReason : evaluation.filteredOutReason;
 
-    if (nextTitle !== existing.title) {
+    if (
+      nextTitle !== existing.title ||
+      nextStatus !== existing.status ||
+      nextFilteredOutReason !== existing.filteredOutReason
+    ) {
       return db.article.update({
         where: { id: existing.id },
         data: {
           title: nextTitle,
+          status: nextStatus,
+          filteredOutReason: nextFilteredOutReason,
         },
       });
     }
@@ -367,6 +392,64 @@ async function ingestSingleFeed(feedId: string) {
 
 export async function syncFeedNow(feedId: string) {
   await ingestSingleFeed(feedId);
+}
+
+export async function reevaluateExistingArticlesForFeed(feedId: string) {
+  const feed = await db.rssFeed.findUnique({
+    where: { id: feedId },
+    include: {
+      filter: true,
+      linkedinAccount: true,
+      xAccount: true,
+    },
+  });
+
+  if (!feed) {
+    throw new Error("Feed not found.");
+  }
+
+  const articles = await db.article.findMany({
+    where: {
+      feedId,
+      status: {
+        not: ArticleStatus.PROCESSED,
+      },
+    },
+    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+  });
+
+  const results = [];
+
+  for (const article of articles) {
+    const evaluation = evaluateContentAgainstFeed(article, {
+      filter: feed.filter,
+    });
+    const shouldUpdate =
+      article.status !== evaluation.status ||
+      article.filteredOutReason !== evaluation.filteredOutReason;
+
+    const nextArticle = shouldUpdate
+      ? await db.article.update({
+          where: { id: article.id },
+          data: {
+            status: evaluation.status,
+            filteredOutReason: evaluation.filteredOutReason,
+          },
+        })
+      : article;
+
+    if (nextArticle.status === ArticleStatus.READY) {
+      await generatePostsForArticle(nextArticle.id);
+    }
+
+    results.push({
+      articleId: nextArticle.id,
+      status: nextArticle.status,
+      changed: shouldUpdate,
+    });
+  }
+
+  return results;
 }
 
 export async function syncDueFeeds() {

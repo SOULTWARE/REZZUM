@@ -129,3 +129,28 @@ export async function updateFeedRecord(
     include: feedWithFilterInclude,
   });
 }
+
+export async function updateFeedStatusRecord(
+  feedId: string,
+  data: {
+    status: "ACTIVE" | "PAUSED";
+    nextSyncAt: Date | null;
+    syncError?: string | null;
+  },
+) {
+  return db.rssFeed.update({
+    where: { id: feedId },
+    data: {
+      status: data.status,
+      nextSyncAt: data.nextSyncAt,
+      syncError: data.syncError ?? undefined,
+    },
+    include: feedWithFilterInclude,
+  });
+}
+
+export async function deleteFeedRecord(feedId: string) {
+  return db.rssFeed.delete({
+    where: { id: feedId },
+  });
+}
