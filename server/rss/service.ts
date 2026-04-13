@@ -41,6 +41,22 @@ function stripHtml(value: string | null | undefined) {
     .trim();
 }
 
+function getTextValue(value: unknown): string | null {
+  if (typeof value === "string" && value.trim()) {
+    return value.trim();
+  }
+
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+
+    if (typeof record["#text"] === "string" && record["#text"].trim()) {
+      return record["#text"].trim();
+    }
+  }
+
+  return null;
+}
+
 function parseDate(value: unknown) {
   if (typeof value !== "string" || !value.trim()) {
     return null;
@@ -53,8 +69,10 @@ function parseDate(value: unknown) {
 
 function pickFirstString(...values: unknown[]) {
   for (const value of values) {
-    if (typeof value === "string" && value.trim()) {
-      return value.trim();
+    const textValue = getTextValue(value);
+
+    if (textValue) {
+      return textValue;
     }
   }
 
@@ -104,7 +122,7 @@ function parseRssItems(channel: Record<string, unknown>) {
       title: pickFirstString(record.title) ?? "Untitled article",
       sourceUrl: pickFirstString(record.link) ?? "",
       canonicalUrl: pickFirstString(record.link),
-      excerpt: stripHtml(record.description as string),
+      excerpt: stripHtml(pickFirstString(record.description)),
       contentText: stripHtml(content),
       authorName: pickFirstString(record.creator, record.author),
       publishedAt: parseDate(record.pubDate ?? record.published),

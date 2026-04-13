@@ -16,6 +16,7 @@ REZZUM is a SaaS app that turns RSS feed articles into AI-generated social media
 3. Install dependencies
 4. Run Prisma migrations
 5. Start the app with `pnpm dev`
+6. Set `OPENAI_API_KEY` and optionally override `OPENAI_MODEL` if needed
 
 ## Cron setup
 
@@ -25,6 +26,7 @@ REZZUM is a SaaS app that turns RSS feed articles into AI-generated social media
 - Set `CRON_WORKER_ENABLED=false` if you want to run `next dev` without the worker.
 - Use `pnpm dev:next` to run only the Next.js dev server.
 - Use `pnpm dev:worker` to run only the cron worker.
+- If you access dev through ngrok or another tunnel, set `ALLOWED_DEV_ORIGINS` to a comma-separated list of hostnames, or set `NEXT_PUBLIC_APP_URL` to the tunneled URL, then restart `pnpm dev`.
 
 ### Production on Linux or AWS
 - Run the web app with `pnpm start`.

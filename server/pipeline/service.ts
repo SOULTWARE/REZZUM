@@ -152,6 +152,20 @@ async function createOrReuseArticle(feed: FeedForSync | null, item: ParsedRssIte
   });
 
   if (existing) {
+    const nextTitle =
+      existing.title === "Untitled article" && item.title !== "Untitled article"
+        ? item.title
+        : existing.title;
+
+    if (nextTitle !== existing.title) {
+      return db.article.update({
+        where: { id: existing.id },
+        data: {
+          title: nextTitle,
+        },
+      });
+    }
+
     return existing;
   }
 

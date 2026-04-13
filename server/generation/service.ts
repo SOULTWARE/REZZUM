@@ -2,8 +2,81 @@ import { GenerationTone, SocialPlatform } from "@prisma/client";
 import type { Article, RssFeed } from "@prisma/client";
 import type { WorkspaceSettingsRecord } from "@/server/settings/repository";
 
-const DEFAULT_OPENAI_MODEL = process.env.OPENAI_MODEL?.trim() || "gpt-4.1-mini";
+const DEFAULT_OPENAI_MODEL = process.env.OPENAI_MODEL?.trim() || "gpt-5.4-mini";
 const PROMPT_VERSION = "v2.0.0";
+
+type OpenAIResponsePayload = {
+  output_text?: string;
+  output?: Array<{
+    type?: string;
+    role?: string;
+    content?: Array<
+      | {
+          type: "output_text";
+          text?: string;
+        }
+      | {
+          type: "refusal";
+          refusal?: string;
+        }
+      | {
+          type?: string;
+        }
+    >;
+  }>;
+};
+
+function extractGeneratedText(payload: OpenAIResponsePayload) {
+  if (typeof payload.output_text === "string" && payload.output_text.trim()) {
+    return payload.output_text.trim();
+  }
+
+  const outputItems = Array.isArray(payload.output) ? payload.output : [];
+  const textChunks: string[] = [];
+  const refusals: string[] = [];
+
+  for (const item of outputItems) {
+    const contentItems = Array.isArray(item.content) ? item.content : [];
+
+    for (const contentItem of contentItems) {
+      if (
+        contentItem.type === "output_text" &&
+        "text" in contentItem &&
+        typeof contentItem.text === "string"
+      ) {
+        const text = contentItem.text.trim();
+
+        if (text) {
+          textChunks.push(text);
+        }
+      }
+
+      if (
+        contentItem.type === "refusal" &&
+        "refusal" in contentItem &&
+        typeof contentItem.refusal === "string"
+      ) {
+        const refusal = contentItem.refusal.trim();
+
+        if (refusal) {
+          refusals.push(refusal);
+        }
+      }
+    }
+  }
+
+  if (textChunks.length > 0) {
+    return textChunks.join("\n\n");
+  }
+
+  if (refusals.length > 0) {
+    throw new Error(`OpenAI generation refused the request: ${refusals.join(" | ")}`);
+  }
+
+  const outputTypes = outputItems.map((item) => item.type ?? "unknown").join(", ") || "none";
+
+  throw new Error(`OpenAI generation returned no text output. Output item types: ${outputTypes}.`);
+}
 
 function getPlatformGuidance(platform: SocialPlatform) {
   if (platform === SocialPlatform.X) {
@@ -140,14 +213,8 @@ export async function generateSocialPost(params: {
     throw new Error(`OpenAI generation failed: ${response.status} ${errorText}`);
   }
 
-  const payload = (await response.json()) as {
-    output_text?: string;
-  };
-  const generatedText = payload.output_text?.trim();
-
-  if (!generatedText) {
-    throw new Error("OpenAI generation returned an empty draft.");
-  }
+  const payload = (await response.json()) as OpenAIResponsePayload;
+  const generatedText = extractGeneratedText(payload);
 
   if (generatedText.length > platformGuidance.maxCharacters && params.platform === SocialPlatform.X) {
     return {
