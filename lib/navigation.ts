@@ -8,6 +8,7 @@ import {
   SaveIcon,
   ScheduleIcon,
   SettingsIcon,
+  SupportIcon,
 } from "@/components/icons";
 
 export type NavigationItem = {
@@ -73,6 +74,12 @@ export const secondaryNavigation: NavigationItem[] = [
     label: "Settings",
     description: "Manage workspace defaults and publishing preferences.",
     icon: SettingsIcon,
+  },
+  {
+    href: "/support",
+    label: "Support",
+    description: "Walk through every part of the workflow and common questions.",
+    icon: SupportIcon,
   },
 ];
 
@@ -233,6 +240,15 @@ export function getShellPage(pathname: string): ShellPage {
       section: secondaryNavigation[0],
       title: "Settings",
       description: "Manage workspace defaults and publishing preferences.",
+      actions: [],
+    };
+  }
+
+  if (pathname === "/support") {
+    return {
+      section: secondaryNavigation[1],
+      title: "Support",
+      description: "Walk through every part of the workflow and common questions.",
       actions: [],
     };
   }
