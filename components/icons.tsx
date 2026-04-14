@@ -104,6 +104,19 @@ export function SettingsIcon(props: Readonly<IconProps>) {
   );
 }
 
+export function SupportIcon(props: Readonly<IconProps>) {
+  return (
+    <BaseIcon {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="2.5" />
+      <path d="M12 3.5V6" />
+      <path d="M12 18V20.5" />
+      <path d="M3.5 12H6" />
+      <path d="M18 12H20.5" />
+    </BaseIcon>
+  );
+}
+
 export function LinkedInIcon(props: Readonly<IconProps>) {
   return (
     <BaseIcon {...props}>
