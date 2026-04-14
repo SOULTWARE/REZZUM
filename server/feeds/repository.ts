@@ -3,6 +3,8 @@ import { db } from "@/server/db/client";
 
 export const feedWithFilterInclude = {
   filter: true,
+  linkedinAccount: true,
+  xAccount: true,
 } satisfies Prisma.RssFeedInclude;
 
 export type FeedRecord = Prisma.RssFeedGetPayload<{
@@ -27,6 +29,15 @@ export async function createFeedRecord(data: {
   name: string;
   rssUrl: string;
   normalizedRssUrl: string;
+  defaultLanguage: string;
+  defaultFeel: string;
+  styleNotes: string;
+  generateLinkedIn: boolean;
+  generateX: boolean;
+  linkedinAccountId: string | null;
+  xAccountId: string | null;
+  autoPublishEnabled: boolean;
+  autoPublishIntervalMinutes: number | null;
   refreshIntervalMinutes: number;
   minimumWordCount: number;
   includeKeywords: string[];
@@ -38,6 +49,15 @@ export async function createFeedRecord(data: {
       name: data.name,
       rssUrl: data.rssUrl,
       normalizedRssUrl: data.normalizedRssUrl,
+      defaultLanguage: data.defaultLanguage,
+      defaultFeel: data.defaultFeel,
+      styleNotes: data.styleNotes,
+      generateLinkedIn: data.generateLinkedIn,
+      generateX: data.generateX,
+      linkedinAccountId: data.linkedinAccountId,
+      xAccountId: data.xAccountId,
+      autoPublishEnabled: data.autoPublishEnabled,
+      autoPublishIntervalMinutes: data.autoPublishIntervalMinutes,
       refreshIntervalMinutes: data.refreshIntervalMinutes,
       nextSyncAt: data.nextSyncAt,
       filter: {
@@ -58,6 +78,15 @@ export async function updateFeedRecord(
     name: string;
     rssUrl: string;
     normalizedRssUrl: string;
+    defaultLanguage: string;
+    defaultFeel: string;
+    styleNotes: string;
+    generateLinkedIn: boolean;
+    generateX: boolean;
+    linkedinAccountId: string | null;
+    xAccountId: string | null;
+    autoPublishEnabled: boolean;
+    autoPublishIntervalMinutes: number | null;
     refreshIntervalMinutes: number;
     minimumWordCount: number;
     includeKeywords: string[];
@@ -71,6 +100,15 @@ export async function updateFeedRecord(
       name: data.name,
       rssUrl: data.rssUrl,
       normalizedRssUrl: data.normalizedRssUrl,
+      defaultLanguage: data.defaultLanguage,
+      defaultFeel: data.defaultFeel,
+      styleNotes: data.styleNotes,
+      generateLinkedIn: data.generateLinkedIn,
+      generateX: data.generateX,
+      linkedinAccountId: data.linkedinAccountId,
+      xAccountId: data.xAccountId,
+      autoPublishEnabled: data.autoPublishEnabled,
+      autoPublishIntervalMinutes: data.autoPublishIntervalMinutes,
       refreshIntervalMinutes: data.refreshIntervalMinutes,
       nextSyncAt: data.nextSyncAt,
       filter: {
@@ -89,5 +127,30 @@ export async function updateFeedRecord(
       },
     },
     include: feedWithFilterInclude,
+  });
+}
+
+export async function updateFeedStatusRecord(
+  feedId: string,
+  data: {
+    status: "ACTIVE" | "PAUSED";
+    nextSyncAt: Date | null;
+    syncError?: string | null;
+  },
+) {
+  return db.rssFeed.update({
+    where: { id: feedId },
+    data: {
+      status: data.status,
+      nextSyncAt: data.nextSyncAt,
+      syncError: data.syncError ?? undefined,
+    },
+    include: feedWithFilterInclude,
+  });
+}
+
+export async function deleteFeedRecord(feedId: string) {
+  return db.rssFeed.delete({
+    where: { id: feedId },
   });
 }

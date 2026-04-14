@@ -1,0 +1,14 @@
+[Unit]
+Description=REZZUM cron worker
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/rezzum
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/env pnpm cron:worker
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

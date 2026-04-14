@@ -1,5 +1,10 @@
-import { SocialAccountStatus } from "@prisma/client";
-import { listSocialAccounts } from "@/server/accounts/repository";
+import { SocialAccountStatus, SocialPlatform } from "@prisma/client";
+import {
+  disconnectSocialAccount,
+  getSocialAccountById,
+  listSocialAccounts,
+  listSocialAccountsInternal,
+} from "@/server/accounts/repository";
 
 const STATUS_ORDER = [
   SocialAccountStatus.CONNECTED,
@@ -48,4 +53,34 @@ export async function getAccountsOverview() {
     attentionCount,
     activePlatformCount,
   };
+}
+
+export async function getConnectedAccountOptions(platform?: SocialPlatform) {
+  const accounts = await listSocialAccounts();
+
+  return accounts
+    .filter(
+      (account) =>
+        account.status === SocialAccountStatus.CONNECTED &&
+        (platform ? account.platform === platform : true),
+    )
+    .map((account) => ({
+      value: account.id,
+      label: account.displayName,
+      platform: account.platform,
+    }));
+}
+
+export async function getConnectedSocialAccountsInternal() {
+  const accounts = await listSocialAccountsInternal();
+
+  return accounts.filter((account) => account.status === SocialAccountStatus.CONNECTED);
+}
+
+export async function getSocialAccount(accountId: string) {
+  return getSocialAccountById(accountId);
+}
+
+export async function disconnectAccount(accountId: string) {
+  return disconnectSocialAccount(accountId);
 }

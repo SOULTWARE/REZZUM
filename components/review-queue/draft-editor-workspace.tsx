@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState, useTransition } from "react";
 import type { GeneratedPostStatus, GenerationTone, SocialPlatform } from "@prisma/client";
 import {
   ApproveIcon,
@@ -13,9 +14,10 @@ import {
   SaveIcon,
   XIcon,
 } from "@/components/icons";
+import type { ActionResult } from "@/lib/actions";
+import { useToast } from "@/components/toast-provider";
 import { PostStatusBadge } from "@/components/review-queue/post-status-badge";
 import { getGenerationToneLabel, getSocialPlatformCharacterLimit } from "@/lib/review-queue/constants";
-import type { ReviewEditorAction } from "@/lib/review-queue/editor-actions";
 
 type PlatformTab = {
   platform: SocialPlatform;
@@ -30,21 +32,21 @@ type DraftEditorWorkspaceProps = {
   status: GeneratedPostStatus;
   tone: GenerationTone;
   promptVersion: string;
-  generationModel: string;
+  generationModel: string | null;
   updatedAtLabel: string;
   versionNumber: number;
   hasEdits: boolean;
   originalGeneratedText: string;
   platformTabs: PlatformTab[];
-  actions: ReviewEditorAction[];
-};
-
-const ACTION_STYLES: Record<ReviewEditorAction["tone"], string> = {
-  secondary: "bg-[var(--surface-high)] text-[var(--foreground)]",
-  ghost: "bg-transparent text-[var(--muted)] hover:text-[var(--foreground)]",
-  success: "bg-[var(--primary-soft)] text-[var(--primary-strong)]",
-  danger: "bg-[rgb(159_64_61_/_0.12)] text-[rgb(117_33_33)]",
-  primary: "button-primary text-white",
+  socialAccountId: string;
+  accountOptions: Array<{ value: string; label: string }>;
+  defaultScheduledFor: string;
+  saveAction: (formData: FormData) => Promise<ActionResult>;
+  approveAction: (formData: FormData) => Promise<ActionResult>;
+  rejectAction: (formData: FormData) => Promise<ActionResult>;
+  scheduleAction: (formData: FormData) => Promise<ActionResult>;
+  publishNowAction: (formData: FormData) => Promise<ActionResult>;
+  regenerateAction: (formData: FormData) => Promise<ActionResult>;
 };
 
 function PlatformIcon({
@@ -61,43 +63,28 @@ function PlatformIcon({
   return <XIcon className={className} />;
 }
 
-function ActionIcon({
-  actionId,
+function ActionButton({
+  label,
+  icon,
+  onClick,
   className,
+  disabled,
 }: Readonly<{
-  actionId: ReviewEditorAction["id"];
-  className?: string;
+  label: string;
+  icon: React.ReactNode;
+  onClick: () => void;
+  className: string;
+  disabled?: boolean;
 }>) {
-  switch (actionId) {
-    case "regenerate":
-      return <RefreshIcon className={className} />;
-    case "saveDraft":
-      return <SaveIcon className={className} />;
-    case "approve":
-      return <ApproveIcon className={className} />;
-    case "reject":
-      return <RejectIcon className={className} />;
-    case "schedule":
-      return <CalendarIcon className={className} />;
-    case "publishNow":
-      return <PublishIcon className={className} />;
-  }
-}
-
-function ActionButton({ action }: Readonly<{ action: ReviewEditorAction }>) {
-  const baseClassName =
-    "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60";
-
   return (
     <button
       type="button"
-      disabled={action.disabled}
-      aria-disabled={action.disabled}
-      aria-label={action.label}
-      className={`${baseClassName} ${ACTION_STYLES[action.tone]}`}
+      onClick={onClick}
+      disabled={disabled}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60 ${className}`}
     >
-      <ActionIcon actionId={action.id} className="h-4 w-4" />
-      {action.label}
+      {icon}
+      {label}
     </button>
   );
 }
@@ -114,17 +101,66 @@ export function DraftEditorWorkspace({
   hasEdits,
   originalGeneratedText,
   platformTabs,
-  actions,
+  socialAccountId,
+  accountOptions,
+  defaultScheduledFor,
+  saveAction,
+  approveAction,
+  rejectAction,
+  scheduleAction,
+  publishNowAction,
+  regenerateAction,
 }: Readonly<DraftEditorWorkspaceProps>) {
+  const router = useRouter();
+  const { pushToast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
   const [value, setValue] = useState(draftText);
+  const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
   const characterLimit = getSocialPlatformCharacterLimit(platform);
   const isOverLimit = value.length > characterLimit;
-  const toolbarActions = actions.filter((action) => action.placement === "toolbar");
-  const footerActions = actions.filter((action) => action.placement === "footer");
-  const characterCountId = `character-count-${platform.toLowerCase()}`;
+  const destinationLabel = useMemo(() => {
+    return accountOptions.find((option) => option.value === socialAccountId)?.label ?? "Unassigned";
+  }, [accountOptions, socialAccountId]);
+
+  function runAction(
+    actionName: string,
+    action: (formData: FormData) => Promise<ActionResult>,
+  ) {
+    if (!formRef.current) {
+      return;
+    }
+
+    setPendingAction(actionName);
+
+    startTransition(async () => {
+      try {
+        const result = await action(new FormData(formRef.current!));
+
+        pushToast(result);
+
+        if (result.redirectTo) {
+          router.push(result.redirectTo);
+          return;
+        }
+
+        if (result.refresh) {
+          router.refresh();
+        }
+      } catch (error) {
+        pushToast({
+          status: "error",
+          message: "Action failed.",
+          detail: error instanceof Error ? error.message : "Unknown action failure.",
+        });
+      }
+
+      setPendingAction(null);
+    });
+  }
 
   return (
-    <section className="surface-card rounded-xl p-5 sm:p-6">
+    <form ref={formRef} className="surface-card rounded-xl p-5 sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
@@ -134,7 +170,7 @@ export function DraftEditorWorkspace({
             {platform === "LINKEDIN" ? "LinkedIn" : "X"} review draft
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">
-            Review the draft, compare variants, and make edits.
+            Review the draft, edit it, then approve, schedule, publish, or regenerate it.
           </p>
         </div>
         <PostStatusBadge status={status} />
@@ -194,7 +230,9 @@ export function DraftEditorWorkspace({
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
             Model
           </p>
-          <p className="mt-2 text-sm font-medium text-[var(--foreground)]">{generationModel}</p>
+          <p className="mt-2 text-sm font-medium text-[var(--foreground)]">
+            {generationModel ?? "Not recorded"}
+          </p>
         </div>
         <div className="rounded-xl bg-[var(--surface-low)] p-4">
           <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
@@ -204,6 +242,42 @@ export function DraftEditorWorkspace({
         </div>
       </div>
 
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <label className="block rounded-xl bg-[var(--surface-low)] p-4">
+          <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+            Destination account
+          </span>
+          <select
+            name="socialAccountId"
+            defaultValue={socialAccountId}
+            className="mt-3 w-full rounded-lg bg-white px-4 py-3 text-sm text-[var(--foreground)]"
+          >
+            <option value="">Select a destination account</option>
+            {accountOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">Current target: {destinationLabel}</p>
+        </label>
+
+        <label className="block rounded-xl bg-[var(--surface-low)] p-4">
+          <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
+            Schedule for
+          </span>
+          <input
+            name="scheduledFor"
+            type="datetime-local"
+            defaultValue={defaultScheduledFor}
+            className="mt-3 w-full rounded-lg bg-white px-4 py-3 text-sm text-[var(--foreground)]"
+          />
+          <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+            Leave blank until you are ready to schedule.
+          </p>
+        </label>
+      </div>
+
       <div className="mt-6 rounded-xl bg-[var(--surface-low)] p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -211,30 +285,21 @@ export function DraftEditorWorkspace({
               Editable draft
             </p>
             <p className="mt-2 text-sm text-[var(--muted)]">
-              {hasEdits
-                ? "This version includes edits."
-                : "Make changes before approval or scheduling."}
+              Version {versionNumber}. Keep the copy within the platform character limits.
             </p>
           </div>
-          <span className="rounded-lg bg-white px-3 py-1.5 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
-            Version {versionNumber}
-          </span>
         </div>
 
         <div className="relative mt-4">
           <textarea
+            name="draftText"
             value={value}
             onChange={(event) => setValue(event.target.value)}
             aria-label="Editable draft content"
-            aria-describedby={characterCountId}
             aria-invalid={isOverLimit}
-            placeholder="Draft content will appear here."
-            className="h-[24rem] w-full resize-none rounded-xl bg-white p-5 text-sm leading-8 text-[var(--foreground)] shadow-[var(--shadow-soft)] outline-none focus:shadow-[0_0_0_2px_var(--ring-soft)]"
+            className="h-[24rem] w-full resize-none rounded-xl bg-white p-5 text-sm leading-8 text-[var(--foreground)] shadow-[var(--shadow-soft)] outline-none"
           />
-
           <div
-            id={characterCountId}
-            aria-live="polite"
             className={`pointer-events-none absolute bottom-4 right-4 rounded-lg px-3 py-1 text-[0.72rem] font-semibold ${
               isOverLimit
                 ? "bg-[rgb(159_64_61_/_0.12)] text-[rgb(117_33_33)]"
@@ -246,9 +311,20 @@ export function DraftEditorWorkspace({
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          {toolbarActions.map((action) => (
-            <ActionButton key={action.id} action={action} />
-          ))}
+          <ActionButton
+            label="Regenerate"
+            icon={<RefreshIcon className="h-4 w-4" />}
+            onClick={() => runAction("regenerate", regenerateAction)}
+            className="bg-[var(--surface-high)] text-[var(--foreground)]"
+            disabled={isPending}
+          />
+          <ActionButton
+            label="Save Draft"
+            icon={<SaveIcon className="h-4 w-4" />}
+            onClick={() => runAction("save", saveAction)}
+            className="bg-transparent text-[var(--muted)]"
+            disabled={isPending}
+          />
         </div>
       </div>
 
@@ -263,13 +339,36 @@ export function DraftEditorWorkspace({
         </div>
       ) : null}
 
-      <p className="mt-6 text-sm text-[var(--muted)]">Actions are disabled in this view.</p>
-
       <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-[var(--ghost-line)] pt-6">
-        {footerActions.map((action) => (
-          <ActionButton key={action.id} action={action} />
-        ))}
+        <ActionButton
+          label="Reject"
+          icon={<RejectIcon className="h-4 w-4" />}
+          onClick={() => runAction("reject", rejectAction)}
+          className="bg-[rgb(159_64_61_/_0.12)] text-[rgb(117_33_33)]"
+          disabled={isPending}
+        />
+        <ActionButton
+          label="Approve"
+          icon={<ApproveIcon className="h-4 w-4" />}
+          onClick={() => runAction("approve", approveAction)}
+          className="bg-[var(--primary-soft)] text-[var(--primary-strong)]"
+          disabled={isPending}
+        />
+        <ActionButton
+          label="Schedule"
+          icon={<CalendarIcon className="h-4 w-4" />}
+          onClick={() => runAction("schedule", scheduleAction)}
+          className="bg-[var(--surface-high)] text-[var(--foreground)]"
+          disabled={isPending}
+        />
+        <ActionButton
+          label={pendingAction === "publish" ? "Publishing..." : "Publish Now"}
+          icon={<PublishIcon className="h-4 w-4" />}
+          onClick={() => runAction("publish", publishNowAction)}
+          className="button-primary text-white"
+          disabled={isPending}
+        />
       </div>
-    </section>
+    </form>
   );
 }

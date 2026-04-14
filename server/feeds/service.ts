@@ -2,8 +2,10 @@ import { Prisma } from "@prisma/client";
 import type { FeedInput } from "@/lib/feeds/validation";
 import {
   createFeedRecord,
+  deleteFeedRecord,
   getFeedById,
   listFeeds,
+  updateFeedStatusRecord,
   updateFeedRecord,
 } from "@/server/feeds/repository";
 
@@ -62,4 +64,29 @@ export async function updateManagedFeed(feedId: string, input: FeedInput) {
 
     throw error;
   }
+}
+
+export async function pauseManagedFeed(feedId: string) {
+  return updateFeedStatusRecord(feedId, {
+    status: "PAUSED",
+    nextSyncAt: null,
+  });
+}
+
+export async function activateManagedFeed(feedId: string) {
+  const feed = await getFeedById(feedId);
+
+  if (!feed) {
+    throw new Error("Feed not found.");
+  }
+
+  return updateFeedStatusRecord(feedId, {
+    status: "ACTIVE",
+    nextSyncAt: buildNextSyncAt(feed.refreshIntervalMinutes),
+    syncError: null,
+  });
+}
+
+export async function deleteManagedFeed(feedId: string) {
+  return deleteFeedRecord(feedId);
 }

@@ -17,6 +17,10 @@ import {
 type FeedFormProps = {
   action: (state: FeedActionState, formData: FormData) => Promise<FeedActionState>;
   initialValues: FeedFormValues;
+  accountOptions: {
+    linkedin: Array<{ value: string; label: string }>;
+    x: Array<{ value: string; label: string }>;
+  };
   metadata?: {
     status: FeedStatus;
     createdAt: Date;
@@ -54,9 +58,40 @@ function FieldError({
   );
 }
 
+function ToggleField({
+  name,
+  label,
+  description,
+  defaultChecked,
+  onChange,
+}: Readonly<{
+  name: string;
+  label: string;
+  description: string;
+  defaultChecked: boolean;
+  onChange: (checked: boolean) => void;
+}>) {
+  return (
+    <label className="flex items-start gap-3 rounded-xl bg-[var(--surface-low)] p-4">
+      <input
+        name={name}
+        type="checkbox"
+        defaultChecked={defaultChecked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="mt-1 h-4 w-4 rounded border-slate-300 text-[var(--primary)] focus:ring-[var(--ring-soft)]"
+      />
+      <span>
+        <span className="block text-sm font-semibold text-[var(--foreground)]">{label}</span>
+        <span className="mt-1 block text-sm leading-6 text-[var(--muted)]">{description}</span>
+      </span>
+    </label>
+  );
+}
+
 export function FeedForm({
   action,
   initialValues,
+  accountOptions,
   metadata,
 }: Readonly<FeedFormProps>) {
   const [state, formAction] = useActionState(action, INITIAL_FEED_ACTION_STATE);
@@ -70,7 +105,6 @@ export function FeedForm({
     () => parseKeywordText(preview.excludeKeywords).length,
     [preview.excludeKeywords],
   );
-
   const refreshDescription =
     FEED_REFRESH_INTERVAL_OPTIONS.find(
       (option) => option.value === preview.refreshIntervalMinutes,
@@ -98,7 +132,7 @@ export function FeedForm({
             </div>
 
             <div className="surface-card rounded-xl p-6 sm:p-8">
-              <div className="space-y-6">
+              <div className="grid gap-6">
                 <label className="block space-y-2">
                   <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     Feed name
@@ -110,10 +144,7 @@ export function FeedForm({
                     onChange={(event) =>
                       setPreview((current) => ({ ...current, name: event.target.value }))
                     }
-                    placeholder="e.g. Product Updates"
-                    aria-invalid={Boolean(state.fieldErrors?.name)}
-                    aria-describedby={state.fieldErrors?.name ? "feed-name-error" : undefined}
-                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm"
                   />
                   <FieldError id="feed-name-error" errors={state.fieldErrors?.name} />
                 </label>
@@ -129,14 +160,84 @@ export function FeedForm({
                     onChange={(event) =>
                       setPreview((current) => ({ ...current, rssUrl: event.target.value }))
                     }
-                    placeholder="https://example.com/feed.xml"
-                    aria-invalid={Boolean(state.fieldErrors?.rssUrl)}
-                    aria-describedby={state.fieldErrors?.rssUrl ? "feed-rss-url-error" : undefined}
-                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm"
                   />
                   <FieldError id="feed-rss-url-error" errors={state.fieldErrors?.rssUrl} />
                 </label>
               </div>
+            </div>
+          </section>
+
+          <section className="space-y-5">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-1 rounded-full bg-[var(--primary)]" />
+              <h2 className="font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
+                Personalization
+              </h2>
+            </div>
+
+            <div className="surface-card rounded-xl p-6 sm:p-8">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <label className="block space-y-2">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Language
+                  </span>
+                  <input
+                    name="defaultLanguage"
+                    type="text"
+                    defaultValue={initialValues.defaultLanguage}
+                    onChange={(event) =>
+                      setPreview((current) => ({
+                        ...current,
+                        defaultLanguage: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm"
+                  />
+                  <FieldError
+                    id="feed-default-language-error"
+                    errors={state.fieldErrors?.defaultLanguage}
+                  />
+                </label>
+
+                <label className="block space-y-2">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Feel
+                  </span>
+                  <input
+                    name="defaultFeel"
+                    type="text"
+                    defaultValue={initialValues.defaultFeel}
+                    onChange={(event) =>
+                      setPreview((current) => ({
+                        ...current,
+                        defaultFeel: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm"
+                  />
+                  <FieldError id="feed-default-feel-error" errors={state.fieldErrors?.defaultFeel} />
+                </label>
+              </div>
+
+              <label className="mt-6 block space-y-2">
+                <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                  Style notes
+                </span>
+                <textarea
+                  name="styleNotes"
+                  rows={5}
+                  defaultValue={initialValues.styleNotes}
+                  onChange={(event) =>
+                    setPreview((current) => ({
+                      ...current,
+                      styleNotes: event.target.value,
+                    }))
+                  }
+                  className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm leading-7"
+                />
+                <FieldError id="feed-style-notes-error" errors={state.fieldErrors?.styleNotes} />
+              </label>
             </div>
           </section>
 
@@ -165,13 +266,7 @@ export function FeedForm({
                         minimumWordCount: Number.parseInt(event.target.value, 10) || 0,
                       }))
                     }
-                    aria-invalid={Boolean(state.fieldErrors?.minimumWordCount)}
-                    aria-describedby={
-                      state.fieldErrors?.minimumWordCount
-                        ? "feed-minimum-word-count-error"
-                        : undefined
-                    }
-                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm"
                   />
                   <FieldError
                     id="feed-minimum-word-count-error"
@@ -195,13 +290,7 @@ export function FeedForm({
                         ) as FeedFormValues["refreshIntervalMinutes"],
                       }))
                     }
-                    aria-invalid={Boolean(state.fieldErrors?.refreshIntervalMinutes)}
-                    aria-describedby={
-                      state.fieldErrors?.refreshIntervalMinutes
-                        ? "feed-refresh-interval-error"
-                        : undefined
-                    }
-                    className="w-full appearance-none rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm"
                   >
                     {FEED_REFRESH_INTERVAL_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -231,19 +320,8 @@ export function FeedForm({
                         includeKeywords: event.target.value,
                       }))
                     }
-                    placeholder="AI, launch, roadmap"
-                    aria-invalid={Boolean(state.fieldErrors?.includeKeywords)}
-                    aria-describedby={
-                      state.fieldErrors?.includeKeywords
-                        ? "feed-include-keywords-error"
-                        : undefined
-                    }
-                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm leading-7 text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm leading-7"
                   />
-                  <p className="text-xs leading-6 text-[var(--muted)]">
-                    Separate keywords with commas or new lines. Articles must match
-                    at least one term when this list is used.
-                  </p>
                   <FieldError
                     id="feed-include-keywords-error"
                     errors={state.fieldErrors?.includeKeywords}
@@ -264,21 +342,129 @@ export function FeedForm({
                         excludeKeywords: event.target.value,
                       }))
                     }
-                    placeholder="jobs, sponsored, hiring"
-                    aria-invalid={Boolean(state.fieldErrors?.excludeKeywords)}
-                    aria-describedby={
-                      state.fieldErrors?.excludeKeywords
-                        ? "feed-exclude-keywords-error"
-                        : undefined
-                    }
-                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm leading-7 text-[var(--foreground)] placeholder:text-[var(--muted-soft)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-soft)]"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm leading-7"
                   />
-                  <p className="text-xs leading-6 text-[var(--muted)]">
-                    Use exclusions to skip low-signal content.
-                  </p>
                   <FieldError
                     id="feed-exclude-keywords-error"
                     errors={state.fieldErrors?.excludeKeywords}
+                  />
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section className="space-y-5">
+            <div className="flex items-center gap-2">
+              <span className="h-6 w-1 rounded-full bg-[var(--primary)]" />
+              <h2 className="font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
+                Publishing setup
+              </h2>
+            </div>
+
+            <div className="surface-card rounded-xl p-6 sm:p-8">
+              <div className="grid gap-4">
+                <ToggleField
+                  name="generateLinkedIn"
+                  label="Generate LinkedIn posts"
+                  description="Create LinkedIn company-page drafts for this feed."
+                  defaultChecked={initialValues.generateLinkedIn}
+                  onChange={(checked) =>
+                    setPreview((current) => ({ ...current, generateLinkedIn: checked }))
+                  }
+                />
+                <ToggleField
+                  name="generateX"
+                  label="Generate X posts"
+                  description="Create X drafts for this feed."
+                  defaultChecked={initialValues.generateX}
+                  onChange={(checked) =>
+                    setPreview((current) => ({ ...current, generateX: checked }))
+                  }
+                />
+              </div>
+
+              <div className="mt-6 grid gap-6 sm:grid-cols-2">
+                <label className="block space-y-2">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    LinkedIn destination
+                  </span>
+                  <select
+                    name="linkedinAccountId"
+                    defaultValue={initialValues.linkedinAccountId}
+                    onChange={(event) =>
+                      setPreview((current) => ({
+                        ...current,
+                        linkedinAccountId: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm"
+                  >
+                    <option value="">Use workspace default / none</option>
+                    {accountOptions.linkedin.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block space-y-2">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    X destination
+                  </span>
+                  <select
+                    name="xAccountId"
+                    defaultValue={initialValues.xAccountId}
+                    onChange={(event) =>
+                      setPreview((current) => ({
+                        ...current,
+                        xAccountId: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm"
+                  >
+                    <option value="">Use workspace default / none</option>
+                    {accountOptions.x.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <div className="mt-6 space-y-4">
+                <ToggleField
+                  name="autoPublishEnabled"
+                  label="Enable auto-publish cadence"
+                  description="Automatically approve and schedule generated posts using the interval below."
+                  defaultChecked={initialValues.autoPublishEnabled}
+                  onChange={(checked) =>
+                    setPreview((current) => ({ ...current, autoPublishEnabled: checked }))
+                  }
+                />
+
+                <label className="block space-y-2">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Auto-publish interval (minutes)
+                  </span>
+                  <input
+                    name="autoPublishIntervalMinutes"
+                    type="number"
+                    min={15}
+                    defaultValue={initialValues.autoPublishIntervalMinutes}
+                    onChange={(event) =>
+                      setPreview((current) => ({
+                        ...current,
+                        autoPublishIntervalMinutes:
+                          Number.parseInt(event.target.value, 10) || current.autoPublishIntervalMinutes,
+                      }))
+                    }
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm"
+                  />
+                  <FieldError
+                    id="feed-auto-publish-interval-error"
+                    errors={state.fieldErrors?.autoPublishIntervalMinutes}
                   />
                 </label>
               </div>
@@ -301,6 +487,18 @@ export function FeedForm({
             <div className="mt-6 space-y-4">
               <div className="rounded-xl bg-[var(--surface-low)] p-4">
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                  Personalization
+                </p>
+                <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
+                  {preview.defaultLanguage} • {preview.defaultFeel}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                  {preview.styleNotes.trim() || "No extra style notes yet."}
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                   Refresh cadence
                 </p>
                 <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
@@ -315,22 +513,27 @@ export function FeedForm({
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                   Filter snapshot
                 </p>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <p className="text-sm font-semibold text-[var(--foreground)]">
-                      {includeKeywordCount}
-                    </p>
-                    <p className="text-xs text-[var(--muted)]">Include keywords</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-[var(--foreground)]">
-                      {excludeKeywordCount}
-                    </p>
-                    <p className="text-xs text-[var(--muted)]">Exclude keywords</p>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm leading-6 text-[var(--muted)]">
-                  Minimum article length: {preview.minimumWordCount} words.
+                <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
+                  {preview.minimumWordCount} word minimum
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                  {includeKeywordCount} include keywords, {excludeKeywordCount} exclude keywords
+                </p>
+              </div>
+
+              <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                  Delivery mode
+                </p>
+                <p className="mt-2 text-sm font-semibold text-[var(--foreground)]">
+                  {preview.autoPublishEnabled
+                    ? `Auto-publish every ${preview.autoPublishIntervalMinutes} minutes`
+                    : "Manual review and scheduling"}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+                  Platforms: {preview.generateLinkedIn ? "LinkedIn" : null}
+                  {preview.generateLinkedIn && preview.generateX ? " and " : null}
+                  {preview.generateX ? "X" : null}
                 </p>
               </div>
             </div>
@@ -344,7 +547,7 @@ export function FeedForm({
               Feed status
             </h2>
             <p className="mt-3 text-sm leading-7 text-[var(--muted)]">
-              Review the saved cadence, filters, and status for this source.
+              Review the current feed state and sync cadence before saving changes.
             </p>
 
             {metadata ? (
@@ -363,7 +566,7 @@ export function FeedForm({
                 </div>
                 <div className="rounded-xl bg-[var(--surface-low)] p-4">
                   <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                    Updated
+                    Last updated
                   </p>
                   <p className="mt-2 text-sm text-[var(--foreground)]">
                     {formatDateTime(metadata.updatedAt)}
@@ -371,7 +574,7 @@ export function FeedForm({
                 </div>
                 <div className="rounded-xl bg-[var(--surface-low)] p-4">
                   <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                    Next sync slot
+                    Next sync
                   </p>
                   <p className="mt-2 text-sm text-[var(--foreground)]">
                     {formatDateTime(metadata.nextSyncAt)}
@@ -379,10 +582,8 @@ export function FeedForm({
                 </div>
               </div>
             ) : (
-              <div className="mt-6 rounded-xl bg-[var(--surface-low)] p-4">
-                <p className="text-sm leading-7 text-[var(--muted)]">
-                  New feeds start active and use the selected refresh interval.
-                </p>
+              <div className="mt-6 rounded-xl bg-[var(--surface-low)] p-4 text-sm leading-6 text-[var(--muted)]">
+                The feed will be scheduled for its first sync as soon as it is saved.
               </div>
             )}
           </aside>

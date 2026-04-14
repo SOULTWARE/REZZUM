@@ -12,6 +12,8 @@ export const FEED_REFRESH_INTERVAL_VALUES = FEED_REFRESH_INTERVAL_OPTIONS.map(
 
 export const DEFAULT_REFRESH_INTERVAL_MINUTES = 60;
 export const DEFAULT_MINIMUM_WORD_COUNT = 300;
+export const DEFAULT_FEED_LANGUAGE = "English";
+export const DEFAULT_FEED_FEEL = "Professional";
 
 export type FeedRefreshIntervalMinutes =
   (typeof FEED_REFRESH_INTERVAL_OPTIONS)[number]["value"];
@@ -19,8 +21,17 @@ export type FeedRefreshIntervalMinutes =
 export type FeedFormValues = {
   name: string;
   rssUrl: string;
+  defaultLanguage: string;
+  defaultFeel: string;
+  styleNotes: string;
   includeKeywords: string;
   excludeKeywords: string;
+  generateLinkedIn: boolean;
+  generateX: boolean;
+  linkedinAccountId: string;
+  xAccountId: string;
+  autoPublishEnabled: boolean;
+  autoPublishIntervalMinutes: number;
   minimumWordCount: number;
   refreshIntervalMinutes: FeedRefreshIntervalMinutes;
 };
@@ -28,8 +39,17 @@ export type FeedFormValues = {
 export const EMPTY_FEED_FORM_VALUES: FeedFormValues = {
   name: "",
   rssUrl: "",
+  defaultLanguage: DEFAULT_FEED_LANGUAGE,
+  defaultFeel: DEFAULT_FEED_FEEL,
+  styleNotes: "",
   includeKeywords: "",
   excludeKeywords: "",
+  generateLinkedIn: true,
+  generateX: true,
+  linkedinAccountId: "",
+  xAccountId: "",
+  autoPublishEnabled: false,
+  autoPublishIntervalMinutes: DEFAULT_REFRESH_INTERVAL_MINUTES,
   minimumWordCount: DEFAULT_MINIMUM_WORD_COUNT,
   refreshIntervalMinutes: DEFAULT_REFRESH_INTERVAL_MINUTES,
 };

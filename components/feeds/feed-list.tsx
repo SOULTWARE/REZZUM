@@ -1,8 +1,20 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { FeedsIcon, ScheduleIcon, SparkIcon } from "@/components/icons";
+import { useToast } from "@/components/toast-provider";
+import type { ActionResult } from "@/lib/actions";
 import type { FeedRecord } from "@/server/feeds/repository";
 import { FeedStatusBadge } from "@/components/feeds/feed-status-badge";
 import { getRefreshIntervalLabel } from "@/lib/feeds/constants";
+import {
+  activateFeedAction,
+  deleteFeedAction,
+  pauseFeedAction,
+  syncFeedNowAction,
+} from "@/server/feeds/actions";
 
 function formatDateTime(value: Date | null) {
   if (!value) {
@@ -74,10 +86,40 @@ function KeywordGroup({
 }
 
 export function FeedList({ feeds }: Readonly<{ feeds: FeedRecord[] }>) {
+  const router = useRouter();
+  const { pushToast } = useToast();
+  const [pendingActionId, setPendingActionId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  function runFeedAction(actionId: string, action: () => Promise<ActionResult>) {
+    setPendingActionId(actionId);
+
+    startTransition(async () => {
+      try {
+        const result = await action();
+
+        pushToast(result);
+
+        if (result.refresh) {
+          router.refresh();
+        }
+      } catch (error) {
+        pushToast({
+          status: "error",
+          message: "Action failed.",
+          detail: error instanceof Error ? error.message : "Unknown action failure.",
+        });
+      }
+
+      setPendingActionId(null);
+    });
+  }
+
   return (
     <div className="grid gap-5">
       {feeds.map((feed) => {
         const keywordSummary = formatKeywordSummary(feed);
+        const isBusy = isPending && pendingActionId?.startsWith(feed.id);
 
         return (
           <article
@@ -103,12 +145,57 @@ export function FeedList({ feeds }: Readonly<{ feeds: FeedRecord[] }>) {
                   </div>
                 </div>
 
-                <Link
-                  href={`/feeds/${feed.id}/edit`}
-                  className="button-secondary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold"
-                >
-                  Edit feed
-                </Link>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
+                    href={`/feeds/${feed.id}/edit`}
+                    className="button-secondary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold"
+                  >
+                    Edit feed
+                  </Link>
+                  {feed.status === "ACTIVE" ? (
+                    <button
+                      type="button"
+                      disabled={isBusy}
+                      onClick={() =>
+                        runFeedAction(`${feed.id}:pause`, () => pauseFeedAction(feed.id))
+                      }
+                      className="inline-flex items-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Pause
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={isBusy}
+                      onClick={() =>
+                        runFeedAction(`${feed.id}:activate`, () => activateFeedAction(feed.id))
+                      }
+                      className="inline-flex items-center rounded-lg border border-[rgb(0_83_218_/_0.14)] px-4 py-2.5 text-sm font-semibold text-[var(--primary)] transition hover:bg-[rgb(0_83_218_/_0.04)] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Run
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    disabled={feed.status !== "ACTIVE" || isBusy}
+                    onClick={() =>
+                      runFeedAction(`${feed.id}:sync`, () => syncFeedNowAction(feed.id))
+                    }
+                    className="button-primary inline-flex items-center rounded-lg px-4 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Sync now
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isBusy}
+                    onClick={() =>
+                      runFeedAction(`${feed.id}:delete`, () => deleteFeedAction(feed.id))
+                    }
+                    className="inline-flex items-center rounded-lg border border-[rgb(159_64_61_/_0.2)] px-4 py-2.5 text-sm font-semibold text-[rgb(117_33_33)] transition hover:bg-[rgb(159_64_61_/_0.06)] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
 
               <section className="mt-6">
@@ -201,6 +288,61 @@ export function FeedList({ feeds }: Readonly<{ feeds: FeedRecord[] }>) {
                     </p>
                     <p className="mt-2 text-sm leading-6 text-slate-500">
                       Shorter items stay out of the generation pipeline.
+                    </p>
+                  </div>
+                </div>
+              </section>
+
+              <section className="mt-8">
+                <div className="flex items-center gap-2">
+                  <span className="h-6 w-1 rounded-full bg-[var(--primary)]" />
+                  <h3 className="font-[var(--font-display)] text-xl font-semibold text-slate-900">
+                    Publishing
+                  </h3>
+                </div>
+
+                <div className="mt-5 grid gap-4 lg:grid-cols-3">
+                  <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                      Personalization
+                    </p>
+                    <p className="mt-3 text-lg font-semibold text-slate-900">
+                      {feed.defaultLanguage ?? "Default"} • {feed.defaultFeel ?? "Default"}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      {feed.styleNotes?.trim() || "Uses workspace style defaults."}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                      Destinations
+                    </p>
+                    <p className="mt-3 text-lg font-semibold text-slate-900">
+                      {feed.generateLinkedIn ? "LinkedIn" : null}
+                      {feed.generateLinkedIn && feed.generateX ? " + " : null}
+                      {feed.generateX ? "X" : null}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      LinkedIn: {feed.linkedinAccount?.displayName ?? "Workspace default / none"}
+                      <br />
+                      X: {feed.xAccount?.displayName ?? "Workspace default / none"}
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl bg-[var(--surface-low)] p-4">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                      Delivery mode
+                    </p>
+                    <p className="mt-3 text-lg font-semibold text-slate-900">
+                      {feed.autoPublishEnabled
+                        ? `Every ${feed.autoPublishIntervalMinutes ?? feed.refreshIntervalMinutes} min`
+                        : "Manual"}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      {feed.autoPublishEnabled
+                        ? "Generated posts are auto-approved and scheduled."
+                        : "Posts stay in review until you approve or schedule them."}
                     </p>
                   </div>
                 </div>

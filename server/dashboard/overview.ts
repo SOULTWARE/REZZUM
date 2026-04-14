@@ -6,16 +6,14 @@ import { getReviewQueue } from "@/server/review-queue/service";
 import { getScheduleOverview } from "@/server/schedule/service";
 
 export async function getDashboardOverview() {
-  const [feeds, queue, schedule, accounts] = await Promise.all([
-    listManagedFeeds(),
-    getReviewQueue({
-      platform: ALL_REVIEW_QUEUE_FILTER,
-      status: ALL_REVIEW_QUEUE_FILTER,
-      feed: ALL_REVIEW_QUEUE_FILTER,
-    }),
-    getScheduleOverview(),
-    getAccountsOverview(),
-  ]);
+  const feeds = await listManagedFeeds();
+  const queue = await getReviewQueue({
+    platform: ALL_REVIEW_QUEUE_FILTER,
+    status: ALL_REVIEW_QUEUE_FILTER,
+    feed: ALL_REVIEW_QUEUE_FILTER,
+  });
+  const schedule = await getScheduleOverview();
+  const accounts = await getAccountsOverview();
 
   const activeFeeds = feeds.filter((feed) => feed.status === FeedStatus.ACTIVE);
   const attentionFeeds = feeds.filter(

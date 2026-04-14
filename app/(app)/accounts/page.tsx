@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { AccountCard } from "@/components/accounts/account-card";
 import { AccountEmptyState } from "@/components/accounts/account-empty-state";
@@ -23,10 +24,12 @@ function StarterPlatformCard({
   title,
   detail,
   icon,
+  href,
 }: Readonly<{
   title: string;
   detail: string;
   icon: React.ReactNode;
+  href: string;
 }>) {
   return (
     <article className="rounded-xl border border-transparent bg-white p-6 shadow-sm transition-all duration-300 hover:border-[rgb(0_83_218_/_0.1)]">
@@ -42,22 +45,18 @@ function StarterPlatformCard({
       <h2 className="font-[var(--font-display)] text-lg font-bold text-slate-900">{title}</h2>
       <p className="mt-1 text-sm leading-6 text-slate-500">{detail}</p>
       <div className="mt-5 flex items-center gap-3">
-        <button
-          type="button"
-          disabled
-          aria-disabled="true"
-          className="button-primary flex-1 rounded-lg py-2 text-xs font-semibold text-white disabled:opacity-70"
+        <Link
+          href={href}
+          className="button-primary flex-1 rounded-lg py-2 text-center text-xs font-semibold text-white"
         >
           Connect
-        </button>
-        <button
-          type="button"
-          disabled
-          aria-disabled="true"
-          className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--surface-low)] text-slate-500 disabled:opacity-70"
+        </Link>
+        <Link
+          href={href}
+          className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--surface-low)] text-slate-500"
         >
           <AccountsIcon className="h-4 w-4" />
-        </button>
+        </Link>
       </div>
     </article>
   );
@@ -72,31 +71,28 @@ export default async function AccountsPage() {
   return (
     <PageContainer>
       <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {hasAccounts ? (
-          <>
-            {overview.accounts.map((account) => (
+        {hasAccounts
+          ? overview.accounts.map((account) => (
               <AccountCard
                 key={account.id}
                 account={account}
                 showPlatformLabel={overview.accounts.length > 1}
               />
-            ))}
-          </>
-        ) : (
-          <>
-            <StarterPlatformCard
-              title="LinkedIn"
-              detail="Connect a professional publishing destination for long-form distribution."
-              icon={<LinkedInIcon className="h-6 w-6" />}
-            />
-            <StarterPlatformCard
-              title="X"
-              detail="Connect a short-form channel for fast updates and launch announcements."
-              icon={<XIcon className="h-6 w-6" />}
-            />
-          </>
-        )}
+            ))
+          : null}
 
+        <StarterPlatformCard
+          title="Connect LinkedIn"
+          detail="Authorize LinkedIn and import the company pages this member can publish as."
+          icon={<LinkedInIcon className="h-6 w-6" />}
+          href="/api/auth/linkedin/start"
+        />
+        <StarterPlatformCard
+          title="Connect X"
+          detail="Authorize X with OAuth 2.0 PKCE for direct posting from the review queue."
+          icon={<XIcon className="h-6 w-6" />}
+          href="/api/auth/x/start"
+        />
         <AccountEmptyState />
       </section>
 
