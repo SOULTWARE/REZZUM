@@ -12,6 +12,7 @@ export default async function ShellLayout({
     <AppShell
       user={{
         email: session.user.email,
+        image: session.user.image ?? null,
         name: session.user.name || session.user.email,
       }}
     >

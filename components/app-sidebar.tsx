@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LogoutButton } from "@/components/logout-button";
-import { MenuCloseIcon, RezzumLogo } from "@/components/icons";
+import { MenuCloseIcon, RezzumLogo, SettingsIcon } from "@/components/icons";
 import { primaryNavigation, secondaryNavigation } from "@/lib/navigation";
 
 type AppSidebarProps = {
@@ -13,6 +14,7 @@ type AppSidebarProps = {
   pathname: string;
   user: {
     email: string;
+    image?: string | null;
     name: string;
   };
 };
@@ -26,6 +28,8 @@ function getInitials(name: string) {
     .join("");
 }
 
+const sidebarSecondaryNavigation = secondaryNavigation.filter((item) => item.href !== "/settings");
+
 export function AppSidebar({
   desktopCollapsed,
   mobileOpen,
@@ -34,6 +38,36 @@ export function AppSidebar({
   pathname,
   user,
 }: Readonly<AppSidebarProps>) {
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+
+  useEffect(() => {
+    setIsAccountModalOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      setIsAccountModalOpen(false);
+    }
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (!isAccountModalOpen) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsAccountModalOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isAccountModalOpen]);
+
   return (
     <>
       <div
@@ -43,6 +77,12 @@ export function AppSidebar({
         }`}
         onClick={onClose}
       />
+      {isAccountModalOpen ? (
+        <div
+          className="fixed inset-0 z-[55]"
+          onClick={() => setIsAccountModalOpen(false)}
+        />
+      ) : null}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200/70 bg-slate-50 px-4 py-4 transition-[width,transform,padding] duration-200 lg:translate-x-0 ${
           desktopCollapsed ? "lg:w-20 lg:px-3" : "lg:w-64 lg:px-4"
@@ -121,7 +161,7 @@ export function AppSidebar({
           </div>
 
           <div className="space-y-1.5">
-            {secondaryNavigation.map(({ href, label, icon: Icon }) => {
+            {sidebarSecondaryNavigation.map(({ href, label, icon: Icon }) => {
               const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
               return (
@@ -145,28 +185,80 @@ export function AppSidebar({
               );
             })}
 
-            <div className="mt-4 border-t border-slate-200/70 pt-4">
-              <div
-                className={`flex items-center px-2 ${
+            <div className="relative mt-4 border-t border-slate-200/70 pt-4">
+              {isAccountModalOpen ? (
+                <section
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Account menu"
+                  className={`absolute bottom-[calc(100%+0.75rem)] z-[60] overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white shadow-[0_24px_70px_rgb(15_23_42_/_0.22)] ${
+                    desktopCollapsed
+                      ? "left-0 w-[min(18rem,calc(100vw-2rem))] lg:w-64"
+                      : "left-0 right-0"
+                  }`}
+                >
+                  <div className="p-4">
+                    <div className="mb-3 flex items-center justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setIsAccountModalOpen(false)}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--surface-low)] text-slate-500 transition-colors hover:text-slate-900"
+                        aria-label="Close account menu"
+                      >
+                        <MenuCloseIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+
+                    <div className="grid gap-3">
+                      <Link
+                        href="/settings"
+                        onClick={() => {
+                          setIsAccountModalOpen(false);
+                          onClose();
+                        }}
+                        className="inline-flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900"
+                      >
+                        <span className="inline-flex items-center gap-3">
+                          <SettingsIcon className="h-5 w-5" />
+                          <span>Settings</span>
+                        </span>
+                        <span className="text-xs uppercase tracking-[0.14em] text-slate-400">
+                          Open
+                        </span>
+                      </Link>
+
+                      <LogoutButton />
+                    </div>
+                  </div>
+                </section>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setIsAccountModalOpen(true)}
+                className={`flex w-full items-center rounded-2xl px-2 py-2 text-left transition-colors hover:bg-white ${
                   desktopCollapsed ? "gap-3 lg:justify-center lg:gap-0" : "gap-3"
                 }`}
+                aria-haspopup="dialog"
+                aria-expanded={isAccountModalOpen}
+                aria-label="Open account menu"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-slate-700 shadow-sm">
-                  {getInitials(user.name)}
-                </div>
+                {user.image ? (
+                  <img
+                    src={user.image}
+                    alt={user.name}
+                    className="h-10 w-10 rounded-full object-cover shadow-sm"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-slate-700 shadow-sm">
+                    {getInitials(user.name)}
+                  </div>
+                )}
                 <div className={`min-w-0 ${desktopCollapsed ? "lg:hidden" : ""}`}>
-                  <p className="truncate text-sm font-semibold text-slate-900">
-                    {user.name}
-                  </p>
+                  <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
                   <p className="truncate text-[11px] text-slate-500">{user.email}</p>
                 </div>
-              </div>
-              <div className={`mt-3 px-2 ${desktopCollapsed ? "lg:hidden" : ""}`}>
-                <LogoutButton />
-              </div>
-              <div className={`mt-3 hidden px-2 ${desktopCollapsed ? "lg:block" : ""}`}>
-                <LogoutButton compact />
-              </div>
+              </button>
             </div>
           </div>
         </nav>

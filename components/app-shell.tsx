@@ -9,6 +9,7 @@ type AppShellProps = {
   children: React.ReactNode;
   user: {
     email: string;
+    image?: string | null;
     name: string;
   };
 };
