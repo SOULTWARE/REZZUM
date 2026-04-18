@@ -1,9 +1,21 @@
+import { requireAuthSession } from "@/server/auth/session";
 import { AppShell } from "@/components/app-shell";
 
-export default function ShellLayout({
+export default async function ShellLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <AppShell>{children}</AppShell>;
+  const session = await requireAuthSession();
+
+  return (
+    <AppShell
+      user={{
+        email: session.user.email,
+        name: session.user.name || session.user.email,
+      }}
+    >
+      {children}
+    </AppShell>
+  );
 }

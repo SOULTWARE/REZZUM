@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LogoutButton } from "@/components/logout-button";
 import { MenuCloseIcon, RezzumLogo } from "@/components/icons";
 import { primaryNavigation, secondaryNavigation } from "@/lib/navigation";
 
@@ -10,7 +11,20 @@ type AppSidebarProps = {
   onClose: () => void;
   onToggleDesktopCollapse: () => void;
   pathname: string;
+  user: {
+    email: string;
+    name: string;
+  };
 };
+
+function getInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
 
 export function AppSidebar({
   desktopCollapsed,
@@ -18,6 +32,7 @@ export function AppSidebar({
   onClose,
   onToggleDesktopCollapse,
   pathname,
+  user,
 }: Readonly<AppSidebarProps>) {
   return (
     <>
@@ -136,15 +151,21 @@ export function AppSidebar({
                   desktopCollapsed ? "gap-3 lg:justify-center lg:gap-0" : "gap-3"
                 }`}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
-                  <RezzumLogo className="h-8 w-8" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-slate-700 shadow-sm">
+                  {getInitials(user.name)}
                 </div>
                 <div className={`min-w-0 ${desktopCollapsed ? "lg:hidden" : ""}`}>
                   <p className="truncate text-sm font-semibold text-slate-900">
-                    Default workspace
+                    {user.name}
                   </p>
-                  <p className="truncate text-[11px] text-slate-500">MVP preview</p>
+                  <p className="truncate text-[11px] text-slate-500">{user.email}</p>
                 </div>
+              </div>
+              <div className={`mt-3 px-2 ${desktopCollapsed ? "lg:hidden" : ""}`}>
+                <LogoutButton />
+              </div>
+              <div className={`mt-3 hidden px-2 ${desktopCollapsed ? "lg:block" : ""}`}>
+                <LogoutButton compact />
               </div>
             </div>
           </div>

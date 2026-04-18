@@ -1,8 +1,15 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { getRequestAuthSession } from "@/server/auth/session";
 import { connectXAccount } from "@/server/integrations/x";
 
 export async function GET(request: Request) {
+  const session = await getRequestAuthSession(request);
+
+  if (!session) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");

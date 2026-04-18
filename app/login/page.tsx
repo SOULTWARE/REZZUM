@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { AuthForm } from "@/components/auth-form";
 import { AuthPageShell } from "@/components/auth-page-shell";
+import { enabledAuthProviders } from "@/server/auth";
+import { getAuthSession } from "@/server/auth/session";
 
 export const metadata: Metadata = {
   title: "Login",
@@ -9,31 +13,22 @@ export const metadata: Metadata = {
   },
 };
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const session = await getAuthSession();
+
+  if (session) {
+    redirect("/dashboard");
+  }
+
   return (
     <AuthPageShell
       alternateHref="/signup"
       alternateLabel="Create an account"
       alternatePrompt="Need an account?"
-      fields={[
-        {
-          autoComplete: "email",
-          label: "Email address",
-          name: "email",
-          placeholder: "you@company.com",
-          type: "email",
-        },
-        {
-          autoComplete: "current-password",
-          label: "Password",
-          name: "password",
-          placeholder: "Enter your password",
-          type: "password",
-        },
-      ]}
-      submitLabel="Log in"
       subtitle="Automate Your Social Flow"
       title="Sign in to REZZUM"
-    />
+    >
+      <AuthForm mode="login" providers={enabledAuthProviders} />
+    </AuthPageShell>
   );
 }

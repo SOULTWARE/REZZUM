@@ -127,6 +127,7 @@ Copy `.env.example` to `.env` and fill in the values you need.
 | `OPENAI_API_KEY` | Yes | Required for AI draft generation. |
 | `OPENAI_MODEL` | No | Overrides the default model. Current default is `gpt-5.4-mini`. |
 | `APP_ENCRYPTION_KEY` | Strongly recommended | Stable key for encrypting provider tokens at rest. |
+| `BETTER_AUTH_SECRET` | Yes for auth | Secret used to sign Better Auth sessions and OAuth state. Falls back to `APP_ENCRYPTION_KEY` if omitted. |
 | `CRON_SECRET` | Required only for HTTP cron | Bearer secret for `/api/cron/feeds` and `/api/cron/publish`. |
 | `CRON_WORKER_ENABLED` | No | Set to `false` to stop `pnpm dev` from starting the worker. |
 | `CRON_WORKER_INTERVAL_MS` | No | Worker poll interval in milliseconds. Default `60000`. |
@@ -135,8 +136,10 @@ Copy `.env.example` to `.env` and fill in the values you need.
 | `CRON_WORKER_RUN_ONCE` | No | Runs one worker tick and exits. Useful for debugging. |
 | `NEXT_PUBLIC_APP_URL` | Yes for OAuth and tunnels | Base URL used to generate OAuth callback URLs. |
 | `ALLOWED_DEV_ORIGINS` | No | Extra dev origins allowed by Next.js when using ngrok or another tunnel. |
+| `GOOGLE_CLIENT_ID` | Required for Google sign-in | Google OAuth client ID for Better Auth. |
+| `GOOGLE_CLIENT_SECRET` | Required for Google sign-in | Google OAuth client secret for Better Auth. |
 | `LINKEDIN_CLIENT_ID` | Required for LinkedIn connect | LinkedIn OAuth client ID. |
-| `LINKEDIN_CLIENT_SECRET` | Required for LinkedIn connect | LinkedIn OAuth client secret. |
+| `LINKEDIN_CLIENT_SECRET` | Required for LinkedIn auth/connect | LinkedIn OAuth client secret. |
 | `LINKEDIN_VERSION` | No | LinkedIn REST API version header. Default `202604`. |
 | `X_CLIENT_ID` | Required for X connect | X OAuth client ID. |
 | `X_CLIENT_SECRET` | Required for X connect | X OAuth client secret. |
@@ -144,6 +147,7 @@ Copy `.env.example` to `.env` and fill in the values you need.
 Notes:
 
 - `APP_ENCRYPTION_KEY` should be stable across restarts and deployments. If you do not set it, REZZUM derives key material from provider secrets and `OPENAI_API_KEY`, which is weaker operationally and can make token decryption brittle if secrets change.
+- `BETTER_AUTH_SECRET` should be a long random string and should not change between deploys unless you intend to invalidate all active sessions.
 - `NEXT_PUBLIC_APP_URL` must match the public URL used by the browser for OAuth callbacks.
 - `scripts/load-env.ts` loads `.env`, `.env.local`, `.env.<NODE_ENV>`, and `.env.<NODE_ENV>.local` for script-based entrypoints.
 
@@ -171,6 +175,7 @@ docker compose up -d postgres
 
 - `DATABASE_URL`
 - `OPENAI_API_KEY`
+- `BETTER_AUTH_SECRET`
 - `NEXT_PUBLIC_APP_URL`
 - `APP_ENCRYPTION_KEY`
 

@@ -1,14 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
-
-function getBaseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ||
-    "https://heroic-solely-amoeba.ngrok-free.app"
-  );
-}
+import { getAbsoluteAppUrl } from "@/server/app-url";
 
 export function getAbsoluteUrl(pathname: string) {
-  return `${getBaseUrl()}${pathname.startsWith("/") ? pathname : `/${pathname}`}`;
+  return getAbsoluteAppUrl(pathname);
 }
 
 export function createOauthState() {
