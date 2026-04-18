@@ -134,6 +134,9 @@ Copy `.env.example` to `.env` and fill in the values you need.
 | `SMTP_USER` | No | SMTP username when your provider requires authentication. |
 | `SMTP_PASSWORD` | No | SMTP password when your provider requires authentication. |
 | `SMTP_FROM` | Required for email verification | Sender used for verification emails, for example `REZZUM <no-reply@example.com>`. |
+| `SMTP_CONNECTION_TIMEOUT_MS` | No | SMTP connection timeout in milliseconds. Default `15000`. |
+| `SMTP_GREETING_TIMEOUT_MS` | No | SMTP greeting timeout in milliseconds. Default `15000`. |
+| `SMTP_SOCKET_TIMEOUT_MS` | No | SMTP socket timeout in milliseconds. Default `30000`. |
 | `CRON_SECRET` | Required only for HTTP cron | Bearer secret for `/api/cron/feeds` and `/api/cron/publish`. |
 | `CRON_WORKER_ENABLED` | No | Set to `false` to stop `pnpm dev` from starting the worker. |
 | `CRON_WORKER_INTERVAL_MS` | No | Worker poll interval in milliseconds. Default `60000`. |
@@ -155,6 +158,7 @@ Notes:
 - `APP_ENCRYPTION_KEY` should be stable across restarts and deployments. If you do not set it, REZZUM derives key material from provider secrets and `OPENAI_API_KEY`, which is weaker operationally and can make token decryption brittle if secrets change.
 - `BETTER_AUTH_SECRET` should be a long random string and should not change between deploys unless you intend to invalidate all active sessions.
 - Email verification and settings-page email changes are enabled only when the SMTP variables above are configured.
+- Use `SMTP_SECURE=true` with port `465`, or `SMTP_SECURE=false` with port `587`.
 - `NEXT_PUBLIC_APP_URL` must match the public URL used by the browser for OAuth callbacks.
 - `scripts/load-env.ts` loads `.env`, `.env.local`, `.env.<NODE_ENV>`, and `.env.<NODE_ENV>.local` for script-based entrypoints.
 

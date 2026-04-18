@@ -7,6 +7,20 @@ type SendEmailInput = {
   to: string;
 };
 
+function parseNumber(value: string | undefined) {
+  if (!value?.trim()) {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+
+  if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+    throw new Error("SMTP timeout values must be positive integers.");
+  }
+
+  return parsedValue;
+}
+
 function parseBoolean(value: string | undefined) {
   if (!value) {
     return null;
@@ -48,12 +62,19 @@ function getSmtpConfig() {
 
   const secure = parseBoolean(process.env.SMTP_SECURE) ?? port === 465;
 
+  if (port === 465 && !secure) {
+    throw new Error("SMTP_SECURE must be true when SMTP_PORT is 465.");
+  }
+
   return {
     auth: user ? { pass: password!, user } : undefined,
+    connectionTimeout: parseNumber(process.env.SMTP_CONNECTION_TIMEOUT_MS) ?? 15000,
     from,
+    greetingTimeout: parseNumber(process.env.SMTP_GREETING_TIMEOUT_MS) ?? 15000,
     host,
     port,
     secure,
+    socketTimeout: parseNumber(process.env.SMTP_SOCKET_TIMEOUT_MS) ?? 30000,
   };
 }
 
@@ -81,18 +102,29 @@ export async function sendEmailMessage({ html, subject, text, to }: Readonly<Sen
 
   const transporter = nodemailer.createTransport({
     auth: config.auth,
+    connectionTimeout: config.connectionTimeout,
+    greetingTimeout: config.greetingTimeout,
     host: config.host,
     port: config.port,
     secure: config.secure,
+    socketTimeout: config.socketTimeout,
   });
 
-  await transporter.sendMail({
-    from: config.from,
-    html,
-    subject,
-    text,
-    to,
-  });
+  try {
+    await transporter.sendMail({
+      from: config.from,
+      html,
+      subject,
+      text,
+      to,
+    });
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "Unknown SMTP error";
+
+    throw new Error(
+      `Failed to send auth email via SMTP (${config.host}:${config.port}, secure=${String(config.secure)}): ${detail}`,
+    );
+  }
 }
 
 export function renderVerificationEmail({
