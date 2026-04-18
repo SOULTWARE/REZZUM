@@ -2,6 +2,11 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@/server/db/client";
+import {
+  isAuthEmailDeliveryConfigured,
+  renderVerificationEmail,
+  sendEmailMessage,
+} from "@/server/email/mailer";
 import { getAppBaseUrl, getTrustedAppOrigins } from "@/server/app-url";
 
 function getAuthSecret() {
@@ -21,14 +26,18 @@ const googleEnabled = Boolean(
 const linkedinEnabled = Boolean(
   process.env.LINKEDIN_CLIENT_ID?.trim() && process.env.LINKEDIN_CLIENT_SECRET?.trim(),
 );
+const emailVerificationEnabled = isAuthEmailDeliveryConfigured();
+const appName = process.env.NEXT_PUBLIC_APP_NAME?.trim() || "REZZUM";
 
 export const enabledAuthProviders = {
   google: googleEnabled,
   linkedin: linkedinEnabled,
 } as const;
 
+export { emailVerificationEnabled };
+
 export const auth = betterAuth({
-  appName: process.env.NEXT_PUBLIC_APP_NAME?.trim() || "REZZUM",
+  appName,
   baseURL: getAppBaseUrl(),
   basePath: "/api/authentication",
   secret: getAuthSecret(),
@@ -41,7 +50,30 @@ export const auth = betterAuth({
     autoSignIn: true,
     minPasswordLength: 8,
     maxPasswordLength: 128,
+    requireEmailVerification: emailVerificationEnabled,
   },
+  ...(emailVerificationEnabled
+    ? {
+        emailVerification: {
+          autoSignInAfterVerification: true,
+          expiresIn: 60 * 60,
+          sendOnSignIn: true,
+          sendOnSignUp: true,
+          sendVerificationEmail: async ({ url, user }) => {
+            const message = renderVerificationEmail({
+              appName,
+              recipientName: user.name || user.email,
+              url,
+            });
+
+            await sendEmailMessage({
+              ...message,
+              to: user.email,
+            });
+          },
+        },
+      }
+    : {}),
   socialProviders: {
     ...(googleEnabled
       ? {
@@ -59,6 +91,11 @@ export const auth = betterAuth({
           },
         }
       : {}),
+  },
+  user: {
+    changeEmail: {
+      enabled: emailVerificationEnabled,
+    },
   },
   plugins: [nextCookies()],
 });

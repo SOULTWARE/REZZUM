@@ -63,6 +63,10 @@ function getErrorMessage(error: { code?: string; message?: string } | null | und
     return "Use 128 characters or fewer for your password.";
   }
 
+  if (error.code === "EMAIL_NOT_VERIFIED") {
+    return "Your email is not verified yet. We sent a fresh verification link.";
+  }
+
   return error.message || "Something went wrong. Please try again.";
 }
 
@@ -80,9 +84,22 @@ function getSocialButtonLabel(mode: AuthFormMode, provider: SocialProvider) {
   return `${action} with ${provider === "google" ? "Google" : "LinkedIn"}`;
 }
 
+function resolveCallbackURL(callbackURL: string) {
+  if (callbackURL.startsWith("http://") || callbackURL.startsWith("https://")) {
+    return callbackURL;
+  }
+
+  if (typeof window === "undefined") {
+    return callbackURL;
+  }
+
+  return new URL(callbackURL, window.location.origin).toString();
+}
+
 export function AuthForm({ callbackURL = "/dashboard", mode, providers }: Readonly<AuthFormProps>) {
   const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingProvider, setPendingProvider] = useState<SocialProvider | null>(null);
 
@@ -122,14 +139,17 @@ export function AuthForm({ callbackURL = "/dashboard", mode, providers }: Readon
 
     setIsSubmitting(true);
     setErrorMessage(null);
+    setSuccessMessage(null);
 
     try {
+      const resolvedCallbackURL = resolveCallbackURL(callbackURL);
       const result =
         mode === "login"
           ? await (async () => {
               const parsedValues = loginSchema.parse(rawValues);
 
               return authClient.signIn.email({
+                callbackURL: resolvedCallbackURL,
                 email: parsedValues.email,
                 password: parsedValues.password,
                 rememberMe: true,
@@ -139,6 +159,7 @@ export function AuthForm({ callbackURL = "/dashboard", mode, providers }: Readon
               const parsedValues = signupSchema.parse(rawValues);
 
               return authClient.signUp.email({
+                callbackURL: resolvedCallbackURL,
                 name: parsedValues.name,
                 email: parsedValues.email,
                 password: parsedValues.password,
@@ -147,6 +168,11 @@ export function AuthForm({ callbackURL = "/dashboard", mode, providers }: Readon
 
       if (result.error) {
         setErrorMessage(getErrorMessage(result.error));
+        return;
+      }
+
+      if (mode === "signup" && !result.data?.token) {
+        setSuccessMessage("Account created. Check your inbox to verify your email address.");
         return;
       }
 
@@ -164,11 +190,12 @@ export function AuthForm({ callbackURL = "/dashboard", mode, providers }: Readon
 
     setPendingProvider(provider);
     setErrorMessage(null);
+    setSuccessMessage(null);
 
     try {
       const result = await authClient.signIn.social({
         provider,
-        callbackURL,
+        callbackURL: resolveCallbackURL(callbackURL),
       });
 
       if (result.error) {
@@ -228,6 +255,15 @@ export function AuthForm({ callbackURL = "/dashboard", mode, providers }: Readon
           type="password"
         />
       </label>
+
+      {successMessage ? (
+        <p
+          role="status"
+          className="rounded-[0.95rem] border border-[rgb(0_83_218_/_0.18)] bg-[rgb(240_247_255)] px-4 py-3 text-sm font-medium text-[var(--primary-strong)]"
+        >
+          {successMessage}
+        </p>
+      ) : null}
 
       {errorMessage ? (
         <p
