@@ -79,7 +79,7 @@ export function AppSidebar({
       />
       {isAccountModalOpen ? (
         <div
-          className="fixed inset-0 z-[55]"
+          className="fixed inset-0 z-40"
           onClick={() => setIsAccountModalOpen(false)}
         />
       ) : null}
@@ -188,57 +188,39 @@ export function AppSidebar({
             <div className="relative mt-4 border-t border-slate-200/70 pt-4">
               {isAccountModalOpen ? (
                 <section
-                  role="dialog"
-                  aria-modal="true"
+                  role="menu"
                   aria-label="Account menu"
-                  className={`absolute bottom-[calc(100%+0.75rem)] z-[60] overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white shadow-[0_24px_70px_rgb(15_23_42_/_0.22)] ${
+                  className={`absolute bottom-[calc(100%+0.6rem)] z-[60] overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-2 shadow-[0_20px_48px_rgb(15_23_42_/_0.18)] ${
                     desktopCollapsed
-                      ? "left-0 w-[min(18rem,calc(100vw-2rem))] lg:w-64"
+                      ? "left-0 w-[min(17rem,calc(100vw-2rem))] lg:w-60"
                       : "left-0 right-0"
                   }`}
                 >
-                  <div className="p-4">
-                    <div className="mb-3 flex items-center justify-end">
-                      <button
-                        type="button"
-                        onClick={() => setIsAccountModalOpen(false)}
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[var(--surface-low)] text-slate-500 transition-colors hover:text-slate-900"
-                        aria-label="Close account menu"
-                      >
-                        <MenuCloseIcon className="h-5 w-5" />
-                      </button>
-                    </div>
+                  <div className="grid gap-1">
+                    <Link
+                      role="menuitem"
+                      href="/settings"
+                      onClick={() => {
+                        setIsAccountModalOpen(false);
+                        onClose();
+                      }}
+                      className="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:text-slate-900"
+                    >
+                      <SettingsIcon className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
 
-                    <div className="grid gap-3">
-                      <Link
-                        href="/settings"
-                        onClick={() => {
-                          setIsAccountModalOpen(false);
-                          onClose();
-                        }}
-                        className="inline-flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-900"
-                      >
-                        <span className="inline-flex items-center gap-3">
-                          <SettingsIcon className="h-5 w-5" />
-                          <span>Settings</span>
-                        </span>
-                        <span className="text-xs uppercase tracking-[0.14em] text-slate-400">
-                          Open
-                        </span>
-                      </Link>
-
-                      <LogoutButton />
-                    </div>
+                    <LogoutButton />
                   </div>
                 </section>
               ) : null}
               <button
                 type="button"
-                onClick={() => setIsAccountModalOpen(true)}
+                onClick={() => setIsAccountModalOpen((current) => !current)}
                 className={`flex w-full items-center rounded-2xl px-2 py-2 text-left transition-colors hover:bg-white ${
                   desktopCollapsed ? "gap-3 lg:justify-center lg:gap-0" : "gap-3"
                 }`}
-                aria-haspopup="dialog"
+                aria-haspopup="menu"
                 aria-expanded={isAccountModalOpen}
                 aria-label="Open account menu"
               >

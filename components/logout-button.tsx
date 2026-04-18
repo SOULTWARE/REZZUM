@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { DisconnectIcon } from "@/components/icons";
 import { authClient } from "@/lib/auth-client";
 
 type LogoutButtonProps = {
@@ -39,7 +40,14 @@ export function LogoutButton({ compact = false }: Readonly<LogoutButtonProps>) {
       aria-label="Log out"
       title="Log out"
     >
-      {compact ? "OUT" : isPending ? "Signing out..." : "Log out"}
+      {compact ? (
+        "OUT"
+      ) : (
+        <>
+          <DisconnectIcon className="mr-2 h-4 w-4" />
+          {isPending ? "Signing out..." : "Log out"}
+        </>
+      )}
     </button>
   );
 }
