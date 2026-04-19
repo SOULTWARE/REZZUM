@@ -34,8 +34,33 @@ export function getAppBaseUrl() {
   throw new Error("NEXT_PUBLIC_APP_URL is required in production.");
 }
 
-export function getAbsoluteAppUrl(pathname: string) {
-  return new URL(pathname, `${getAppBaseUrl()}/`).toString();
+export function getRequestBaseUrl(request: Request) {
+  const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const host = request.headers.get("host")?.trim();
+  const origin = request.headers.get("origin")?.trim();
+
+  if (forwardedHost) {
+    return `${forwardedProto || "https"}://${forwardedHost}`;
+  }
+
+  if (host) {
+    const protocol =
+      forwardedProto ||
+      (host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https");
+
+    return `${protocol}://${host}`;
+  }
+
+  if (origin) {
+    return stripTrailingSlash(origin);
+  }
+
+  return getAppBaseUrl();
+}
+
+export function getAbsoluteAppUrl(pathname: string, baseUrl = getAppBaseUrl()) {
+  return new URL(pathname, `${stripTrailingSlash(baseUrl)}/`).toString();
 }
 
 export function getTrustedAppOrigins() {

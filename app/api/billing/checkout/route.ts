@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { getRequestBaseUrl } from "@/server/app-url";
 import {
   createCheckoutForPlan,
   resolveBillingPlanSlug,
@@ -10,7 +11,7 @@ import { getRequestAuthSession } from "@/server/auth/session";
 export const dynamic = "force-dynamic";
 
 function getAuthRedirect(request: NextRequest, plan: string | null) {
-  const redirectUrl = new URL("/signup", request.url);
+  const redirectUrl = new URL("/signup", `${getRequestBaseUrl(request)}/`);
 
   if (plan) {
     redirectUrl.searchParams.set("plan", plan);
@@ -20,11 +21,11 @@ function getAuthRedirect(request: NextRequest, plan: string | null) {
 }
 
 function getSettingsRedirect(request: NextRequest, status: string) {
-  return NextResponse.redirect(new URL(`/settings?billing=${status}`, request.url));
+  return NextResponse.redirect(new URL(`/settings?billing=${status}`, `${getRequestBaseUrl(request)}/`));
 }
 
 function getPricingRedirect(request: NextRequest, status: string) {
-  return NextResponse.redirect(new URL(`/pricing?billing=${status}`, request.url));
+  return NextResponse.redirect(new URL(`/pricing?billing=${status}`, `${getRequestBaseUrl(request)}/`));
 }
 
 export async function GET(request: NextRequest) {
@@ -43,6 +44,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const checkoutUrl = await createCheckoutForPlan({
+      appBaseUrl: getRequestBaseUrl(request),
       plan,
       returnPath: resolveInternalReturnPath(
         request.nextUrl.searchParams.get("returnTo"),

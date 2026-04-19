@@ -228,8 +228,8 @@ function selectManagedSubscription(subscriptions: PolarSubscription[]) {
   return managedSubscription ?? subscriptions[0] ?? null;
 }
 
-function getSettingsReturnUrl(status: string) {
-  return getAbsoluteAppUrl(`/settings?billing=${status}`);
+function getSettingsReturnUrl(status: string, appBaseUrl?: string) {
+  return getAbsoluteAppUrl(`/settings?billing=${status}`, appBaseUrl);
 }
 
 export function isBillingEnabled() {
@@ -313,6 +313,7 @@ export async function getCurrentSubscriptionForUser(userId: string) {
 }
 
 export async function createCheckoutForPlan(input: {
+  appBaseUrl?: string;
   plan: BillingPlanSlug;
   returnPath?: string;
   user: PolarManagedUser;
@@ -335,8 +336,9 @@ export async function createCheckoutForPlan(input: {
       products: [productId],
       return_url: getAbsoluteAppUrl(
         resolveInternalReturnPath(input.returnPath, "/pricing"),
+        input.appBaseUrl,
       ),
-      success_url: getSettingsReturnUrl("success"),
+      success_url: getSettingsReturnUrl("success", input.appBaseUrl),
     }),
     method: "POST",
   });
@@ -345,6 +347,7 @@ export async function createCheckoutForPlan(input: {
 }
 
 export async function createCustomerPortalSession(input: {
+  appBaseUrl?: string;
   returnPath?: string;
   userId: string;
 }) {
@@ -353,6 +356,7 @@ export async function createCustomerPortalSession(input: {
       external_customer_id: input.userId,
       return_url: getAbsoluteAppUrl(
         resolveInternalReturnPath(input.returnPath, "/settings"),
+        input.appBaseUrl,
       ),
     }),
     method: "POST",
@@ -361,16 +365,20 @@ export async function createCustomerPortalSession(input: {
   return response;
 }
 
-export async function cancelSubscriptionForUser(userId: string) {
-  const currentSubscription = await getCurrentSubscriptionForUser(userId);
+export async function cancelSubscriptionForUser(input: {
+  appBaseUrl?: string;
+  userId: string;
+}) {
+  const currentSubscription = await getCurrentSubscriptionForUser(input.userId);
 
   if (!currentSubscription) {
     return false;
   }
 
   const customerSession = await createCustomerPortalSession({
+    appBaseUrl: input.appBaseUrl,
     returnPath: "/settings",
-    userId,
+    userId: input.userId,
   });
 
   await polarRequest(
@@ -387,6 +395,7 @@ export async function cancelSubscriptionForUser(userId: string) {
 }
 
 export async function changeSubscriptionForUser(input: {
+  appBaseUrl?: string;
   plan: BillingPlanSlug;
   user: PolarManagedUser;
 }) {
@@ -401,6 +410,7 @@ export async function changeSubscriptionForUser(input: {
   if (!currentSubscription) {
     return {
       checkoutUrl: await createCheckoutForPlan({
+        appBaseUrl: input.appBaseUrl,
         plan: input.plan,
         returnPath: "/settings",
         user: input.user,
@@ -416,6 +426,7 @@ export async function changeSubscriptionForUser(input: {
   }
 
   const customerSession = await createCustomerPortalSession({
+    appBaseUrl: input.appBaseUrl,
     returnPath: "/settings",
     userId: input.user.id,
   });
