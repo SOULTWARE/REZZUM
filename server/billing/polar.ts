@@ -57,7 +57,7 @@ export type BillingSubscriptionSummary = {
   status: string;
 };
 
-class PolarApiError extends Error {
+export class PolarApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
@@ -65,6 +65,18 @@ class PolarApiError extends Error {
     super(message);
     this.name = "PolarApiError";
   }
+}
+
+export function getBillingErrorDetail(error: unknown) {
+  if (error instanceof PolarApiError) {
+    return error.message;
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return "Unexpected billing error.";
 }
 
 const billingPlans = {
@@ -304,7 +316,7 @@ export async function getCurrentSubscriptionForUser(userId: string) {
 
     return subscription ? normalizeSubscription(subscription) : null;
   } catch (error) {
-    if (error instanceof PolarApiError && error.status === 404) {
+    if (error instanceof PolarApiError && (error.status === 404 || error.status === 422)) {
       return null;
     }
 

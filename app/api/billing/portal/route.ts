@@ -1,13 +1,19 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getRequestBaseUrl } from "@/server/app-url";
-import { createCustomerPortalSession } from "@/server/billing/polar";
+import { createCustomerPortalSession, getBillingErrorDetail } from "@/server/billing/polar";
 import { getRequestAuthSession } from "@/server/auth/session";
 
 export const dynamic = "force-dynamic";
 
-function getSettingsRedirect(request: NextRequest, status: string) {
-  return NextResponse.redirect(new URL(`/settings?billing=${status}`, `${getRequestBaseUrl(request)}/`));
+function getSettingsRedirect(request: NextRequest, status: string, detail?: string) {
+  const url = new URL(`/settings?billing=${status}`, `${getRequestBaseUrl(request)}/`);
+
+  if (detail) {
+    url.searchParams.set("billingDetail", detail.slice(0, 180));
+  }
+
+  return NextResponse.redirect(url);
 }
 
 export async function GET(request: NextRequest) {
@@ -25,7 +31,8 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.redirect(customerSession.customer_portal_url);
-  } catch {
-    return getSettingsRedirect(request, "portal-unavailable");
+  } catch (error) {
+    console.error("Polar portal session failed", error);
+    return getSettingsRedirect(request, "portal-unavailable", getBillingErrorDetail(error));
   }
 }

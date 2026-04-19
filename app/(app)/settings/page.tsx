@@ -19,6 +19,8 @@ export const dynamic = "force-dynamic";
 function getStatusBanner(searchParams: { [key: string]: string | string[] | undefined }) {
   const error = typeof searchParams.error === "string" ? searchParams.error : null;
   const billing = typeof searchParams.billing === "string" ? searchParams.billing : null;
+  const billingDetail =
+    typeof searchParams.billingDetail === "string" ? searchParams.billingDetail : null;
 
   if (searchParams.emailUpdated === "1") {
     return {
@@ -90,8 +92,8 @@ function getStatusBanner(searchParams: { [key: string]: string | string[] | unde
           : billing === "no-subscription"
             ? "No active subscription was found for this account."
             : billing === "portal-unavailable"
-              ? "We could not open the Polar customer portal right now."
-              : "Billing is unavailable right now. Verify your Polar configuration and try again.",
+              ? `We could not open the Polar customer portal right now.${billingDetail ? ` ${billingDetail}` : ""}`
+              : `Billing is unavailable right now.${billingDetail ? ` ${billingDetail}` : " Verify your Polar configuration and try again."}`,
     };
   }
 
