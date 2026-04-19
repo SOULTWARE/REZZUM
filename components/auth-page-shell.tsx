@@ -1,46 +1,14 @@
 import Link from "next/link";
-import { LinkedInIcon, RezzumLogo } from "@/components/icons";
-
-type AuthField = {
-  autoComplete?: string;
-  label: string;
-  name: string;
-  placeholder: string;
-  type?: "email" | "password" | "text";
-};
+import { RezzumLogo } from "@/components/icons";
 
 type AuthPageShellProps = {
   alternateHref: string;
   alternateLabel: string;
   alternatePrompt: string;
-  fields: AuthField[];
-  submitLabel: string;
+  children: React.ReactNode;
   subtitle: string;
   title: string;
 };
-
-function GoogleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
-      <path
-        d="M21.6 12.23C21.6 11.55 21.54 10.9 21.43 10.27H12V14.14H17.39C17.16 15.39 16.45 16.45 15.39 17.16V19.67H18.62C20.51 17.93 21.6 15.37 21.6 12.23Z"
-        fill="#4285F4"
-      />
-      <path
-        d="M12 22C14.7 22 16.96 21.11 18.62 19.67L15.39 17.16C14.5 17.76 13.36 18.12 12 18.12C9.39 18.12 7.18 16.36 6.4 14H3.06V16.59C4.71 19.86 8.09 22 12 22Z"
-        fill="#34A853"
-      />
-      <path
-        d="M6.4 14C6.2 13.4 6.09 12.76 6.09 12C6.09 11.24 6.2 10.6 6.4 10V7.41H3.06C2.39 8.73 2 10.31 2 12C2 13.69 2.39 15.27 3.06 16.59L6.4 14Z"
-        fill="#FBBC05"
-      />
-      <path
-        d="M12 5.88C13.49 5.88 14.82 6.39 15.87 7.39L18.69 4.57C16.95 2.95 14.69 2 12 2C8.09 2 4.71 4.14 3.06 7.41L6.4 10C7.18 7.64 9.39 5.88 12 5.88Z"
-        fill="#EA4335"
-      />
-    </svg>
-  );
-}
 
 function CornerWaves({
   className,
@@ -76,8 +44,7 @@ export function AuthPageShell({
   alternateHref,
   alternateLabel,
   alternatePrompt,
-  fields,
-  submitLabel,
+  children,
   subtitle,
   title,
 }: Readonly<AuthPageShellProps>) {
@@ -117,47 +84,7 @@ export function AuthPageShell({
           </div>
 
           <section className="mt-9">
-            <form className="space-y-4">
-              {fields.map((field) => (
-                <label key={field.name} className="block">
-                  <span className="mb-2 block text-sm font-semibold text-[var(--foreground)]">
-                    {field.label}
-                  </span>
-                  <input
-                    autoComplete={field.autoComplete}
-                    className="w-full rounded-[0.95rem] border border-[rgb(0_83_218_/_0.24)] bg-white px-4 py-4 text-[1.02rem] text-[var(--foreground)] shadow-[inset_0_1px_2px_rgb(16_24_40_/_0.04)] outline-none transition placeholder:text-slate-400 focus:border-[var(--primary)] focus:ring-4 focus:ring-[rgb(0_83_218_/_0.12)]"
-                    name={field.name}
-                    placeholder={field.placeholder}
-                    type={field.type ?? "text"}
-                  />
-                </label>
-              ))}
-
-              <button
-                type="button"
-                className="button-primary mt-3 inline-flex w-full items-center justify-center rounded-full px-6 py-4 text-lg font-semibold"
-              >
-                {submitLabel}
-              </button>
-
-              <button
-                type="button"
-                className="inline-flex w-full items-center justify-center gap-3 rounded-full border border-slate-200 bg-white px-6 py-4 text-lg font-medium text-slate-600 shadow-[0_6px_14px_rgb(15_23_42_/_0.06)]"
-              >
-                <GoogleIcon />
-                <span>{submitLabel === "Log in" ? "Sign in with Google" : "Sign up with Google"}</span>
-              </button>
-
-              <button
-                type="button"
-                className="inline-flex w-full items-center justify-center gap-3 rounded-full bg-[linear-gradient(145deg,var(--primary),var(--primary-strong))] px-6 py-4 text-lg font-medium text-white shadow-[0_14px_30px_rgb(0_83_218_/_0.22)]"
-              >
-                <LinkedInIcon className="h-5 w-5" />
-                <span>
-                  {submitLabel === "Log in" ? "Sign in with LinkedIn" : "Sign up with LinkedIn"}
-                </span>
-              </button>
-            </form>
+            {children}
 
             <p className="mt-8 text-center text-[1.05rem] text-[var(--foreground)]">
               {alternatePrompt}{" "}

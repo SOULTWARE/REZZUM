@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MenuCloseIcon, RezzumLogo } from "@/components/icons";
+import { LogoutButton } from "@/components/logout-button";
+import { MenuCloseIcon, RezzumLogo, SettingsIcon } from "@/components/icons";
 import { primaryNavigation, secondaryNavigation } from "@/lib/navigation";
 
 type AppSidebarProps = {
@@ -10,7 +12,23 @@ type AppSidebarProps = {
   onClose: () => void;
   onToggleDesktopCollapse: () => void;
   pathname: string;
+  user: {
+    email: string;
+    image?: string | null;
+    name: string;
+  };
 };
+
+function getInitials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+const sidebarSecondaryNavigation = secondaryNavigation.filter((item) => item.href !== "/settings");
 
 export function AppSidebar({
   desktopCollapsed,
@@ -18,7 +36,38 @@ export function AppSidebar({
   onClose,
   onToggleDesktopCollapse,
   pathname,
+  user,
 }: Readonly<AppSidebarProps>) {
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+
+  useEffect(() => {
+    setIsAccountModalOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!mobileOpen) {
+      setIsAccountModalOpen(false);
+    }
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    if (!isAccountModalOpen) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsAccountModalOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isAccountModalOpen]);
+
   return (
     <>
       <div
@@ -28,6 +77,12 @@ export function AppSidebar({
         }`}
         onClick={onClose}
       />
+      {isAccountModalOpen ? (
+        <div
+          className="fixed inset-0 z-40"
+          onClick={() => setIsAccountModalOpen(false)}
+        />
+      ) : null}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-200/70 bg-slate-50 px-4 py-4 transition-[width,transform,padding] duration-200 lg:translate-x-0 ${
           desktopCollapsed ? "lg:w-20 lg:px-3" : "lg:w-64 lg:px-4"
@@ -106,7 +161,7 @@ export function AppSidebar({
           </div>
 
           <div className="space-y-1.5">
-            {secondaryNavigation.map(({ href, label, icon: Icon }) => {
+            {sidebarSecondaryNavigation.map(({ href, label, icon: Icon }) => {
               const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
               return (
@@ -130,22 +185,62 @@ export function AppSidebar({
               );
             })}
 
-            <div className="mt-4 border-t border-slate-200/70 pt-4">
-              <div
-                className={`flex items-center px-2 ${
+            <div className="relative mt-4 border-t border-slate-200/70 pt-4">
+              {isAccountModalOpen ? (
+                <section
+                  role="menu"
+                  aria-label="Account menu"
+                  className={`absolute bottom-[calc(100%+0.6rem)] z-[60] overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-2 shadow-[0_20px_48px_rgb(15_23_42_/_0.18)] ${
+                    desktopCollapsed
+                      ? "left-0 w-[min(17rem,calc(100vw-2rem))] lg:w-60"
+                      : "left-0 right-0"
+                  }`}
+                >
+                  <div className="grid gap-1">
+                    <Link
+                      role="menuitem"
+                      href="/settings"
+                      onClick={() => {
+                        setIsAccountModalOpen(false);
+                        onClose();
+                      }}
+                      className="inline-flex w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-600 shadow-sm transition-colors hover:border-slate-300 hover:text-slate-900"
+                    >
+                      <SettingsIcon className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
+
+                    <LogoutButton />
+                  </div>
+                </section>
+              ) : null}
+              <button
+                type="button"
+                onClick={() => setIsAccountModalOpen((current) => !current)}
+                className={`flex w-full items-center rounded-2xl px-2 py-2 text-left transition-colors hover:bg-white ${
                   desktopCollapsed ? "gap-3 lg:justify-center lg:gap-0" : "gap-3"
                 }`}
+                aria-haspopup="menu"
+                aria-expanded={isAccountModalOpen}
+                aria-label="Open account menu"
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
-                  <RezzumLogo className="h-8 w-8" />
-                </div>
+                {user.image ? (
+                  <img
+                    src={user.image}
+                    alt={user.name}
+                    className="h-10 w-10 rounded-full object-cover shadow-sm"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-bold text-slate-700 shadow-sm">
+                    {getInitials(user.name)}
+                  </div>
+                )}
                 <div className={`min-w-0 ${desktopCollapsed ? "lg:hidden" : ""}`}>
-                  <p className="truncate text-sm font-semibold text-slate-900">
-                    Default workspace
-                  </p>
-                  <p className="truncate text-[11px] text-slate-500">MVP preview</p>
+                  <p className="truncate text-sm font-semibold text-slate-900">{user.name}</p>
+                  <p className="truncate text-[11px] text-slate-500">{user.email}</p>
                 </div>
-              </div>
+              </button>
             </div>
           </div>
         </nav>

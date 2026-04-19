@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { AccountSettingsPanel } from "@/components/account-settings-panel";
 import { PageContainer } from "@/components/page-container";
+import { db } from "@/server/db/client";
 import { getConnectedAccountOptions } from "@/server/accounts/service";
+import { emailVerificationEnabled } from "@/server/auth";
+import { requireAuthSession } from "@/server/auth/session";
 import { updateWorkspaceSettingsAction } from "@/server/settings/actions";
 import { getWorkspaceSettings } from "@/server/settings/service";
 
@@ -10,126 +14,201 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function SettingsPage() {
-  const settings = await getWorkspaceSettings();
-  const linkedinAccounts = await getConnectedAccountOptions("LINKEDIN");
-  const xAccounts = await getConnectedAccountOptions("X");
+function getStatusBanner(searchParams: { [key: string]: string | string[] | undefined }) {
+  const error = typeof searchParams.error === "string" ? searchParams.error : null;
+
+  if (searchParams.emailUpdated === "1") {
+    return {
+      className: "border-[rgb(0_83_218_/_0.14)] bg-[rgb(240_247_255)] text-[var(--primary-strong)]",
+      message: "Your email address has been updated and verified.",
+    };
+  }
+
+  if (searchParams.verified === "1") {
+    return {
+      className: "border-[rgb(0_83_218_/_0.14)] bg-[rgb(240_247_255)] text-[var(--primary-strong)]",
+      message: "Your email address has been verified.",
+    };
+  }
+
+  if (error === "TOKEN_EXPIRED") {
+    return {
+      className: "border-[rgb(181_125_20_/_0.18)] bg-[rgb(255_250_240)] text-[rgb(108_79_10)]",
+      message: "That verification link expired. Request a new one from your account settings.",
+    };
+  }
+
+  if (error === "INVALID_TOKEN") {
+    return {
+      className: "border-[rgb(159_64_61_/_0.18)] bg-[rgb(255_245_245)] text-[rgb(117_33_33)]",
+      message: "That verification link is invalid. Request a fresh email and try again.",
+    };
+  }
+
+  return null;
+}
+
+export default async function SettingsPage({
+  searchParams,
+}: Readonly<{
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}>) {
+  const session = await requireAuthSession();
+  const [resolvedSearchParams, settings, linkedinAccounts, xAccounts, credentialAccount] =
+    await Promise.all([
+      searchParams,
+      getWorkspaceSettings(),
+      getConnectedAccountOptions("LINKEDIN"),
+      getConnectedAccountOptions("X"),
+      db.account.findFirst({
+        select: {
+          id: true,
+          password: true,
+        },
+        where: {
+          providerId: "credential",
+          userId: session.user.id,
+        },
+      }),
+    ]);
+  const statusBanner = getStatusBanner(resolvedSearchParams);
 
   return (
     <PageContainer>
+      {statusBanner ? (
+        <div
+          className={`mb-6 rounded-xl border px-4 py-4 text-sm font-medium ${statusBanner.className}`}
+        >
+          {statusBanner.message}
+        </div>
+      ) : null}
+
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-        <form action={updateWorkspaceSettingsAction} className="rounded-xl bg-white p-6 shadow-sm">
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-            Workspace defaults
-          </p>
-          <h1 className="mt-3 font-[var(--font-display)] text-3xl font-semibold tracking-[-0.04em] text-slate-900">
-            Generation and delivery defaults
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-            These values fill new feeds automatically and act as fallbacks when a feed does not
-            override them.
-          </p>
+        <div className="grid gap-6">
+          <AccountSettingsPanel
+            emailVerificationEnabled={emailVerificationEnabled}
+            hasPassword={Boolean(credentialAccount?.password)}
+            user={{
+              email: session.user.email,
+              emailVerified: session.user.emailVerified,
+              image: session.user.image ?? null,
+              name: session.user.name || session.user.email,
+            }}
+          />
 
-          <div className="mt-8 grid gap-6">
-            <div className="grid gap-6 sm:grid-cols-2">
+          <form action={updateWorkspaceSettingsAction} className="rounded-xl bg-white p-6 shadow-sm">
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              Workspace defaults
+            </p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-semibold tracking-[-0.04em] text-slate-900">
+              Generation and delivery defaults
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+              These values fill new feeds automatically and act as fallbacks when a feed does not
+              override them.
+            </p>
+
+            <div className="mt-8 grid gap-6">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <label className="block space-y-2">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Default language
+                  </span>
+                  <input
+                    name="defaultLanguage"
+                    type="text"
+                    defaultValue={settings.defaultLanguage}
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-slate-900"
+                  />
+                </label>
+
+                <label className="block space-y-2">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Default feel
+                  </span>
+                  <input
+                    name="defaultFeel"
+                    type="text"
+                    defaultValue={settings.defaultFeel}
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-slate-900"
+                  />
+                </label>
+              </div>
+
               <label className="block space-y-2">
                 <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                  Default language
+                  Default style
                 </span>
-                <input
-                  name="defaultLanguage"
-                  type="text"
-                  defaultValue={settings.defaultLanguage}
-                  className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-slate-900"
+                <textarea
+                  name="defaultStyle"
+                  rows={6}
+                  defaultValue={settings.defaultStyle}
+                  className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm leading-7 text-slate-900"
                 />
               </label>
 
+              <div className="grid gap-6 sm:grid-cols-2">
+                <label className="block space-y-2">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Default LinkedIn destination
+                  </span>
+                  <select
+                    name="defaultLinkedInAccountId"
+                    defaultValue={settings.defaultLinkedInAccountId ?? ""}
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-slate-900"
+                  >
+                    <option value="">No default destination</option>
+                    {linkedinAccounts.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block space-y-2">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Default X destination
+                  </span>
+                  <select
+                    name="defaultXAccountId"
+                    defaultValue={settings.defaultXAccountId ?? ""}
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-slate-900"
+                  >
+                    <option value="">No default destination</option>
+                    {xAccounts.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
               <label className="block space-y-2">
                 <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                  Default feel
+                  Default auto-publish interval (minutes)
                 </span>
                 <input
-                  name="defaultFeel"
-                  type="text"
-                  defaultValue={settings.defaultFeel}
+                  name="defaultAutoPublishIntervalMinutes"
+                  type="number"
+                  min={15}
+                  defaultValue={settings.defaultAutoPublishIntervalMinutes ?? ""}
                   className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-slate-900"
                 />
               </label>
             </div>
 
-            <label className="block space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                Default style
-              </span>
-              <textarea
-                name="defaultStyle"
-                rows={6}
-                defaultValue={settings.defaultStyle}
-                className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm leading-7 text-slate-900"
-              />
-            </label>
-
-            <div className="grid gap-6 sm:grid-cols-2">
-              <label className="block space-y-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                  Default LinkedIn destination
-                </span>
-                <select
-                  name="defaultLinkedInAccountId"
-                  defaultValue={settings.defaultLinkedInAccountId ?? ""}
-                  className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-slate-900"
-                >
-                  <option value="">No default destination</option>
-                  {linkedinAccounts.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="block space-y-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                  Default X destination
-                </span>
-                <select
-                  name="defaultXAccountId"
-                  defaultValue={settings.defaultXAccountId ?? ""}
-                  className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-slate-900"
-                >
-                  <option value="">No default destination</option>
-                  {xAccounts.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <div className="mt-8">
+              <button
+                type="submit"
+                className="button-primary inline-flex items-center rounded-lg px-5 py-3 text-sm font-semibold"
+              >
+                Save workspace defaults
+              </button>
             </div>
-
-            <label className="block space-y-2">
-              <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
-                Default auto-publish interval (minutes)
-              </span>
-              <input
-                name="defaultAutoPublishIntervalMinutes"
-                type="number"
-                min={15}
-                defaultValue={settings.defaultAutoPublishIntervalMinutes ?? ""}
-                className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-slate-900"
-              />
-            </label>
-          </div>
-
-          <div className="mt-8">
-            <button
-              type="submit"
-              className="button-primary inline-flex items-center rounded-lg px-5 py-3 text-sm font-semibold"
-            >
-              Save workspace defaults
-            </button>
-          </div>
-        </form>
+          </form>
+        </div>
 
         <aside className="grid gap-6">
           <section className="rounded-xl bg-white p-6 shadow-sm">
@@ -168,6 +247,7 @@ export default async function SettingsPage() {
               Notes
             </p>
             <div className="mt-5 space-y-3 text-sm leading-7 text-slate-500">
+              <p>Email/password verification emails are sent through the configured SMTP transport.</p>
               <p>LinkedIn connections import company pages the authenticated member can publish as.</p>
               <p>X uses OAuth 2.0 PKCE and stores the connected account for direct publishing.</p>
               <p>Feed-specific settings override these defaults whenever they are present.</p>

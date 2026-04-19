@@ -5,7 +5,16 @@ import { usePathname } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { AppSidebar } from "@/components/app-sidebar";
 
-export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) {
+type AppShellProps = {
+  children: React.ReactNode;
+  user: {
+    email: string;
+    image?: string | null;
+    name: string;
+  };
+};
+
+export function AppShell({ children, user }: Readonly<AppShellProps>) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
@@ -18,6 +27,7 @@ export function AppShell({ children }: Readonly<{ children: React.ReactNode }>) 
         onClose={() => setMobileOpen(false)}
         onToggleDesktopCollapse={() => setDesktopCollapsed((current) => !current)}
         pathname={pathname}
+        user={user}
       />
       <div
         className={`min-h-screen transition-[padding] duration-200 ${
