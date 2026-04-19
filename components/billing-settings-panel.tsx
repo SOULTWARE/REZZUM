@@ -90,8 +90,9 @@ export function BillingSettingsPanel({
                   <input name="plan" type="hidden" value={plan.slug} />
                   <button
                     type="submit"
+                    disabled={isCurrentPlan}
                     className={`inline-flex w-full items-center justify-between rounded-lg px-4 py-3 text-sm font-semibold ${
-                      isCurrentPlan ? "button-secondary" : "button-primary"
+                      isCurrentPlan ? "button-secondary disabled:cursor-not-allowed disabled:opacity-60" : "button-primary"
                     }`}
                   >
                     <span>{isCurrentPlan ? `Current: ${plan.label}` : `Change to ${plan.label}`}</span>
@@ -103,21 +104,30 @@ export function BillingSettingsPanel({
           </div>
 
           <div className="mt-6 grid gap-3">
-            <form action="/api/billing/subscription/cancel" method="post">
-              <button
-                type="submit"
-                disabled={!currentSubscription}
-                className="inline-flex w-full items-center justify-center rounded-lg border border-rose-200 px-4 py-3 text-sm font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+            {currentSubscription?.cancelAtPeriodEnd ? (
+              <Link
+                href="/api/billing/portal"
+                className="inline-flex w-full items-center justify-center rounded-lg border border-[rgb(0_83_218_/_0.2)] px-4 py-3 text-sm font-semibold text-[var(--primary)]"
               >
-                Cancel subscription
-              </button>
-            </form>
+                Restore subscription
+              </Link>
+            ) : (
+              <form action="/api/billing/subscription/cancel" method="post">
+                <button
+                  type="submit"
+                  disabled={!currentSubscription}
+                  className="inline-flex w-full items-center justify-center rounded-lg border border-rose-200 px-4 py-3 text-sm font-semibold text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Cancel subscription
+                </button>
+              </form>
+            )}
 
             <Link
               href="/api/billing/portal"
               className="button-secondary inline-flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-semibold"
             >
-              Open customer portal
+              {currentSubscription?.cancelAtPeriodEnd ? "Manage billing in portal" : "Open customer portal"}
             </Link>
           </div>
         </>
