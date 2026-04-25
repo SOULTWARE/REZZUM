@@ -39,6 +39,11 @@ const nextConfig: NextConfig = {
         hostname: "**.licdn.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "**.fbcdn.net",
+        pathname: "/**",
+      },
     ],
   },
 };
