@@ -8,6 +8,7 @@ export const generatedPostInclude = {
       feed: {
         include: {
           filter: true,
+          facebookAccount: true,
           linkedinAccount: true,
           xAccount: true,
         },

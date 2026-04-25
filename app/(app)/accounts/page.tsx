@@ -2,8 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { AccountCard } from "@/components/accounts/account-card";
 import { AccountEmptyState } from "@/components/accounts/account-empty-state";
-import { AccountsIcon, LinkedInIcon, SparkIcon, XIcon } from "@/components/icons";
+import { AccountsIcon, FacebookIcon, LinkedInIcon, SparkIcon, XIcon } from "@/components/icons";
 import { PageContainer } from "@/components/page-container";
+import { requireAuthSession } from "@/server/auth/session";
+import { getUserPlanAccess } from "@/server/billing/limits";
 import { getAccountsOverview } from "@/server/accounts/service";
 
 export const metadata: Metadata = {
@@ -25,11 +27,13 @@ function StarterPlatformCard({
   detail,
   icon,
   href,
+  actionLabel = "Connect",
 }: Readonly<{
   title: string;
   detail: string;
   icon: React.ReactNode;
   href: string;
+  actionLabel?: string;
 }>) {
   return (
     <article className="rounded-xl border border-transparent bg-white p-6 shadow-sm transition-all duration-300 hover:border-[rgb(0_83_218_/_0.1)]">
@@ -49,7 +53,7 @@ function StarterPlatformCard({
           href={href}
           className="button-primary flex-1 rounded-lg py-2 text-center text-xs font-semibold text-white"
         >
-          Connect
+          {actionLabel}
         </Link>
         <Link
           href={href}
@@ -63,10 +67,13 @@ function StarterPlatformCard({
 }
 
 export default async function AccountsPage() {
+  const session = await requireAuthSession();
   const overview = await getAccountsOverview();
+  const planAccess = await getUserPlanAccess(session.user.id);
+  const canUseX = planAccess.limits.allowedPlatforms.includes("X");
   const hasAccounts = overview.totalCount > 0;
   const connectionRate = formatPercentage(overview.connectedCount, overview.totalCount);
-  const platformCoverage = formatPercentage(overview.activePlatformCount, 2);
+  const platformCoverage = formatPercentage(overview.activePlatformCount, 3);
 
   return (
     <PageContainer>
@@ -82,16 +89,27 @@ export default async function AccountsPage() {
           : null}
 
         <StarterPlatformCard
+          title="Connect Facebook"
+          detail="Authorize Facebook and import the Pages this member can publish as."
+          icon={<FacebookIcon className="h-6 w-6" />}
+          href="/api/auth/facebook/start"
+        />
+        <StarterPlatformCard
           title="Connect LinkedIn"
           detail="Authorize LinkedIn and import the company pages this member can publish as."
           icon={<LinkedInIcon className="h-6 w-6" />}
           href="/api/auth/linkedin/start"
         />
         <StarterPlatformCard
-          title="Connect X"
-          detail="Authorize X with OAuth 2.0 PKCE for direct posting from the review queue."
+          title={canUseX ? "Connect X" : "Upgrade for X"}
+          detail={
+            canUseX
+              ? "Authorize X with OAuth 2.0 PKCE for direct posting from the review queue."
+              : "X publishing is available on the Pro plan."
+          }
           icon={<XIcon className="h-6 w-6" />}
-          href="/api/auth/x/start"
+          href={canUseX ? "/api/auth/x/start" : "/pricing"}
+          actionLabel={canUseX ? "Connect" : "View Pro"}
         />
         <AccountEmptyState />
       </section>

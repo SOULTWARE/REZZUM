@@ -4,9 +4,14 @@ import {
   SocialPlatform,
 } from "@prisma/client";
 
-export const SUPPORTED_REVIEW_PLATFORMS = [SocialPlatform.LINKEDIN, SocialPlatform.X] as const;
+export const SUPPORTED_REVIEW_PLATFORMS = [
+  SocialPlatform.FACEBOOK,
+  SocialPlatform.LINKEDIN,
+  SocialPlatform.X,
+] as const;
 
 export const SOCIAL_PLATFORM_LABELS: Record<SocialPlatform, string> = {
+  FACEBOOK: "Facebook",
   LINKEDIN: "LinkedIn",
   X: "X",
 };
@@ -27,6 +32,7 @@ export const GENERATION_TONE_LABELS: Record<GenerationTone, string> = {
 };
 
 export const SOCIAL_PLATFORM_CHARACTER_LIMITS: Record<SocialPlatform, number> = {
+  FACEBOOK: 63206,
   LINKEDIN: 3000,
   X: 280,
 };

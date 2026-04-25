@@ -73,7 +73,7 @@ const gettingStartedSteps = [
   {
     title: "Connect publishing accounts first",
     description:
-      "Open Accounts and authorize the LinkedIn pages or X profiles that REZZUM should publish to. Drafts and publishing actions depend on having valid destinations available.",
+      "Open Accounts and authorize the Facebook Pages, LinkedIn pages, or X profiles that REZZUM should publish to. Drafts and publishing actions depend on having valid destinations available.",
     href: "/accounts",
     cta: "Open accounts",
     icon: AccountsIcon,
@@ -170,8 +170,8 @@ const pageGuides = [
     href: "/accounts",
     icon: AccountsIcon,
     points: [
-      "Accounts is where LinkedIn and X connections are created and monitored.",
-      "LinkedIn imports the company pages the authenticated member can publish as, while X uses OAuth 2.0 PKCE for direct posting.",
+      "Accounts is where Facebook, LinkedIn, and X connections are created and monitored.",
+      "Facebook and LinkedIn import the Pages the authenticated member can publish as, while X uses OAuth 2.0 PKCE for direct posting.",
       "If an account is expired or disconnected, drafts may still exist, but scheduling and publishing to that destination will need attention.",
     ],
   },

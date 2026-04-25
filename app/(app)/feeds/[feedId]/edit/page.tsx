@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 import { PageContainer } from "@/components/page-container";
 import { FeedForm } from "@/components/feeds/feed-form";
 import { joinKeywordList, type FeedFormValues } from "@/lib/feeds/constants";
+import { getSocialPlatformLabel } from "@/lib/review-queue/constants";
 import { getConnectedAccountOptions } from "@/server/accounts/service";
+import { requireAuthSession } from "@/server/auth/session";
+import { getUserPlanAccess } from "@/server/billing/limits";
 import { updateFeedAction } from "@/server/feeds/actions";
 import { getManagedFeed } from "@/server/feeds/service";
 
@@ -18,8 +21,11 @@ export default async function EditFeedPage({
 }: Readonly<{
   params: Promise<{ feedId: string }>;
 }>) {
+  const session = await requireAuthSession();
   const { feedId } = await params;
   const feed = await getManagedFeed(feedId);
+  const planAccess = await getUserPlanAccess(session.user.id);
+  const facebookAccounts = await getConnectedAccountOptions("FACEBOOK");
   const linkedinAccounts = await getConnectedAccountOptions("LINKEDIN");
   const xAccounts = await getConnectedAccountOptions("X");
 
@@ -35,8 +41,10 @@ export default async function EditFeedPage({
     styleNotes: feed.styleNotes ?? "",
     includeKeywords: joinKeywordList(feed.filter?.includeKeywords ?? []),
     excludeKeywords: joinKeywordList(feed.filter?.excludeKeywords ?? []),
+    generateFacebook: feed.generateFacebook,
     generateLinkedIn: feed.generateLinkedIn,
     generateX: feed.generateX,
+    facebookAccountId: feed.facebookAccountId ?? "",
     linkedinAccountId: feed.linkedinAccountId ?? "",
     xAccountId: feed.xAccountId ?? "",
     autoPublishEnabled: feed.autoPublishEnabled,
@@ -53,8 +61,15 @@ export default async function EditFeedPage({
         action={boundAction}
         initialValues={initialValues}
         accountOptions={{
+          facebook: facebookAccounts,
           linkedin: linkedinAccounts,
           x: xAccounts,
+        }}
+        planLimits={{
+          label: planAccess.limits.label,
+          postLimit: planAccess.limits.postLimit,
+          rssFeedLimit: planAccess.limits.rssFeedLimit,
+          allowedPlatforms: planAccess.limits.allowedPlatforms.map(getSocialPlatformLabel),
         }}
         metadata={{
           status: feed.status,

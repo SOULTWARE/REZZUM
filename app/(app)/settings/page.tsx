@@ -118,6 +118,7 @@ export default async function SettingsPage({
   const [
     resolvedSearchParams,
     settings,
+    facebookAccounts,
     linkedinAccounts,
     xAccounts,
     credentialAccount,
@@ -125,6 +126,7 @@ export default async function SettingsPage({
     await Promise.all([
       searchParams,
       getWorkspaceSettings(),
+      getConnectedAccountOptions("FACEBOOK"),
       getConnectedAccountOptions("LINKEDIN"),
       getConnectedAccountOptions("X"),
       db.account.findFirst({
@@ -214,7 +216,25 @@ export default async function SettingsPage({
                 />
               </label>
 
-              <div className="grid gap-6 sm:grid-cols-2">
+              <div className="grid gap-6 sm:grid-cols-3">
+                <label className="block space-y-2">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Default Facebook destination
+                  </span>
+                  <select
+                    name="defaultFacebookAccountId"
+                    defaultValue={settings.defaultFacebookAccountId ?? ""}
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm text-slate-900"
+                  >
+                    <option value="">No default destination</option>
+                    {facebookAccounts.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
                 <label className="block space-y-2">
                   <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     Default LinkedIn destination
@@ -320,6 +340,7 @@ export default async function SettingsPage({
             </p>
             <div className="mt-5 space-y-3 text-sm leading-7 text-slate-500">
               <p>Email/password verification emails are sent through the configured SMTP transport.</p>
+              <p>Facebook connections import Pages the authenticated member can publish as.</p>
               <p>LinkedIn connections import company pages the authenticated member can publish as.</p>
               <p>X uses OAuth 2.0 PKCE and stores the connected account for direct publishing.</p>
               <p>Feed-specific settings override these defaults whenever they are present.</p>

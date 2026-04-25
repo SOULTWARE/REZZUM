@@ -18,7 +18,7 @@ import {
 export const metadata: Metadata = {
   title: "REZZUM | RSS-to-Social Media Automation Platform",
   description:
-    "Automate social media content from RSS feeds with AI-assisted drafting, editorial review, scheduling, and publishing for LinkedIn and X.",
+    "Automate social media content from RSS feeds with AI-assisted drafting, editorial review, scheduling, and publishing for Facebook, LinkedIn, and X.",
   keywords: [
     "RSS social media automation",
     "RSS to social media",
@@ -26,6 +26,7 @@ export const metadata: Metadata = {
     "AI social media content",
     "social media scheduling",
     "content repurposing platform",
+    "Facebook publishing",
     "LinkedIn publishing",
     "X publishing",
     "editorial workflow",
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "REZZUM | RSS-to-Social Media Automation Platform",
     description:
-      "Automate RSS-to-social publishing with AI drafts, human review, scheduling, and delivery to LinkedIn and X.",
+      "Automate RSS-to-social publishing with AI drafts, human review, scheduling, and delivery to Facebook, LinkedIn, and X.",
   },
   robots: {
     index: true,
@@ -99,7 +100,7 @@ const features = [
   {
     title: "Multi-channel publishing",
     description:
-      "Publish approved content to LinkedIn and X from one queue with delivery tracking and operational reliability.",
+      "Publish approved content to Facebook, LinkedIn, and X from one queue with delivery tracking and operational reliability.",
     icon: PublishIcon,
   },
 ];
@@ -155,7 +156,7 @@ export default function HomePage() {
               </div>
               <div className="mt-10 flex flex-wrap gap-3 text-sm text-[var(--muted)]">
                 <div className="rounded-full bg-white/70 px-4 py-2 shadow-[0_8px_24px_rgb(42_52_57_/_0.05)]">
-                  Built for LinkedIn and X
+                  Built for Facebook, LinkedIn, and X
                 </div>
                 <div className="rounded-full bg-white/70 px-4 py-2 shadow-[0_8px_24px_rgb(42_52_57_/_0.05)]">
                   Human approval before publishing
@@ -233,7 +234,7 @@ export default function HomePage() {
                         Publish with confidence
                       </h3>
                       <p className="mt-1 text-sm text-[var(--muted)]">
-                        Schedule and deliver across LinkedIn and X from one reliable queue.
+                        Schedule and deliver across Facebook, LinkedIn, and X from one reliable queue.
                       </p>
                     </article>
                   </div>

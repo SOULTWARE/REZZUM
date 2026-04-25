@@ -12,6 +12,7 @@ function getKeyMaterial() {
 
   const derived = [
     process.env.OPENAI_API_KEY,
+    process.env.FACEBOOK_CLIENT_SECRET,
     process.env.LINKEDIN_CLIENT_SECRET,
     process.env.X_CLIENT_SECRET,
   ]

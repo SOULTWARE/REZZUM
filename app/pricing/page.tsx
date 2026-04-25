@@ -6,7 +6,7 @@ import { LandingHeader } from "@/components/landing-header";
 
 export const metadata: Metadata = {
   title: "Pricing",
-  description: "Simple monthly pricing for REZZUM with two plans at $5 and $20.",
+  description: "Simple monthly pricing for REZZUM with free, Starter, and Pro limits.",
   alternates: {
     canonical: "/pricing",
   },
@@ -19,13 +19,27 @@ const primaryNavLinks = [
 
 const plans = [
   {
+    name: "Free",
+    slug: null,
+    price: 0,
+    description: "Included when no paid subscription is active.",
+    features: [
+      "5 generated and published posts",
+      "1 RSS feed",
+      "Facebook and LinkedIn publishing",
+      "Manual review before publishing",
+    ],
+    highlighted: false,
+  },
+  {
     name: "Starter",
     slug: "starter",
     price: 5,
     description: "A lightweight plan for getting your RSS-to-social workflow running.",
     features: [
-      "1 active RSS workflow",
-      "AI-assisted draft generation",
+      "100 generated and published posts",
+      "10 RSS feeds",
+      "Facebook and LinkedIn publishing",
       "Manual review before publishing",
       "Basic scheduling",
     ],
@@ -37,10 +51,10 @@ const plans = [
     price: 20,
     description: "More capacity for teams managing a steadier publishing cadence.",
     features: [
-      "Multiple active RSS workflows",
-      "Priority draft generation",
+      "1,000 generated and published posts",
+      "100 RSS feeds",
+      "Facebook, LinkedIn, and X publishing",
       "Editorial review and scheduling",
-      "LinkedIn and X publishing",
     ],
     highlighted: true,
   },
@@ -66,7 +80,7 @@ export default function PricingPage() {
             </p>
           </div>
 
-          <div className="mt-14 grid gap-6 lg:grid-cols-2">
+          <div className="mt-14 grid gap-6 lg:grid-cols-3">
             {plans.map((plan) => (
               <article
                 key={plan.name}
@@ -111,12 +125,12 @@ export default function PricingPage() {
                 </ul>
 
                 <Link
-                  href={`/signup?plan=${plan.slug}`}
+                  href={plan.slug ? `/signup?plan=${plan.slug}` : "/signup"}
                   className={`mt-10 inline-flex w-full items-center justify-center rounded-lg px-6 py-3.5 text-sm font-semibold ${
                     plan.highlighted ? "button-primary" : "button-secondary"
                   }`}
                 >
-                  Get started
+                  {plan.slug ? "Get started" : "Start free"}
                 </Link>
               </article>
             ))}

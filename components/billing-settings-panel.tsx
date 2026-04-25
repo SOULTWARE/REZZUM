@@ -5,6 +5,8 @@ import {
   isBillingEnabled,
   type BillingSubscriptionSummary,
 } from "@/server/billing/polar";
+import { getPlanAccess } from "@/server/billing/limits";
+import { getSocialPlatformLabel } from "@/lib/review-queue/constants";
 
 type BillingSettingsPanelProps = {
   currentSubscription: BillingSubscriptionSummary | null;
@@ -34,6 +36,7 @@ export function BillingSettingsPanel({
 }: Readonly<BillingSettingsPanelProps>) {
   const billingEnabled = isBillingEnabled();
   const currentPlan = currentSubscription?.plan ? getBillingPlan(currentSubscription.plan) : null;
+  const currentAccess = getPlanAccess(currentSubscription);
   const renewalDate = formatDate(currentSubscription?.currentPeriodEnd ?? null);
 
   return (
@@ -58,7 +61,7 @@ export function BillingSettingsPanel({
             <p className="text-sm font-semibold text-slate-900">
               {currentPlan
                 ? `${currentPlan.label} plan`
-                : currentSubscription?.productName || "No active subscription"}
+                : currentSubscription?.productName || "Free plan"}
             </p>
             <div className="mt-2 space-y-1 text-sm leading-6 text-slate-500">
               {currentSubscription ? (
@@ -79,6 +82,19 @@ export function BillingSettingsPanel({
                 <p>No subscription is active for this account yet.</p>
               )}
             </div>
+          </div>
+
+          <div className="mt-4 rounded-xl border border-[var(--ghost-line)] bg-white px-4 py-4 text-sm leading-6 text-slate-500">
+            <p className="font-semibold text-slate-900">Current limits</p>
+            <p className="mt-1">
+              {currentAccess.limits.rssFeedLimit} RSS feed
+              {currentAccess.limits.rssFeedLimit === 1 ? "" : "s"} and{" "}
+              {currentAccess.limits.postLimit.toLocaleString()} generated posts.
+            </p>
+            <p>
+              Platforms:{" "}
+              {currentAccess.limits.allowedPlatforms.map(getSocialPlatformLabel).join(" + ")}.
+            </p>
           </div>
 
           <div className="mt-6 space-y-3">

@@ -9,6 +9,7 @@ export async function updateWorkspaceSettings(input: {
   defaultFeel: string;
   defaultStyle: string;
   defaultAutoPublishIntervalMinutes: number | null;
+  defaultFacebookAccountId: string | null;
   defaultLinkedInAccountId: string | null;
   defaultXAccountId: string | null;
 }) {

@@ -4,7 +4,7 @@ import { listLatestGeneratedPosts, type GeneratedPostRecord } from "@/server/pos
 export type ScheduleItem = GeneratedPostRecord;
 
 function comparePlatforms(left: SocialPlatform, right: SocialPlatform) {
-  const order = [SocialPlatform.LINKEDIN, SocialPlatform.X];
+  const order = [SocialPlatform.FACEBOOK, SocialPlatform.LINKEDIN, SocialPlatform.X];
 
   return order.indexOf(left) - order.indexOf(right);
 }

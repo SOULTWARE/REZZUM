@@ -18,8 +18,15 @@ type FeedFormProps = {
   action: (state: FeedActionState, formData: FormData) => Promise<FeedActionState>;
   initialValues: FeedFormValues;
   accountOptions: {
+    facebook: Array<{ value: string; label: string }>;
     linkedin: Array<{ value: string; label: string }>;
     x: Array<{ value: string; label: string }>;
+  };
+  planLimits?: {
+    label: string;
+    postLimit: number;
+    rssFeedLimit: number;
+    allowedPlatforms: string[];
   };
   metadata?: {
     status: FeedStatus;
@@ -63,12 +70,14 @@ function ToggleField({
   label,
   description,
   defaultChecked,
+  disabled = false,
   onChange,
 }: Readonly<{
   name: string;
   label: string;
   description: string;
   defaultChecked: boolean;
+  disabled?: boolean;
   onChange: (checked: boolean) => void;
 }>) {
   return (
@@ -77,8 +86,9 @@ function ToggleField({
         name={name}
         type="checkbox"
         defaultChecked={defaultChecked}
+        disabled={disabled}
         onChange={(event) => onChange(event.target.checked)}
-        className="mt-1 h-4 w-4 rounded border-slate-300 text-[var(--primary)] focus:ring-[var(--ring-soft)]"
+        className="mt-1 h-4 w-4 rounded border-slate-300 text-[var(--primary)] focus:ring-[var(--ring-soft)] disabled:cursor-not-allowed disabled:opacity-50"
       />
       <span>
         <span className="block text-sm font-semibold text-[var(--foreground)]">{label}</span>
@@ -92,10 +102,15 @@ export function FeedForm({
   action,
   initialValues,
   accountOptions,
+  planLimits,
   metadata,
 }: Readonly<FeedFormProps>) {
+  const canUseX = planLimits?.allowedPlatforms.includes("X") ?? true;
   const [state, formAction] = useActionState(action, INITIAL_FEED_ACTION_STATE);
-  const [preview, setPreview] = useState(initialValues);
+  const [preview, setPreview] = useState({
+    ...initialValues,
+    generateX: initialValues.generateX && canUseX,
+  });
 
   const includeKeywordCount = useMemo(
     () => parseKeywordText(preview.includeKeywords).length,
@@ -109,6 +124,11 @@ export function FeedForm({
     FEED_REFRESH_INTERVAL_OPTIONS.find(
       (option) => option.value === preview.refreshIntervalMinutes,
     )?.description ?? "A custom cadence is selected.";
+  const previewPlatforms = [
+    preview.generateFacebook ? "Facebook" : null,
+    preview.generateLinkedIn ? "LinkedIn" : null,
+    preview.generateX ? "X" : null,
+  ].filter(Boolean);
 
   return (
     <form id="feed-form" action={formAction} className="space-y-8">
@@ -118,6 +138,15 @@ export function FeedForm({
           className="rounded-xl bg-[rgb(159_64_61_/_0.08)] px-4 py-3 text-sm text-[rgb(117_33_33)]"
         >
           {state.message}
+        </div>
+      ) : null}
+
+      {planLimits ? (
+        <div className="rounded-xl bg-[var(--surface-low)] px-4 py-3 text-sm leading-6 text-[var(--muted)]">
+          <span className="font-semibold text-[var(--foreground)]">{planLimits.label}</span>{" "}
+          includes {planLimits.rssFeedLimit} RSS feed
+          {planLimits.rssFeedLimit === 1 ? "" : "s"}, {planLimits.postLimit} generated posts,
+          and {planLimits.allowedPlatforms.join(" + ")} publishing.
         </div>
       ) : null}
 
@@ -364,6 +393,15 @@ export function FeedForm({
             <div className="surface-card rounded-xl p-6 sm:p-8">
               <div className="grid gap-4">
                 <ToggleField
+                  name="generateFacebook"
+                  label="Generate Facebook posts"
+                  description="Create Facebook Page drafts for this feed."
+                  defaultChecked={initialValues.generateFacebook}
+                  onChange={(checked) =>
+                    setPreview((current) => ({ ...current, generateFacebook: checked }))
+                  }
+                />
+                <ToggleField
                   name="generateLinkedIn"
                   label="Generate LinkedIn posts"
                   description="Create LinkedIn company-page drafts for this feed."
@@ -375,15 +413,48 @@ export function FeedForm({
                 <ToggleField
                   name="generateX"
                   label="Generate X posts"
-                  description="Create X drafts for this feed."
-                  defaultChecked={initialValues.generateX}
+                  description={
+                    canUseX
+                      ? "Create X drafts for this feed."
+                      : "X publishing is available on the Pro plan."
+                  }
+                  defaultChecked={initialValues.generateX && canUseX}
+                  disabled={!canUseX}
                   onChange={(checked) =>
                     setPreview((current) => ({ ...current, generateX: checked }))
                   }
                 />
+                <FieldError
+                  id="feed-platform-error"
+                  errors={state.fieldErrors?.generateFacebook ?? state.fieldErrors?.generateX}
+                />
               </div>
 
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
+              <div className="mt-6 grid gap-6 sm:grid-cols-3">
+                <label className="block space-y-2">
+                  <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Facebook destination
+                  </span>
+                  <select
+                    name="facebookAccountId"
+                    defaultValue={initialValues.facebookAccountId}
+                    onChange={(event) =>
+                      setPreview((current) => ({
+                        ...current,
+                        facebookAccountId: event.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm"
+                  >
+                    <option value="">Use workspace default / none</option>
+                    {accountOptions.facebook.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
                 <label className="block space-y-2">
                   <span className="block text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
                     LinkedIn destination
@@ -415,13 +486,14 @@ export function FeedForm({
                   <select
                     name="xAccountId"
                     defaultValue={initialValues.xAccountId}
+                    disabled={!canUseX}
                     onChange={(event) =>
                       setPreview((current) => ({
                         ...current,
                         xAccountId: event.target.value,
                       }))
                     }
-                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm"
+                    className="w-full rounded-lg bg-[var(--surface-low)] px-4 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-55"
                   >
                     <option value="">Use workspace default / none</option>
                     {accountOptions.x.map((option) => (
@@ -531,9 +603,8 @@ export function FeedForm({
                     : "Manual review and scheduling"}
                 </p>
                 <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-                  Platforms: {preview.generateLinkedIn ? "LinkedIn" : null}
-                  {preview.generateLinkedIn && preview.generateX ? " and " : null}
-                  {preview.generateX ? "X" : null}
+                  Platforms:{" "}
+                  {previewPlatforms.length > 0 ? previewPlatforms.join(" and ") : "None selected"}
                 </p>
               </div>
             </div>
