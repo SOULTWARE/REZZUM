@@ -20,6 +20,7 @@ const primaryNavLinks = [
 const plans = [
   {
     name: "Starter",
+    slug: "starter",
     price: 5,
     description: "A lightweight plan for getting your RSS-to-social workflow running.",
     features: [
@@ -32,6 +33,7 @@ const plans = [
   },
   {
     name: "Pro",
+    slug: "pro",
     price: 20,
     description: "More capacity for teams managing a steadier publishing cadence.",
     features: [
@@ -109,7 +111,7 @@ export default function PricingPage() {
                 </ul>
 
                 <Link
-                  href="/dashboard"
+                  href={`/signup?plan=${plan.slug}`}
                   className={`mt-10 inline-flex w-full items-center justify-center rounded-lg px-6 py-3.5 text-sm font-semibold ${
                     plan.highlighted ? "button-primary" : "button-secondary"
                   }`}

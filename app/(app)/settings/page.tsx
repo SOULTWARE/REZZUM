@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { AccountSettingsPanel } from "@/components/account-settings-panel";
+import { BillingSettingsPanel } from "@/components/billing-settings-panel";
 import { PageContainer } from "@/components/page-container";
+import { getCurrentSubscriptionForUser } from "@/server/billing/polar";
 import { db } from "@/server/db/client";
 import { getConnectedAccountOptions } from "@/server/accounts/service";
 import { emailVerificationEnabled } from "@/server/auth";
@@ -16,6 +18,9 @@ export const dynamic = "force-dynamic";
 
 function getStatusBanner(searchParams: { [key: string]: string | string[] | undefined }) {
   const error = typeof searchParams.error === "string" ? searchParams.error : null;
+  const billing = typeof searchParams.billing === "string" ? searchParams.billing : null;
+  const billingDetail =
+    typeof searchParams.billingDetail === "string" ? searchParams.billingDetail : null;
 
   if (searchParams.emailUpdated === "1") {
     return {
@@ -45,6 +50,53 @@ function getStatusBanner(searchParams: { [key: string]: string | string[] | unde
     };
   }
 
+  if (billing === "success") {
+    return {
+      className: "border-[rgb(0_83_218_/_0.14)] bg-[rgb(240_247_255)] text-[var(--primary-strong)]",
+      message: "Your billing flow completed successfully.",
+    };
+  }
+
+  if (billing === "changed") {
+    return {
+      className: "border-[rgb(0_83_218_/_0.14)] bg-[rgb(240_247_255)] text-[var(--primary-strong)]",
+      message: "Your subscription has been updated.",
+    };
+  }
+
+  if (billing === "canceled") {
+    return {
+      className: "border-[rgb(181_125_20_/_0.18)] bg-[rgb(255_250_240)] text-[rgb(108_79_10)]",
+      message: "Your subscription will cancel at the end of the current billing period.",
+    };
+  }
+
+  if (billing === "unchanged") {
+    return {
+      className: "border-[rgb(0_83_218_/_0.14)] bg-[rgb(240_247_255)] text-[var(--primary-strong)]",
+      message: "You are already on that subscription plan.",
+    };
+  }
+
+  if (
+    billing === "missing-plan" ||
+    billing === "no-subscription" ||
+    billing === "portal-unavailable" ||
+    billing === "unavailable"
+  ) {
+    return {
+      className: "border-[rgb(159_64_61_/_0.18)] bg-[rgb(255_245_245)] text-[rgb(117_33_33)]",
+      message:
+        billing === "missing-plan"
+          ? "Choose a valid subscription plan and try again."
+          : billing === "no-subscription"
+            ? "No active subscription was found for this account."
+            : billing === "portal-unavailable"
+              ? `We could not open the Polar customer portal right now.${billingDetail ? ` ${billingDetail}` : ""}`
+              : `Billing is unavailable right now.${billingDetail ? ` ${billingDetail}` : " Verify your Polar configuration and try again."}`,
+    };
+  }
+
   return null;
 }
 
@@ -54,7 +106,22 @@ export default async function SettingsPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }>) {
   const session = await requireAuthSession();
-  const [resolvedSearchParams, settings, linkedinAccounts, xAccounts, credentialAccount] =
+  const currentSubscriptionResult = await getCurrentSubscriptionForUser(session.user.id)
+    .then((subscription) => ({
+      subscription,
+      unavailable: false,
+    }))
+    .catch(() => ({
+      subscription: null,
+      unavailable: true,
+    }));
+  const [
+    resolvedSearchParams,
+    settings,
+    linkedinAccounts,
+    xAccounts,
+    credentialAccount,
+  ] =
     await Promise.all([
       searchParams,
       getWorkspaceSettings(),
@@ -211,6 +278,11 @@ export default async function SettingsPage({
         </div>
 
         <aside className="grid gap-6">
+          <BillingSettingsPanel
+            currentSubscription={currentSubscriptionResult.subscription}
+            unavailable={currentSubscriptionResult.unavailable}
+          />
+
           <section className="rounded-xl bg-white p-6 shadow-sm">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
               Automation
