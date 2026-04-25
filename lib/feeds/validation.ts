@@ -17,6 +17,11 @@ const MAXIMUM_WORD_COUNT = 50000;
 const MAXIMUM_STYLE_LENGTH = 2000;
 const MAXIMUM_AUTO_PUBLISH_INTERVAL_MINUTES = 7 * 24 * 60;
 
+const optionalAccountIdSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value : ""),
+  z.string().trim().max(191).default(""),
+);
+
 const feedFormSchema = z
   .object({
     name: z
@@ -54,9 +59,9 @@ const feedFormSchema = z
     generateFacebook: z.coerce.boolean().default(true),
     generateLinkedIn: z.coerce.boolean().default(true),
     generateX: z.coerce.boolean().default(false),
-    facebookAccountId: z.string().trim().max(191).default(""),
-    linkedinAccountId: z.string().trim().max(191).default(""),
-    xAccountId: z.string().trim().max(191).default(""),
+    facebookAccountId: optionalAccountIdSchema,
+    linkedinAccountId: optionalAccountIdSchema,
+    xAccountId: optionalAccountIdSchema,
     autoPublishEnabled: z.coerce.boolean().default(false),
     autoPublishIntervalMinutes: z.coerce
       .number()
