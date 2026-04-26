@@ -1,5 +1,13 @@
 import { ArticleStatus, FeedStatus, GeneratedPostStatus, Prisma, SocialPlatform } from "@prisma/client";
 import type { Article } from "@prisma/client";
+import {
+  assertPlatformsAllowed,
+  ensureCanCreatePosts,
+  filterAllowedPlatforms,
+  getRemainingPostSlots,
+  getWorkspaceAutomationPlanAccess,
+  type PlanAccess,
+} from "@/server/billing/limits";
 import { db } from "@/server/db/client";
 import {
   generateSocialPost,
@@ -22,8 +30,10 @@ type FeedForSync = {
   defaultLanguage: string | null;
   defaultFeel: string | null;
   styleNotes: string | null;
+  generateFacebook: boolean;
   generateLinkedIn: boolean;
   generateX: boolean;
+  facebookAccountId: string | null;
   linkedinAccountId: string | null;
   xAccountId: string | null;
   autoPublishEnabled: boolean;
@@ -299,6 +309,10 @@ async function resolveTargetAccountId(params: {
     return null;
   }
 
+  if (params.platform === SocialPlatform.FACEBOOK) {
+    return params.feed.facebookAccountId ?? params.workspace.defaultFacebookAccountId ?? null;
+  }
+
   if (params.platform === SocialPlatform.LINKEDIN) {
     return params.feed.linkedinAccountId ?? params.workspace.defaultLinkedInAccountId ?? null;
   }
@@ -370,13 +384,14 @@ function buildFeedSyncFailureMessage(error: unknown) {
   return "Feed sync failed for an unknown reason.";
 }
 
-export async function generatePostsForArticle(articleId: string) {
+export async function generatePostsForArticle(articleId: string, planAccess?: PlanAccess) {
   const article = await db.article.findUnique({
     where: { id: articleId },
     include: {
       feed: {
         include: {
           filter: true,
+          facebookAccount: true,
           linkedinAccount: true,
           xAccount: true,
         },
@@ -388,16 +403,30 @@ export async function generatePostsForArticle(articleId: string) {
     return [];
   }
 
+  const access = planAccess ?? await getWorkspaceAutomationPlanAccess();
   const workspace = await getWorkspaceSettings();
   const personalization = resolveFeedPersonalization({
     feed: article.feed,
     workspace,
   });
-  const platforms = [
+  const requestedPlatforms = [
+    article.feed.generateFacebook ? SocialPlatform.FACEBOOK : null,
     article.feed.generateLinkedIn ? SocialPlatform.LINKEDIN : null,
     article.feed.generateX ? SocialPlatform.X : null,
   ].filter(Boolean) as SocialPlatform[];
+  const remainingSlots = await getRemainingPostSlots(access);
+  const platforms = filterAllowedPlatforms(access, requestedPlatforms).slice(0, remainingSlots);
   const createdPosts = [];
+
+  if (requestedPlatforms.length > 0 && platforms.length === 0) {
+    if (remainingSlots <= 0) {
+      await ensureCanCreatePosts(access, 1);
+    }
+
+    assertPlatformsAllowed(access, requestedPlatforms);
+  }
+
+  await ensureCanCreatePosts(access, platforms.length);
 
   for (const platform of platforms) {
     const socialAccountId = await resolveTargetAccountId({
@@ -443,11 +472,15 @@ export async function generatePostsForArticle(articleId: string) {
   return createdPosts;
 }
 
-async function ingestSingleFeed(feedId: string): Promise<FeedSyncResult> {
+async function ingestSingleFeed(
+  feedId: string,
+  planAccess?: PlanAccess,
+): Promise<FeedSyncResult> {
   const feed = await db.rssFeed.findUnique({
     where: { id: feedId },
     include: {
       filter: true,
+      facebookAccount: true,
       linkedinAccount: true,
       xAccount: true,
     },
@@ -457,6 +490,7 @@ async function ingestSingleFeed(feedId: string): Promise<FeedSyncResult> {
     throw new Error("Feed not found.");
   }
 
+  const access = planAccess ?? await getWorkspaceAutomationPlanAccess();
   const now = new Date();
 
   await db.rssFeed.update({
@@ -482,7 +516,7 @@ async function ingestSingleFeed(feedId: string): Promise<FeedSyncResult> {
         const article = await createOrReuseArticle(feed, item);
 
         if (article?.status === ArticleStatus.READY) {
-          const posts = await generatePostsForArticle(article.id);
+          const posts = await generatePostsForArticle(article.id, access);
 
           if (posts.length > 0) {
             result.generatedArticleCount += 1;
@@ -524,15 +558,19 @@ async function ingestSingleFeed(feedId: string): Promise<FeedSyncResult> {
   }
 }
 
-export async function syncFeedNow(feedId: string) {
-  return ingestSingleFeed(feedId);
+export async function syncFeedNow(feedId: string, planAccess?: PlanAccess) {
+  return ingestSingleFeed(feedId, planAccess);
 }
 
-export async function reevaluateExistingArticlesForFeed(feedId: string) {
+export async function reevaluateExistingArticlesForFeed(
+  feedId: string,
+  planAccess?: PlanAccess,
+) {
   const feed = await db.rssFeed.findUnique({
     where: { id: feedId },
     include: {
       filter: true,
+      facebookAccount: true,
       linkedinAccount: true,
       xAccount: true,
     },
@@ -542,6 +580,7 @@ export async function reevaluateExistingArticlesForFeed(feedId: string) {
     throw new Error("Feed not found.");
   }
 
+  const access = planAccess ?? await getWorkspaceAutomationPlanAccess();
   const articles = await db.article.findMany({
     where: {
       feedId,
@@ -573,7 +612,7 @@ export async function reevaluateExistingArticlesForFeed(feedId: string) {
       : article;
 
     if (nextArticle.status === ArticleStatus.READY) {
-      await generatePostsForArticle(nextArticle.id);
+      await generatePostsForArticle(nextArticle.id, access);
     }
 
     results.push({

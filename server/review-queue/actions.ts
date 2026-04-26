@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { GeneratedPostStatus } from "@prisma/client";
 import type { ActionResult } from "@/lib/actions";
+import { requireAuthSession } from "@/server/auth/session";
+import { assertPlatformsAllowed, getUserPlanAccess, type PlanAccess } from "@/server/billing/limits";
 import { generateSocialPost } from "@/server/generation/service";
 import { publishPostNow } from "@/server/publishing/service";
 import {
@@ -54,7 +56,21 @@ function buildActionError(message: string, error: unknown) {
   } satisfies ActionResult;
 }
 
+async function ensurePostPlatformAllowed(postId: string, access: PlanAccess) {
+  const post = await getGeneratedPostById(postId);
+
+  if (!post) {
+    throw new Error("Draft not found.");
+  }
+
+  assertPlatformsAllowed(access, [post.platform]);
+
+  return post;
+}
+
 export async function saveDraftAction(postId: string, formData: FormData) {
+  await requireAuthSession();
+
   try {
     await updateGeneratedPost(postId, {
       editedText: getDraftText(formData) || null,
@@ -78,6 +94,8 @@ export async function saveDraftAction(postId: string, formData: FormData) {
 }
 
 export async function approveDraftAction(postId: string, formData: FormData) {
+  await requireAuthSession();
+
   try {
     await updateGeneratedPost(postId, {
       editedText: getDraftText(formData) || null,
@@ -104,6 +122,8 @@ export async function approveDraftAction(postId: string, formData: FormData) {
 }
 
 export async function rejectDraftAction(postId: string, formData: FormData) {
+  await requireAuthSession();
+
   try {
     await updateGeneratedPost(postId, {
       editedText: getDraftText(formData) || null,
@@ -129,7 +149,10 @@ export async function rejectDraftAction(postId: string, formData: FormData) {
 }
 
 export async function scheduleDraftAction(postId: string, formData: FormData) {
+  const session = await requireAuthSession();
+
   try {
+    const access = await getUserPlanAccess(session.user.id);
     const scheduledFor = getScheduledFor(formData);
 
     if (!scheduledFor) {
@@ -141,6 +164,7 @@ export async function scheduleDraftAction(postId: string, formData: FormData) {
       } satisfies ActionResult;
     }
 
+    await ensurePostPlatformAllowed(postId, access);
     await updateGeneratedPost(postId, {
       editedText: getDraftText(formData) || null,
       socialAccountId: getSocialAccountId(formData),
@@ -169,14 +193,19 @@ export async function scheduleDraftAction(postId: string, formData: FormData) {
 }
 
 export async function publishDraftNowAction(postId: string, formData: FormData) {
+  const session = await requireAuthSession();
+
   try {
+    const access = await getUserPlanAccess(session.user.id);
+
+    await ensurePostPlatformAllowed(postId, access);
     await updateGeneratedPost(postId, {
       editedText: getDraftText(formData) || null,
       socialAccountId: getSocialAccountId(formData),
       reviewedAt: new Date(),
     });
 
-    const publishedPost = await publishPostNow(postId);
+    const publishedPost = await publishPostNow(postId, access);
     revalidateQueuePaths(postId);
 
     if (publishedPost.status === GeneratedPostStatus.FAILED) {
@@ -202,7 +231,10 @@ export async function publishDraftNowAction(postId: string, formData: FormData) 
 }
 
 export async function regenerateDraftAction(postId: string, formData: FormData) {
+  const session = await requireAuthSession();
+
   try {
+    const access = await getUserPlanAccess(session.user.id);
     const post = await getGeneratedPostById(postId);
 
     if (!post) {
@@ -214,6 +246,7 @@ export async function regenerateDraftAction(postId: string, formData: FormData) 
       } satisfies ActionResult;
     }
 
+    assertPlatformsAllowed(access, [post.platform]);
     const workspace = await getWorkspaceSettings();
     const draft = await generateSocialPost({
       article: post.article,

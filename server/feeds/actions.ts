@@ -2,9 +2,17 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { SocialPlatform } from "@prisma/client";
 import type { ActionResult } from "@/lib/actions";
-import type { FeedActionState } from "@/lib/feeds/validation";
+import type { FeedActionState, FeedInput } from "@/lib/feeds/validation";
 import { validateFeedFormData } from "@/lib/feeds/validation";
+import {
+  assertPlatformsAllowed,
+  ensureCanCreateFeed,
+  getUserPlanAccess,
+  PlanLimitError,
+} from "@/server/billing/limits";
+import { requireAuthSession } from "@/server/auth/session";
 import {
   activateManagedFeed,
   createManagedFeed,
@@ -32,6 +40,27 @@ function buildGenericErrorState(): FeedActionState {
   };
 }
 
+function buildPlanLimitState(error: PlanLimitError): FeedActionState {
+  return {
+    status: "error",
+    message: error.message,
+    fieldErrors:
+      error.code === "integration_limit"
+        ? {
+            generateX: [error.message],
+          }
+        : undefined,
+  };
+}
+
+function getSelectedPlatforms(input: FeedInput) {
+  return [
+    input.generateFacebook ? SocialPlatform.FACEBOOK : null,
+    input.generateLinkedIn ? SocialPlatform.LINKEDIN : null,
+    input.generateX ? SocialPlatform.X : null,
+  ].filter(Boolean) as SocialPlatform[];
+}
+
 function revalidateFeedPaths(feedId?: string) {
   revalidatePath("/feeds");
   revalidatePath("/dashboard");
@@ -47,6 +76,7 @@ export async function createFeedAction(
   _previousState: FeedActionState,
   formData: FormData,
 ) {
+  const session = await requireAuthSession();
   const parsed = validateFeedFormData(formData);
 
   if (!parsed.success) {
@@ -54,10 +84,17 @@ export async function createFeedAction(
   }
 
   try {
+    const access = await ensureCanCreateFeed(session.user.id);
+
+    assertPlatformsAllowed(access, getSelectedPlatforms(parsed.data));
     await createManagedFeed(parsed.data);
   } catch (error) {
     if (error instanceof FeedConflictError) {
       return buildConflictState();
+    }
+
+    if (error instanceof PlanLimitError) {
+      return buildPlanLimitState(error);
     }
 
     return buildGenericErrorState();
@@ -72,23 +109,31 @@ export async function updateFeedAction(
   _previousState: FeedActionState,
   formData: FormData,
 ) {
+  const session = await requireAuthSession();
   const parsed = validateFeedFormData(formData);
 
   if (!parsed.success) {
     return parsed.state;
   }
 
+  const access = await getUserPlanAccess(session.user.id);
+
   try {
+    assertPlatformsAllowed(access, getSelectedPlatforms(parsed.data));
     await updateManagedFeed(feedId, parsed.data);
   } catch (error) {
     if (error instanceof FeedConflictError) {
       return buildConflictState();
     }
 
+    if (error instanceof PlanLimitError) {
+      return buildPlanLimitState(error);
+    }
+
     return buildGenericErrorState();
   }
 
-  await reevaluateExistingArticlesForFeed(feedId);
+  await reevaluateExistingArticlesForFeed(feedId, access);
 
   revalidatePath("/feeds");
   revalidatePath(`/feeds/${feedId}/edit`);
@@ -99,8 +144,10 @@ export async function updateFeedAction(
 }
 
 export async function syncFeedNowAction(feedId: string) {
+  const session = await requireAuthSession();
+
   try {
-    const result = await syncFeedNow(feedId);
+    const result = await syncFeedNow(feedId, await getUserPlanAccess(session.user.id));
 
     if (result.articleIssues.length > 0) {
       const firstIssue = result.articleIssues[0];
@@ -142,6 +189,8 @@ export async function syncFeedNowAction(feedId: string) {
 }
 
 export async function pauseFeedAction(feedId: string) {
+  await requireAuthSession();
+
   try {
     await pauseManagedFeed(feedId);
     revalidateFeedPaths(feedId);
@@ -165,6 +214,8 @@ export async function pauseFeedAction(feedId: string) {
 }
 
 export async function activateFeedAction(feedId: string) {
+  await requireAuthSession();
+
   try {
     await activateManagedFeed(feedId);
     revalidateFeedPaths(feedId);
@@ -188,6 +239,8 @@ export async function activateFeedAction(feedId: string) {
 }
 
 export async function deleteFeedAction(feedId: string) {
+  await requireAuthSession();
+
   try {
     await deleteManagedFeed(feedId);
     revalidateFeedPaths();

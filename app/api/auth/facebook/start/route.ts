@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import { SocialPlatform } from "@prisma/client";
 import { getRequestAuthSession } from "@/server/auth/session";
 import { assertPlatformsAllowed, getUserPlanAccess } from "@/server/billing/limits";
+import { getFacebookAuthorizationUrl } from "@/server/integrations/facebook";
 import { createOauthState } from "@/server/integrations/oauth";
-import { createXAuthorizationRequest } from "@/server/integrations/x";
 
 export async function GET(request: Request) {
   const session = await getRequestAuthSession(request);
@@ -13,10 +13,12 @@ export async function GET(request: Request) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
+  const access = await getUserPlanAccess(session.user.id);
+
   try {
-    assertPlatformsAllowed(await getUserPlanAccess(session.user.id), [SocialPlatform.X]);
+    assertPlatformsAllowed(access, [SocialPlatform.FACEBOOK]);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "X is not available.";
+    const message = error instanceof Error ? error.message : "Facebook is not available.";
 
     return NextResponse.redirect(
       new URL(`/accounts?error=${encodeURIComponent(message)}`, request.url),
@@ -24,17 +26,9 @@ export async function GET(request: Request) {
   }
 
   const state = createOauthState();
-  const { verifier, authorizationUrl } = createXAuthorizationRequest(state);
   const cookieStore = await cookies();
 
-  cookieStore.set("rezzum_x_oauth_state", state, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 10,
-  });
-  cookieStore.set("rezzum_x_oauth_verifier", verifier, {
+  cookieStore.set("rezzum_facebook_oauth_state", state, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -42,5 +36,5 @@ export async function GET(request: Request) {
     maxAge: 60 * 10,
   });
 
-  return NextResponse.redirect(authorizationUrl);
+  return NextResponse.redirect(getFacebookAuthorizationUrl(state));
 }

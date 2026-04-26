@@ -1,13 +1,13 @@
 # REZZUM
 
-REZZUM is a Next.js SaaS app that turns RSS feed articles into AI-generated social media drafts, keeps a human review step in the middle, and then schedules or publishes the final copy to connected LinkedIn and X accounts.
+REZZUM is a Next.js SaaS app that turns RSS feed articles into AI-generated social media drafts, keeps a human review step in the middle, and then schedules or publishes the final copy to connected Facebook, LinkedIn, and X accounts.
 
 ## What REZZUM does
 
 - Stores RSS feeds with per-feed filtering, generation, and publishing defaults.
 - Fetches and parses RSS and Atom feeds on a polling loop.
 - Deduplicates articles by source URL, canonical URL, and content hash.
-- Generates platform-aware drafts with OpenAI for LinkedIn and X.
+- Generates platform-aware drafts with OpenAI for Facebook, LinkedIn, and X.
 - Preserves article context, generation model, prompt version, tone, and destination account on each draft.
 - Supports review, edit, approve, reject, regenerate, schedule, and publish-now flows.
 - Tracks publishing state and keeps publish attempt history.
@@ -26,16 +26,14 @@ Included:
 - Scheduling
 - Publish now
 - Publishing status tracking
-- Connected LinkedIn and X accounts
+- Connected Facebook, LinkedIn, and X accounts
 - Workspace defaults for generation and destinations
 
 Not included:
 
-- Billing
 - Team collaboration
 - Advanced analytics
 - Rich media generation
-- Facebook publishing
 - Multi-workspace admin complexity
 
 ## Main app areas
@@ -48,7 +46,7 @@ Not included:
 - `/queue` review queue with filters
 - `/queue/[postId]` draft editor, approval, scheduling, publish, and regeneration
 - `/schedule` scheduled, published, and failed posts timeline
-- `/accounts` LinkedIn and X account connections
+- `/accounts` Facebook, LinkedIn, and X account connections
 - `/settings` workspace-wide generation and destination defaults
 
 ## Architecture
@@ -87,7 +85,7 @@ REZZUM follows a modular App Router structure:
 - `server/publishing/service.ts`
   Publish-now flow, due publish processing, and publish attempts.
 - `server/integrations/*`
-  LinkedIn and X OAuth + publishing integrations.
+  Facebook, LinkedIn, and X OAuth + publishing integrations.
 - `server/accounts/*`
   Connected social account storage and lookup.
 - `server/settings/*`
@@ -111,7 +109,7 @@ REZZUM follows a modular App Router structure:
 - `pnpm`
 - PostgreSQL database
 - OpenAI API key
-- LinkedIn and X developer credentials if you want real publishing integrations
+- Facebook, LinkedIn, and X developer credentials if you want real publishing integrations
 
 ## Environment variables
 
@@ -147,11 +145,18 @@ Copy `.env.example` to `.env` and fill in the values you need.
 | `ALLOWED_DEV_ORIGINS` | No | Extra dev origins allowed by Next.js when using ngrok or another tunnel. |
 | `GOOGLE_CLIENT_ID` | Required for Google sign-in | Google OAuth client ID for Better Auth. |
 | `GOOGLE_CLIENT_SECRET` | Required for Google sign-in | Google OAuth client secret for Better Auth. |
+| `FACEBOOK_CLIENT_ID` | Required for Facebook connect | Meta app client ID. |
+| `FACEBOOK_CLIENT_SECRET` | Required for Facebook connect | Meta app client secret. |
+| `FACEBOOK_API_VERSION` | No | Meta Graph API version. Default `v25.0`. |
 | `LINKEDIN_CLIENT_ID` | Required for LinkedIn connect | LinkedIn OAuth client ID. |
 | `LINKEDIN_CLIENT_SECRET` | Required for LinkedIn auth/connect | LinkedIn OAuth client secret. |
 | `LINKEDIN_VERSION` | No | LinkedIn REST API version header. Default `202604`. |
 | `X_CLIENT_ID` | Required for X connect | X OAuth client ID. |
 | `X_CLIENT_SECRET` | Required for X connect | X OAuth client secret. |
+| `POLAR_ACCESS_TOKEN` | Required for billing | Polar API token used for subscription lookup and checkout. |
+| `POLAR_PRODUCT_STARTER_ID` | Required for billing | Polar product id for the Starter plan. |
+| `POLAR_PRODUCT_PRO_ID` | Required for billing | Polar product id for the Pro plan. |
+| `POLAR_SERVER` | No | Set to `sandbox` to use Polar sandbox. |
 
 Notes:
 
@@ -371,7 +376,7 @@ Use HTTP cron only if you prefer an external scheduler over a long-lived worker.
 1. Connect one or more RSS feeds.
 2. Configure filters and generation defaults.
 3. Let the worker ingest new articles.
-4. Generate LinkedIn and X drafts from accepted articles.
+4. Generate Facebook, LinkedIn, and X drafts from accepted articles.
 5. Review and edit drafts in the queue.
 6. Approve, reject, schedule, publish now, or regenerate.
 7. Track the result in the schedule and publishing timeline.
@@ -437,6 +442,5 @@ server/               Domain services, repositories, and integrations
 ## Current limitations
 
 - MVP scope only
-- LinkedIn and X first
-- No billing, analytics, media generation, or team workflows
+- No advanced analytics, media generation, or team workflows
 - No queue system yet beyond the current polling-worker architecture

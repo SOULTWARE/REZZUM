@@ -8,7 +8,7 @@ export function AccountEmptyState() {
       </div>
       <p className="text-sm font-semibold text-slate-600">Add another connection</p>
       <p className="max-w-[180px] text-xs leading-5 text-slate-400">
-        Connect LinkedIn or X to expand automated publishing coverage.
+        Connect Facebook, LinkedIn, or X to expand publishing coverage.
       </p>
     </article>
   );

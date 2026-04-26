@@ -17,6 +17,11 @@ const MAXIMUM_WORD_COUNT = 50000;
 const MAXIMUM_STYLE_LENGTH = 2000;
 const MAXIMUM_AUTO_PUBLISH_INTERVAL_MINUTES = 7 * 24 * 60;
 
+const optionalAccountIdSchema = z.preprocess(
+  (value) => (typeof value === "string" ? value : ""),
+  z.string().trim().max(191).default(""),
+);
+
 const feedFormSchema = z
   .object({
     name: z
@@ -51,10 +56,12 @@ const feedFormSchema = z
       .default(""),
     includeKeywords: z.string().trim().default(""),
     excludeKeywords: z.string().trim().default(""),
+    generateFacebook: z.coerce.boolean().default(true),
     generateLinkedIn: z.coerce.boolean().default(true),
-    generateX: z.coerce.boolean().default(true),
-    linkedinAccountId: z.string().trim().max(191).default(""),
-    xAccountId: z.string().trim().max(191).default(""),
+    generateX: z.coerce.boolean().default(false),
+    facebookAccountId: optionalAccountIdSchema,
+    linkedinAccountId: optionalAccountIdSchema,
+    xAccountId: optionalAccountIdSchema,
     autoPublishEnabled: z.coerce.boolean().default(false),
     autoPublishIntervalMinutes: z.coerce
       .number()
@@ -85,15 +92,20 @@ const feedFormSchema = z
       .default(DEFAULT_REFRESH_INTERVAL_MINUTES),
   })
   .superRefine((data, context) => {
-    if (!data.generateLinkedIn && !data.generateX) {
+    if (!data.generateFacebook && !data.generateLinkedIn && !data.generateX) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Enable at least one publishing platform.",
-        path: ["generateLinkedIn"],
+        path: ["generateFacebook"],
       });
     }
 
-    if (data.autoPublishEnabled && !data.linkedinAccountId && !data.xAccountId) {
+    if (
+      data.autoPublishEnabled &&
+      !data.facebookAccountId &&
+      !data.linkedinAccountId &&
+      !data.xAccountId
+    ) {
       context.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Select at least one destination account before enabling auto-publish.",
@@ -106,6 +118,7 @@ const feedFormSchema = z
     normalizedRssUrl: normalizeFeedUrl(data.rssUrl),
     includeKeywords: parseKeywordText(data.includeKeywords),
     excludeKeywords: parseKeywordText(data.excludeKeywords),
+    facebookAccountId: data.facebookAccountId || null,
     linkedinAccountId: data.linkedinAccountId || null,
     xAccountId: data.xAccountId || null,
     autoPublishIntervalMinutes: data.autoPublishEnabled
@@ -136,8 +149,10 @@ export function validateFeedFormData(formData: FormData) {
     styleNotes: formData.get("styleNotes"),
     includeKeywords: formData.get("includeKeywords"),
     excludeKeywords: formData.get("excludeKeywords"),
+    generateFacebook: formData.get("generateFacebook"),
     generateLinkedIn: formData.get("generateLinkedIn"),
     generateX: formData.get("generateX"),
+    facebookAccountId: formData.get("facebookAccountId"),
     linkedinAccountId: formData.get("linkedinAccountId"),
     xAccountId: formData.get("xAccountId"),
     autoPublishEnabled: formData.get("autoPublishEnabled"),

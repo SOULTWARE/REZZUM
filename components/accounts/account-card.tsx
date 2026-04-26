@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Prisma, SocialPlatform } from "@prisma/client";
 import {
   DisconnectIcon,
+  FacebookIcon,
   LinkedInIcon,
   XIcon,
 } from "@/components/icons";
@@ -21,12 +22,20 @@ function PlatformIcon({
     return <LinkedInIcon className={className} />;
   }
 
+  if (platform === "FACEBOOK") {
+    return <FacebookIcon className={className} />;
+  }
+
   return <XIcon className={className} />;
 }
 
 function getPlatformAccent(platform: SocialPlatform) {
   if (platform === "LINKEDIN") {
     return "bg-[#0077B5] text-white";
+  }
+
+  if (platform === "FACEBOOK") {
+    return "bg-[#1877F2] text-white";
   }
 
   return "bg-[#111111] text-white";
@@ -60,6 +69,10 @@ function getAccountContext(account: SocialAccountRecord) {
 }
 
 function getPlatformLabel(platform: SocialPlatform) {
+  if (platform === "FACEBOOK") {
+    return "Facebook";
+  }
+
   return platform === "LINKEDIN" ? "LinkedIn" : "X";
 }
 

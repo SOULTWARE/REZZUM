@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { requireAuthSession } from "@/server/auth/session";
 import { updateWorkspaceSettings } from "@/server/settings/service";
 
 function normalizeAccountId(value: FormDataEntryValue | null) {
@@ -14,6 +15,8 @@ function normalizeAccountId(value: FormDataEntryValue | null) {
 }
 
 export async function updateWorkspaceSettingsAction(formData: FormData) {
+  await requireAuthSession();
+
   const defaultLanguage = String(formData.get("defaultLanguage") ?? "").trim() || "English";
   const defaultFeel = String(formData.get("defaultFeel") ?? "").trim() || "Professional";
   const defaultStyle = String(formData.get("defaultStyle") ?? "").trim();
@@ -28,6 +31,7 @@ export async function updateWorkspaceSettingsAction(formData: FormData) {
       defaultAutoPublishIntervalMinutes && defaultAutoPublishIntervalMinutes > 0
         ? defaultAutoPublishIntervalMinutes
         : null,
+    defaultFacebookAccountId: normalizeAccountId(formData.get("defaultFacebookAccountId")),
     defaultLinkedInAccountId: normalizeAccountId(formData.get("defaultLinkedInAccountId")),
     defaultXAccountId: normalizeAccountId(formData.get("defaultXAccountId")),
   });

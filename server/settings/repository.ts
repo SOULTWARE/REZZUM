@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/server/db/client";
 
 export const workspaceSettingsInclude = {
+  defaultFacebookAccount: true,
   defaultLinkedInAccount: true,
   defaultXAccount: true,
 } satisfies Prisma.WorkspaceSettingsInclude;
@@ -33,6 +34,7 @@ export async function updateWorkspaceSettingsRecord(data: {
   defaultFeel: string;
   defaultStyle: string;
   defaultAutoPublishIntervalMinutes: number | null;
+  defaultFacebookAccountId: string | null;
   defaultLinkedInAccountId: string | null;
   defaultXAccountId: string | null;
 }) {

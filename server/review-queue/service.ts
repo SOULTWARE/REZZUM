@@ -19,7 +19,7 @@ type ReviewQueueOption = {
 };
 
 function comparePlatforms(left: SocialPlatform, right: SocialPlatform) {
-  const platformOrder = [SocialPlatform.LINKEDIN, SocialPlatform.X];
+  const platformOrder = [SocialPlatform.FACEBOOK, SocialPlatform.LINKEDIN, SocialPlatform.X];
 
   return platformOrder.indexOf(left) - platformOrder.indexOf(right);
 }

@@ -90,6 +90,14 @@ function extractGeneratedText(payload: OpenAIResponsePayload) {
 }
 
 function getPlatformGuidance(platform: SocialPlatform) {
+  if (platform === SocialPlatform.FACEBOOK) {
+    return {
+      maxCharacters: 63206,
+      instruction:
+        "Write one Facebook Page post. Aim for 400-900 characters, clear context, and a conversational but professional tone. No hashtag stack.",
+    };
+  }
+
   if (platform === SocialPlatform.X) {
     return {
       maxCharacters: 280,

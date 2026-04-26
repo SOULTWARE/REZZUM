@@ -55,6 +55,16 @@ function formatKeywordSummary(feed: FeedRecord) {
   };
 }
 
+function formatFeedPlatforms(feed: FeedRecord) {
+  return [
+    feed.generateFacebook ? "Facebook" : null,
+    feed.generateLinkedIn ? "LinkedIn" : null,
+    feed.generateX ? "X" : null,
+  ]
+    .filter(Boolean)
+    .join(" + ");
+}
+
 function KeywordGroup({
   title,
   keywords,
@@ -319,11 +329,11 @@ export function FeedList({ feeds }: Readonly<{ feeds: FeedRecord[] }>) {
                       Destinations
                     </p>
                     <p className="mt-3 text-lg font-semibold text-slate-900">
-                      {feed.generateLinkedIn ? "LinkedIn" : null}
-                      {feed.generateLinkedIn && feed.generateX ? " + " : null}
-                      {feed.generateX ? "X" : null}
+                      {formatFeedPlatforms(feed) || "None"}
                     </p>
                     <p className="mt-2 text-sm leading-6 text-slate-500">
+                      Facebook: {feed.facebookAccount?.displayName ?? "Workspace default / none"}
+                      <br />
                       LinkedIn: {feed.linkedinAccount?.displayName ?? "Workspace default / none"}
                       <br />
                       X: {feed.xAccount?.displayName ?? "Workspace default / none"}

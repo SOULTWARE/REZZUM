@@ -3,6 +3,7 @@ import { db } from "@/server/db/client";
 
 export const feedWithFilterInclude = {
   filter: true,
+  facebookAccount: true,
   linkedinAccount: true,
   xAccount: true,
 } satisfies Prisma.RssFeedInclude;
@@ -32,8 +33,10 @@ export async function createFeedRecord(data: {
   defaultLanguage: string;
   defaultFeel: string;
   styleNotes: string;
+  generateFacebook: boolean;
   generateLinkedIn: boolean;
   generateX: boolean;
+  facebookAccountId: string | null;
   linkedinAccountId: string | null;
   xAccountId: string | null;
   autoPublishEnabled: boolean;
@@ -52,8 +55,10 @@ export async function createFeedRecord(data: {
       defaultLanguage: data.defaultLanguage,
       defaultFeel: data.defaultFeel,
       styleNotes: data.styleNotes,
+      generateFacebook: data.generateFacebook,
       generateLinkedIn: data.generateLinkedIn,
       generateX: data.generateX,
+      facebookAccountId: data.facebookAccountId,
       linkedinAccountId: data.linkedinAccountId,
       xAccountId: data.xAccountId,
       autoPublishEnabled: data.autoPublishEnabled,
@@ -81,8 +86,10 @@ export async function updateFeedRecord(
     defaultLanguage: string;
     defaultFeel: string;
     styleNotes: string;
+    generateFacebook: boolean;
     generateLinkedIn: boolean;
     generateX: boolean;
+    facebookAccountId: string | null;
     linkedinAccountId: string | null;
     xAccountId: string | null;
     autoPublishEnabled: boolean;
@@ -103,8 +110,10 @@ export async function updateFeedRecord(
       defaultLanguage: data.defaultLanguage,
       defaultFeel: data.defaultFeel,
       styleNotes: data.styleNotes,
+      generateFacebook: data.generateFacebook,
       generateLinkedIn: data.generateLinkedIn,
       generateX: data.generateX,
+      facebookAccountId: data.facebookAccountId,
       linkedinAccountId: data.linkedinAccountId,
       xAccountId: data.xAccountId,
       autoPublishEnabled: data.autoPublishEnabled,

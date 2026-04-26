@@ -26,8 +26,10 @@ export type FeedFormValues = {
   styleNotes: string;
   includeKeywords: string;
   excludeKeywords: string;
+  generateFacebook: boolean;
   generateLinkedIn: boolean;
   generateX: boolean;
+  facebookAccountId: string;
   linkedinAccountId: string;
   xAccountId: string;
   autoPublishEnabled: boolean;
@@ -44,8 +46,10 @@ export const EMPTY_FEED_FORM_VALUES: FeedFormValues = {
   styleNotes: "",
   includeKeywords: "",
   excludeKeywords: "",
+  generateFacebook: true,
   generateLinkedIn: true,
-  generateX: true,
+  generateX: false,
+  facebookAccountId: "",
   linkedinAccountId: "",
   xAccountId: "",
   autoPublishEnabled: false,
