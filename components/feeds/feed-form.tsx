@@ -152,7 +152,7 @@ export function FeedForm({
 
       <div className="grid gap-8 lg:grid-cols-12">
         <div className="space-y-8 lg:col-span-7">
-          <section className="space-y-5">
+          <section data-onboarding="feed-form-connection" className="space-y-5">
             <div className="flex items-center gap-2">
               <span className="h-6 w-1 rounded-full bg-[var(--primary)]" />
               <h2 className="font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
@@ -197,7 +197,7 @@ export function FeedForm({
             </div>
           </section>
 
-          <section className="space-y-5">
+          <section data-onboarding="feed-form-personalization" className="space-y-5">
             <div className="flex items-center gap-2">
               <span className="h-6 w-1 rounded-full bg-[var(--primary)]" />
               <h2 className="font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
@@ -270,7 +270,7 @@ export function FeedForm({
             </div>
           </section>
 
-          <section className="space-y-5">
+          <section data-onboarding="feed-form-filtering" className="space-y-5">
             <div className="flex items-center gap-2">
               <span className="h-6 w-1 rounded-full bg-[var(--primary)]" />
               <h2 className="font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
@@ -382,7 +382,7 @@ export function FeedForm({
             </div>
           </section>
 
-          <section className="space-y-5">
+          <section data-onboarding="feed-form-publishing" className="space-y-5">
             <div className="flex items-center gap-2">
               <span className="h-6 w-1 rounded-full bg-[var(--primary)]" />
               <h2 className="font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
@@ -545,7 +545,7 @@ export function FeedForm({
         </div>
 
         <div className="space-y-6 lg:col-span-5">
-          <aside className="surface-card rounded-xl p-6 sm:p-8">
+          <aside data-onboarding="feed-form-preview" className="surface-card rounded-xl p-6 sm:p-8">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
               Feed preview
             </p>

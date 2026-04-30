@@ -77,7 +77,7 @@ export default async function AccountsPage() {
 
   return (
     <PageContainer>
-      <section className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <section data-onboarding="accounts-platforms" className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {hasAccounts
           ? overview.accounts.map((account) => (
               <AccountCard
@@ -114,7 +114,7 @@ export default async function AccountsPage() {
         <AccountEmptyState />
       </section>
 
-      <section className="flex flex-col gap-8 rounded-[1.5rem] border border-[rgb(223_213_247)] bg-[rgb(223_213_247_/_0.28)] p-8 md:flex-row md:items-center">
+      <section data-onboarding="accounts-coverage" className="flex flex-col gap-8 rounded-[1.5rem] border border-[rgb(223_213_247)] bg-[rgb(223_213_247_/_0.28)] p-8 md:flex-row md:items-center">
         <div className="flex-1 space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full bg-[rgb(98_91_119)] px-3 py-1 text-white">
             <SparkIcon className="h-4 w-4" />

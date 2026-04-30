@@ -328,7 +328,7 @@ function SupportSection({
 export default function SupportPage() {
   return (
     <PageContainer>
-      <section className="relative overflow-hidden rounded-[1.75rem] bg-[linear-gradient(145deg,_#0053da_0%,_#0048c1_100%)] px-6 py-8 text-white shadow-sm sm:px-8 sm:py-10">
+      <section data-onboarding="support-hero" className="relative overflow-hidden rounded-[1.75rem] bg-[linear-gradient(145deg,_#0053da_0%,_#0048c1_100%)] px-6 py-8 text-white shadow-sm sm:px-8 sm:py-10">
         <div className="relative z-10 max-w-3xl">
           <div className="inline-flex items-center gap-2 rounded-full bg-white/12 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-white/85">
             <SupportIcon className="h-4 w-4" />
@@ -349,7 +349,7 @@ export default function SupportPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[260px_minmax(0,1fr)]">
-        <aside className="xl:sticky xl:top-32 xl:self-start">
+        <aside data-onboarding="support-nav" className="xl:sticky xl:top-32 xl:self-start">
           <div className="rounded-[1.5rem] bg-white p-4 shadow-sm sm:p-5">
             <p className="px-2 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
               On this page
@@ -369,7 +369,7 @@ export default function SupportPage() {
           </div>
         </aside>
 
-        <div className="grid gap-6">
+        <div data-onboarding="support-content" className="grid gap-6">
           <SupportSection
             id="start-here"
             eyebrow="Setup"

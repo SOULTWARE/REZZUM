@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AppHeader } from "@/components/app-header";
 import { AppSidebar } from "@/components/app-sidebar";
-import { OnboardingTour } from "@/components/onboarding-tour";
+import { hasPageWalkthrough, OnboardingTour } from "@/components/onboarding-tour";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -16,24 +16,34 @@ type AppShellProps = {
 };
 
 const ONBOARDING_STORAGE_VERSION = "v1";
+type WalkthroughScope = "full" | "page";
 
 function getOnboardingStorageKey(email: string) {
   return `rezzum:onboarding:${ONBOARDING_STORAGE_VERSION}:${email.toLowerCase()}`;
 }
 
+function getPageOnboardingStorageKey(email: string, pathname: string) {
+  const normalizedPathname = pathname.replace(/\/[a-z0-9_-]{16,}(?=\/|$)/gi, "/detail");
+
+  return `rezzum:onboarding-page:${ONBOARDING_STORAGE_VERSION}:${email.toLowerCase()}:${normalizedPathname}`;
+}
+
 export function AppShell({ children, user }: Readonly<AppShellProps>) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "/dashboard";
   const [mobileOpen, setMobileOpen] = useState(false);
   const [desktopCollapsed, setDesktopCollapsed] = useState(false);
   const [walkthroughRun, setWalkthroughRun] = useState(false);
   const [walkthroughKey, setWalkthroughKey] = useState(0);
+  const [walkthroughScope, setWalkthroughScope] = useState<WalkthroughScope>("full");
   const autoStartAttemptedRef = useRef(false);
 
   const onboardingStorageKey = getOnboardingStorageKey(user.email);
+  const pageOnboardingStorageKey = getPageOnboardingStorageKey(user.email, pathname);
 
-  const startWalkthrough = useCallback(() => {
+  const startWalkthrough = useCallback((scope: WalkthroughScope = "full") => {
     setDesktopCollapsed(false);
-    setMobileOpen(typeof window !== "undefined" && window.innerWidth < 1024);
+    setMobileOpen(scope === "full" && typeof window !== "undefined" && window.innerWidth < 1024);
+    setWalkthroughScope(scope);
     setWalkthroughRun(false);
     setWalkthroughKey((current) => current + 1);
 
@@ -46,11 +56,17 @@ export function AppShell({ children, user }: Readonly<AppShellProps>) {
     setWalkthroughRun(false);
 
     try {
-      window.localStorage.setItem(onboardingStorageKey, "completed");
+      if (walkthroughScope === "full") {
+        window.localStorage.setItem(onboardingStorageKey, "completed");
+      }
+
+      if (hasPageWalkthrough(pathname)) {
+        window.localStorage.setItem(pageOnboardingStorageKey, "completed");
+      }
     } catch {
       // Browsers can block localStorage in private or restricted contexts.
     }
-  }, [onboardingStorageKey]);
+  }, [onboardingStorageKey, pageOnboardingStorageKey, pathname, walkthroughScope]);
 
   useEffect(() => {
     if (autoStartAttemptedRef.current) {
@@ -71,6 +87,27 @@ export function AppShell({ children, user }: Readonly<AppShellProps>) {
 
     return () => window.clearTimeout(timer);
   }, [onboardingStorageKey, startWalkthrough]);
+
+  useEffect(() => {
+    if (walkthroughRun || !hasPageWalkthrough(pathname)) {
+      return;
+    }
+
+    try {
+      if (
+        !window.localStorage.getItem(onboardingStorageKey) ||
+        window.localStorage.getItem(pageOnboardingStorageKey)
+      ) {
+        return;
+      }
+    } catch {
+      return;
+    }
+
+    const timer = window.setTimeout(() => startWalkthrough("page"), 650);
+
+    return () => window.clearTimeout(timer);
+  }, [onboardingStorageKey, pageOnboardingStorageKey, pathname, startWalkthrough, walkthroughRun]);
 
   return (
     <div className="min-h-screen bg-[var(--surface)]">
@@ -99,7 +136,9 @@ export function AppShell({ children, user }: Readonly<AppShellProps>) {
       <OnboardingTour
         key={walkthroughKey}
         onFinish={finishWalkthrough}
+        pathname={pathname}
         run={walkthroughRun}
+        scope={walkthroughScope}
         tourKey={walkthroughKey}
       />
     </div>

@@ -50,7 +50,7 @@ export function QueueFilters({ filters, options }: Readonly<QueueFiltersProps>) 
   const active = hasActiveReviewQueueFilters(filters);
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-sm">
+    <section data-onboarding="queue-filters" className="rounded-xl bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">

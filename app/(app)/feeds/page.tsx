@@ -62,7 +62,7 @@ export default async function FeedsPage() {
 
   return (
     <PageContainer>
-      <section className="grid gap-6 xl:grid-cols-12">
+      <section data-onboarding="feeds-summary" className="grid gap-6 xl:grid-cols-12">
         <article className="rounded-xl bg-white p-6 shadow-sm xl:col-span-3">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--surface-low)] text-[var(--primary)]">
@@ -138,7 +138,9 @@ export default async function FeedsPage() {
         </article>
       </section>
 
-      <section>{feeds.length === 0 ? <FeedEmptyState /> : <FeedList feeds={feeds} />}</section>
+      <section data-onboarding="feeds-library">
+        {feeds.length === 0 ? <FeedEmptyState /> : <FeedList feeds={feeds} />}
+      </section>
     </PageContainer>
   );
 }

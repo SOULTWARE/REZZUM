@@ -165,7 +165,11 @@ export default async function SettingsPage({
             }}
           />
 
-          <form action={updateWorkspaceSettingsAction} className="rounded-xl bg-white p-6 shadow-sm">
+          <form
+            data-onboarding="settings-workspace"
+            action={updateWorkspaceSettingsAction}
+            className="rounded-xl bg-white p-6 shadow-sm"
+          >
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
               Workspace defaults
             </p>
@@ -303,7 +307,7 @@ export default async function SettingsPage({
             unavailable={currentSubscriptionResult.unavailable}
           />
 
-          <section className="rounded-xl bg-white p-6 shadow-sm">
+          <section data-onboarding="settings-automation" className="rounded-xl bg-white p-6 shadow-sm">
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
               Automation
             </p>

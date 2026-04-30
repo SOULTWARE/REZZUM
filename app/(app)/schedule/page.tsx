@@ -51,7 +51,7 @@ export default async function SchedulePage() {
 
   return (
     <PageContainer>
-      <section className="grid gap-6 xl:grid-cols-12">
+      <section data-onboarding="schedule-summary" className="grid gap-6 xl:grid-cols-12">
         <article className="rounded-xl bg-white p-6 shadow-sm xl:col-span-3">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--surface-low)] text-[var(--primary)]">
@@ -126,15 +126,11 @@ export default async function SchedulePage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(300px,0.9fr)]">
-        {hasItems ? (
-          <section className="grid gap-4">
-            <ScheduleList items={overview.items} />
-          </section>
-        ) : (
-          <ScheduleEmptyState />
-        )}
+        <section data-onboarding="schedule-list">
+          {hasItems ? <ScheduleList items={overview.items} /> : <ScheduleEmptyState />}
+        </section>
 
-        <section className="grid gap-6">
+        <section data-onboarding="schedule-followup" className="grid gap-6">
           <ScheduleErrorState failedItems={overview.failedItems} />
 
           <aside className="rounded-xl bg-white p-6 shadow-sm">

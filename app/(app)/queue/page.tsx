@@ -43,7 +43,7 @@ export default async function QueuePage({
 
   return (
     <PageContainer>
-      <section className="grid gap-6 xl:grid-cols-12">
+      <section data-onboarding="queue-summary" className="grid gap-6 xl:grid-cols-12">
         <article className="rounded-xl bg-white p-6 shadow-sm xl:col-span-3">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--surface-low)] text-[var(--primary)]">
@@ -117,34 +117,36 @@ export default async function QueuePage({
 
       <QueueFilters filters={queue.filters} options={queue.filterOptions} />
 
-      {queue.items.length > 0 ? (
-        <QueueList items={queue.items} />
-      ) : (
-        <PageEmptyState
-          eyebrow="Review queue"
-          title={
-            hasActiveFilters
-              ? "No drafts match these filters"
-              : "No generated drafts are ready for review"
-          }
-          description={
-            hasActiveFilters
-              ? "Adjust the platform, status, or feed filters."
-              : "Drafts ready for review will appear here."
-          }
-          icon={<QueueIcon className="h-6 w-6" />}
-          actions={
-            hasActiveFilters ? (
-              <Link
-                href="/queue"
-                className="button-secondary inline-flex items-center rounded-full px-4 py-2.5 text-sm font-semibold"
-              >
-                Clear filters
-              </Link>
-            ) : null
-          }
-        />
-      )}
+      <section data-onboarding="queue-list">
+        {queue.items.length > 0 ? (
+          <QueueList items={queue.items} />
+        ) : (
+          <PageEmptyState
+            eyebrow="Review queue"
+            title={
+              hasActiveFilters
+                ? "No drafts match these filters"
+                : "No generated drafts are ready for review"
+            }
+            description={
+              hasActiveFilters
+                ? "Adjust the platform, status, or feed filters."
+                : "Drafts ready for review will appear here."
+            }
+            icon={<QueueIcon className="h-6 w-6" />}
+            actions={
+              hasActiveFilters ? (
+                <Link
+                  href="/queue"
+                  className="button-secondary inline-flex items-center rounded-full px-4 py-2.5 text-sm font-semibold"
+                >
+                  Clear filters
+                </Link>
+              ) : null
+            }
+          />
+        )}
+      </section>
     </PageContainer>
   );
 }
