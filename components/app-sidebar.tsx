@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { LogoutButton } from "@/components/logout-button";
-import { MenuCloseIcon, RezzumLogo, SettingsIcon } from "@/components/icons";
+import { MenuCloseIcon, RezzumLogo, SettingsIcon, SparkIcon } from "@/components/icons";
 import { primaryNavigation, secondaryNavigation } from "@/lib/navigation";
 
 type AppSidebarProps = {
   desktopCollapsed: boolean;
   mobileOpen: boolean;
   onClose: () => void;
+  onStartWalkthrough: () => void;
   onToggleDesktopCollapse: () => void;
   pathname: string;
   user: {
@@ -34,21 +35,12 @@ export function AppSidebar({
   desktopCollapsed,
   mobileOpen,
   onClose,
+  onStartWalkthrough,
   onToggleDesktopCollapse,
   pathname,
   user,
 }: Readonly<AppSidebarProps>) {
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
-
-  useEffect(() => {
-    setIsAccountModalOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!mobileOpen) {
-      setIsAccountModalOpen(false);
-    }
-  }, [mobileOpen]);
 
   useEffect(() => {
     if (!isAccountModalOpen) {
@@ -67,6 +59,11 @@ export function AppSidebar({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isAccountModalOpen]);
+
+  function handleCloseNavigation() {
+    setIsAccountModalOpen(false);
+    onClose();
+  }
 
   return (
     <>
@@ -97,6 +94,7 @@ export function AppSidebar({
         >
           <button
             type="button"
+            data-onboarding="sidebar-brand"
             onClick={() => {
               if (typeof window !== "undefined" && window.innerWidth >= 1024) {
                 onToggleDesktopCollapse();
@@ -125,7 +123,7 @@ export function AppSidebar({
           </button>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleCloseNavigation}
             className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-slate-500 shadow-sm lg:hidden"
             aria-label="Close navigation"
           >
@@ -142,7 +140,8 @@ export function AppSidebar({
                 <Link
                   key={href}
                   href={href}
-                  onClick={onClose}
+                  data-onboarding={`nav-${href.slice(1)}`}
+                  onClick={handleCloseNavigation}
                   aria-current={isActive ? "page" : undefined}
                   title={desktopCollapsed ? label : undefined}
                   className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
@@ -168,7 +167,8 @@ export function AppSidebar({
                 <Link
                   key={href}
                   href={href}
-                  onClick={onClose}
+                  data-onboarding={`nav-${href.slice(1)}`}
+                  onClick={handleCloseNavigation}
                   aria-current={isActive ? "page" : undefined}
                   title={desktopCollapsed ? label : undefined}
                   className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium ${
@@ -184,6 +184,22 @@ export function AppSidebar({
                 </Link>
               );
             })}
+
+            <button
+              type="button"
+              data-onboarding="walkthrough-button"
+              onClick={() => {
+                handleCloseNavigation();
+                window.setTimeout(onStartWalkthrough, 160);
+              }}
+              title={desktopCollapsed ? "Start walkthrough" : undefined}
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-100 hover:text-slate-900 ${
+                desktopCollapsed ? "lg:justify-center" : ""
+              }`}
+            >
+              <SparkIcon className="h-5 w-5" />
+              <span className={desktopCollapsed ? "lg:hidden" : ""}>Walkthrough</span>
+            </button>
 
             <div className="relative mt-4 border-t border-slate-200/70 pt-4">
               {isAccountModalOpen ? (
@@ -216,6 +232,7 @@ export function AppSidebar({
               ) : null}
               <button
                 type="button"
+                data-onboarding="account-menu"
                 onClick={() => setIsAccountModalOpen((current) => !current)}
                 className={`flex w-full items-center rounded-2xl px-2 py-2 text-left transition-colors hover:bg-white ${
                   desktopCollapsed ? "gap-3 lg:justify-center lg:gap-0" : "gap-3"

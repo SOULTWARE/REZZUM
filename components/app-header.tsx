@@ -58,7 +58,10 @@ export function AppHeader({ pathname, onMenuClick }: Readonly<AppHeaderProps>) {
   const page = getShellPage(pathname);
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur-2xl">
+    <header
+      data-onboarding="app-header"
+      className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur-2xl"
+    >
       <div className="px-4 py-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="flex min-w-0 items-start gap-3">
