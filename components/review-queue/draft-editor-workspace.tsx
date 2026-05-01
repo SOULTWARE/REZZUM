@@ -160,7 +160,11 @@ export function DraftEditorWorkspace({
   }
 
   return (
-    <form ref={formRef} className="surface-card rounded-xl p-5 sm:p-6">
+    <form
+      ref={formRef}
+      data-onboarding="draft-editor"
+      className="surface-card rounded-xl p-5 sm:p-6"
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
@@ -176,7 +180,7 @@ export function DraftEditorWorkspace({
         <PostStatusBadge status={status} />
       </div>
 
-      <div className="mt-6 rounded-xl bg-[var(--surface-low)] p-1">
+      <div data-onboarding="draft-platform-tabs" className="mt-6 rounded-xl bg-[var(--surface-low)] p-1">
         <div className="grid gap-1 sm:grid-cols-2">
           {platformTabs.map((tab) => {
             if (tab.href) {
@@ -242,7 +246,7 @@ export function DraftEditorWorkspace({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      <div data-onboarding="draft-destination" className="mt-6 grid gap-4 lg:grid-cols-2">
         <label className="block rounded-xl bg-[var(--surface-low)] p-4">
           <span className="block text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
             Destination account
@@ -278,7 +282,7 @@ export function DraftEditorWorkspace({
         </label>
       </div>
 
-      <div className="mt-6 rounded-xl bg-[var(--surface-low)] p-4 sm:p-5">
+      <div data-onboarding="draft-copy" className="mt-6 rounded-xl bg-[var(--surface-low)] p-4 sm:p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--muted-soft)]">
@@ -339,7 +343,7 @@ export function DraftEditorWorkspace({
         </div>
       ) : null}
 
-      <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-[var(--ghost-line)] pt-6">
+      <div data-onboarding="draft-actions" className="mt-6 flex flex-wrap items-center gap-3 border-t border-[var(--ghost-line)] pt-6">
         <ActionButton
           label="Reject"
           icon={<RejectIcon className="h-4 w-4" />}

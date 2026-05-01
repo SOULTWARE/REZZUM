@@ -114,7 +114,7 @@ export default async function DashboardPage() {
 
   return (
     <PageContainer>
-      <section className="grid gap-6 xl:grid-cols-12">
+      <section data-onboarding="dashboard-summary" className="grid gap-6 xl:grid-cols-12">
         <article className="xl:col-span-3 rounded-xl bg-white p-6 shadow-sm">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[var(--surface-low)] text-[var(--primary)]">
@@ -198,7 +198,7 @@ export default async function DashboardPage() {
         </article>
       </section>
 
-      <section className="overflow-hidden rounded-xl bg-white shadow-sm">
+      <section data-onboarding="dashboard-activity" className="overflow-hidden rounded-xl bg-white shadow-sm">
         <div className="flex flex-col gap-4 border-b border-slate-200/80 px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap items-center gap-6">
             <span className="border-b-2 border-[var(--primary)] pb-4 text-sm font-semibold text-[var(--primary)] -mb-4">
@@ -377,7 +377,7 @@ export default async function DashboardPage() {
       </section>
 
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-        <section className="rounded-xl bg-white p-6 shadow-sm">
+        <section data-onboarding="dashboard-sources" className="rounded-xl bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
@@ -428,7 +428,7 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        <aside className="rounded-xl bg-white p-6 shadow-sm">
+        <aside data-onboarding="dashboard-notes" className="rounded-xl bg-white p-6 shadow-sm">
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">
             Workspace
           </p>

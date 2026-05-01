@@ -403,7 +403,7 @@ export function AccountSettingsPanel({
   }
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-sm">
+    <section data-onboarding="settings-account" className="rounded-xl bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">

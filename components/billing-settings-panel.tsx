@@ -40,7 +40,7 @@ export function BillingSettingsPanel({
   const renewalDate = formatDate(currentSubscription?.currentPeriodEnd ?? null);
 
   return (
-    <section className="rounded-xl bg-white p-6 shadow-sm">
+    <section data-onboarding="settings-billing" className="rounded-xl bg-white p-6 shadow-sm">
       <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">Billing</p>
       <h2 className="mt-3 font-[var(--font-display)] text-2xl font-semibold tracking-[-0.03em] text-slate-900">
         Subscription
