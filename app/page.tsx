@@ -299,11 +299,14 @@ export default function HomePage() {
                   </p>
                   <div className="mt-4 flex flex-wrap gap-3">
                     <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
+                      <FacebookIcon className="h-4 w-4" />
+                      Facebook
+                    </div>
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
                       <LinkedInIcon className="h-4 w-4" />
                       LinkedIn
                     </div>
-                    <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
-                      <XIcon className="h-4 w-4" />
+                    <div className="inline-flex items-center rounded-full bg-white px-4 py-2 text-sm font-semibold text-[var(--foreground)]">
                       X
                     </div>
                   </div>
