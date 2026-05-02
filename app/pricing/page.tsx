@@ -84,13 +84,13 @@ export default function PricingPage() {
             {plans.map((plan) => (
               <article
                 key={plan.name}
-                className={`surface-card rounded-2xl border p-8 sm:p-10 ${
+                className={`surface-card flex flex-col rounded-2xl border p-8 sm:p-10 ${
                   plan.highlighted
                     ? "border-[rgb(0_83_218_/_0.22)] shadow-[0_20px_48px_rgb(0_83_218_/_0.14)]"
                     : "border-[var(--ghost-line)]"
                 }`}
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex min-h-36 items-start justify-between gap-4">
                   <div>
                     <h2 className="font-[var(--font-display)] text-3xl font-semibold text-[var(--foreground)]">
                       {plan.name}
@@ -124,14 +124,16 @@ export default function PricingPage() {
                   ))}
                 </ul>
 
-                <Link
-                  href={plan.slug ? `/signup?plan=${plan.slug}` : "/signup"}
-                  className={`mt-10 inline-flex w-full items-center justify-center rounded-lg px-6 py-3.5 text-sm font-semibold ${
-                    plan.highlighted ? "button-primary" : "button-secondary"
-                  }`}
-                >
-                  {plan.slug ? "Get started" : "Start free"}
-                </Link>
+                <div className="mt-auto pt-10">
+                  <Link
+                    href={plan.slug ? `/signup?plan=${plan.slug}` : "/signup"}
+                    className={`inline-flex w-full items-center justify-center rounded-lg px-6 py-3.5 text-sm font-semibold ${
+                      plan.highlighted ? "button-primary" : "button-secondary"
+                    }`}
+                  >
+                    {plan.slug ? "Get started" : "Start free"}
+                  </Link>
+                </div>
               </article>
             ))}
           </div>
