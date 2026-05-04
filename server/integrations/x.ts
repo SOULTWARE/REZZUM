@@ -41,18 +41,18 @@ function getXClientSecret() {
   return clientSecret;
 }
 
-function getRedirectUri() {
-  return getAbsoluteUrl("/api/auth/x/callback");
+function getRedirectUri(baseUrl?: string) {
+  return getAbsoluteUrl("/api/auth/x/callback", baseUrl);
 }
 
-export function createXAuthorizationRequest(state: string) {
+export function createXAuthorizationRequest(state: string, baseUrl?: string) {
   const verifier = createPkceVerifier();
   const challenge = createPkceChallenge(verifier);
   const url = new URL("https://x.com/i/oauth2/authorize");
 
   url.searchParams.set("response_type", "code");
   url.searchParams.set("client_id", getXClientId());
-  url.searchParams.set("redirect_uri", getRedirectUri());
+  url.searchParams.set("redirect_uri", getRedirectUri(baseUrl));
   url.searchParams.set("scope", X_SCOPES.join(" "));
   url.searchParams.set("state", state);
   url.searchParams.set("code_challenge", challenge);
@@ -67,12 +67,13 @@ export function createXAuthorizationRequest(state: string) {
 export async function exchangeXCodeForToken(params: {
   code: string;
   verifier: string;
+  baseUrl?: string;
 }) {
   const body = new URLSearchParams({
     code: params.code,
     grant_type: "authorization_code",
     client_id: getXClientId(),
-    redirect_uri: getRedirectUri(),
+    redirect_uri: getRedirectUri(params.baseUrl),
     code_verifier: params.verifier,
   });
   const response = await fetch("https://api.x.com/2/oauth2/token", {
@@ -198,6 +199,7 @@ async function fetchAuthenticatedXUser(accessToken: string) {
 export async function connectXAccount(params: {
   code: string;
   verifier: string;
+  baseUrl?: string;
 }) {
   const token = await exchangeXCodeForToken(params);
   const user = await fetchAuthenticatedXUser(token.access_token);

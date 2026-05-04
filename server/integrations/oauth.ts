@@ -1,8 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import { getAbsoluteAppUrl } from "@/server/app-url";
 
-export function getAbsoluteUrl(pathname: string) {
-  return getAbsoluteAppUrl(pathname);
+export function getAbsoluteUrl(pathname: string, baseUrl?: string) {
+  return getAbsoluteAppUrl(pathname, baseUrl);
 }
 
 export function createOauthState() {

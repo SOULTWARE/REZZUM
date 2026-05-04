@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getRequestAuthSession } from "@/server/auth/session";
+import { getRequestBaseUrl } from "@/server/app-url";
 import { getLinkedInAuthorizationUrl } from "@/server/integrations/linkedin";
 import { createOauthState } from "@/server/integrations/oauth";
 
@@ -22,5 +23,5 @@ export async function GET(request: Request) {
     maxAge: 60 * 10,
   });
 
-  return NextResponse.redirect(getLinkedInAuthorizationUrl(state));
+  return NextResponse.redirect(getLinkedInAuthorizationUrl(state, getRequestBaseUrl(request)));
 }

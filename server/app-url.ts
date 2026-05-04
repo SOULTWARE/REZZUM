@@ -1,3 +1,5 @@
+const DEFAULT_PRODUCTION_APP_URL = "https://rezzum.online";
+
 function stripTrailingSlash(value: string) {
   return value.replace(/\/+$/, "");
 }
@@ -27,11 +29,11 @@ export function getAppBaseUrl() {
     return stripTrailingSlash(configuredUrl);
   }
 
-  if (process.env.NODE_ENV !== "production") {
-    return "http://localhost:3000";
+  if (process.env.NODE_ENV === "production") {
+    return DEFAULT_PRODUCTION_APP_URL;
   }
 
-  throw new Error("NEXT_PUBLIC_APP_URL is required in production.");
+  return "http://localhost:3000";
 }
 
 export function getRequestBaseUrl(request: Request) {

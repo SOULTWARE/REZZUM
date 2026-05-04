@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { SocialPlatform } from "@prisma/client";
 import { getRequestAuthSession } from "@/server/auth/session";
+import { getRequestBaseUrl } from "@/server/app-url";
 import { assertPlatformsAllowed, getUserPlanAccess } from "@/server/billing/limits";
 import { connectXAccount } from "@/server/integrations/x";
 
@@ -31,6 +32,7 @@ export async function GET(request: Request) {
     await connectXAccount({
       code,
       verifier,
+      baseUrl: getRequestBaseUrl(request),
     });
 
     return NextResponse.redirect(new URL("/accounts?connected=x", request.url));

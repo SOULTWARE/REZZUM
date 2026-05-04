@@ -54,15 +54,15 @@ function getGraphUrl(pathname: string) {
   return `https://graph.facebook.com/${FACEBOOK_API_VERSION}${pathname}`;
 }
 
-function getRedirectUri() {
-  return getAbsoluteUrl("/api/auth/facebook/callback");
+function getRedirectUri(baseUrl?: string) {
+  return getAbsoluteUrl("/api/auth/facebook/callback", baseUrl);
 }
 
-export function getFacebookAuthorizationUrl(state: string) {
+export function getFacebookAuthorizationUrl(state: string, baseUrl?: string) {
   const url = new URL("https://www.facebook.com/dialog/oauth");
 
   url.searchParams.set("client_id", getFacebookClientId());
-  url.searchParams.set("redirect_uri", getRedirectUri());
+  url.searchParams.set("redirect_uri", getRedirectUri(baseUrl));
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", FACEBOOK_SCOPES.join(","));
   url.searchParams.set("state", state);
@@ -70,12 +70,12 @@ export function getFacebookAuthorizationUrl(state: string) {
   return url.toString();
 }
 
-async function exchangeFacebookCodeForToken(code: string) {
+async function exchangeFacebookCodeForToken(code: string, baseUrl?: string) {
   const url = new URL(getGraphUrl("/oauth/access_token"));
 
   url.searchParams.set("client_id", getFacebookClientId());
   url.searchParams.set("client_secret", getFacebookClientSecret());
-  url.searchParams.set("redirect_uri", getRedirectUri());
+  url.searchParams.set("redirect_uri", getRedirectUri(baseUrl));
   url.searchParams.set("code", code);
 
   const response = await fetch(url, {
@@ -113,8 +113,8 @@ async function fetchFacebookPages(accessToken: string) {
   return payload.data ?? [];
 }
 
-export async function connectFacebookPages(code: string) {
-  const token = await exchangeFacebookCodeForToken(code);
+export async function connectFacebookPages(code: string, baseUrl?: string) {
+  const token = await exchangeFacebookCodeForToken(code, baseUrl);
   const pages = await fetchFacebookPages(token.access_token);
 
   if (pages.length === 0) {

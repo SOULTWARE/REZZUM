@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { SocialPlatform } from "@prisma/client";
 import { getRequestAuthSession } from "@/server/auth/session";
+import { getRequestBaseUrl } from "@/server/app-url";
 import { assertPlatformsAllowed, getUserPlanAccess } from "@/server/billing/limits";
 import { createOauthState } from "@/server/integrations/oauth";
 import { createXAuthorizationRequest } from "@/server/integrations/x";
@@ -24,7 +25,10 @@ export async function GET(request: Request) {
   }
 
   const state = createOauthState();
-  const { verifier, authorizationUrl } = createXAuthorizationRequest(state);
+  const { verifier, authorizationUrl } = createXAuthorizationRequest(
+    state,
+    getRequestBaseUrl(request),
+  );
   const cookieStore = await cookies();
 
   cookieStore.set("rezzum_x_oauth_state", state, {

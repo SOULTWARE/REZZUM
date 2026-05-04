@@ -30,11 +30,11 @@ function getLinkedInHeaders(accessToken: string) {
   };
 }
 
-function getRedirectUri() {
-  return getAbsoluteUrl("/api/auth/linkedin/callback");
+function getRedirectUri(baseUrl?: string) {
+  return getAbsoluteUrl("/api/auth/linkedin/callback", baseUrl);
 }
 
-export function getLinkedInAuthorizationUrl(state: string) {
+export function getLinkedInAuthorizationUrl(state: string, baseUrl?: string) {
   const clientId = process.env.LINKEDIN_CLIENT_ID?.trim();
 
   if (!clientId) {
@@ -44,14 +44,14 @@ export function getLinkedInAuthorizationUrl(state: string) {
   const url = new URL("https://www.linkedin.com/oauth/v2/authorization");
   url.searchParams.set("response_type", "code");
   url.searchParams.set("client_id", clientId);
-  url.searchParams.set("redirect_uri", getRedirectUri());
+  url.searchParams.set("redirect_uri", getRedirectUri(baseUrl));
   url.searchParams.set("state", state);
   url.searchParams.set("scope", LINKEDIN_SCOPES.join(" "));
 
   return url.toString();
 }
 
-export async function exchangeLinkedInCodeForToken(code: string) {
+export async function exchangeLinkedInCodeForToken(code: string, baseUrl?: string) {
   const clientId = process.env.LINKEDIN_CLIENT_ID?.trim();
   const clientSecret = process.env.LINKEDIN_CLIENT_SECRET?.trim();
 
@@ -62,7 +62,7 @@ export async function exchangeLinkedInCodeForToken(code: string) {
   const body = new URLSearchParams({
     grant_type: "authorization_code",
     code,
-    redirect_uri: getRedirectUri(),
+    redirect_uri: getRedirectUri(baseUrl),
     client_id: clientId,
     client_secret: clientSecret,
   });
@@ -167,8 +167,8 @@ async function fetchLinkedInOrganizations(accessToken: string) {
   return organizations;
 }
 
-export async function connectLinkedInOrganizations(code: string) {
-  const token = await exchangeLinkedInCodeForToken(code);
+export async function connectLinkedInOrganizations(code: string, baseUrl?: string) {
+  const token = await exchangeLinkedInCodeForToken(code, baseUrl);
   const user = await fetchLinkedInUserInfo(token.access_token);
   const organizations = await fetchLinkedInOrganizations(token.access_token);
 
