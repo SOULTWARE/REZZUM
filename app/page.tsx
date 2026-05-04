@@ -3,6 +3,14 @@ import Link from "next/link";
 import { ArrowRight, Rss } from "lucide-react";
 import { LandingFooter } from "@/components/landing-footer";
 import { LandingHeader } from "@/components/landing-header";
+import { publicFaqItems } from "@/lib/public-faq";
+import {
+  createPageMetadata,
+  organizationJsonLd,
+  serializeStructuredData,
+  softwareApplicationJsonLd,
+  websiteJsonLd,
+} from "@/lib/seo";
 import {
   ArrowRightIcon,
   FacebookIcon,
@@ -15,10 +23,15 @@ import {
   XIcon,
 } from "@/components/icons";
 
-export const metadata: Metadata = {
-  title: "REZZUM | RSS-to-Social Media Automation Platform",
-  description:
-    "Automate social media content from RSS feeds with AI-assisted drafting, editorial review, scheduling, and publishing for Facebook, LinkedIn, and X.",
+const pageTitle = "REZZUM | RSS-to-Social Media Automation Platform";
+const pageDescription =
+  "Automate social media content from RSS feeds with AI-assisted drafting, editorial review, scheduling, and publishing for Facebook, LinkedIn, and X.";
+
+export const metadata: Metadata = createPageMetadata({
+  title: pageTitle,
+  description: pageDescription,
+  pathname: "/",
+  absoluteTitle: true,
   keywords: [
     "RSS social media automation",
     "RSS to social media",
@@ -31,28 +44,7 @@ export const metadata: Metadata = {
     "X publishing",
     "editorial workflow",
   ],
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
-    title: "REZZUM | RSS-to-Social Media Automation Platform",
-    description:
-      "Convert RSS content into high-quality social media drafts with built-in review, scheduling, and publishing workflows.",
-    url: "/",
-    siteName: "REZZUM",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "REZZUM | RSS-to-Social Media Automation Platform",
-    description:
-      "Automate RSS-to-social publishing with AI drafts, human review, scheduling, and delivery to Facebook, LinkedIn, and X.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+});
 
 const workflowSteps = [
   {
@@ -108,16 +100,14 @@ const features = [
 const primaryNavLinks = [
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
+  { href: "/faq", label: "FAQ" },
 ];
 
-const organizationSchema = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "REZZUM",
-  url: "/",
-  description:
-    "RSS-to-social media automation platform with AI drafting, editorial review, scheduling, and publishing.",
-};
+const structuredData = [
+  organizationJsonLd(),
+  websiteJsonLd(),
+  softwareApplicationJsonLd(),
+];
 
 export default function HomePage() {
   return (
@@ -330,6 +320,43 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section className="bg-[var(--surface-low)] px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-2xl">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
+                Common questions
+              </p>
+              <h2 className="mt-4 font-[var(--font-display)] text-4xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">
+                Direct answers for AI-assisted social publishing decisions
+              </h2>
+              <p className="mt-4 text-lg leading-8 text-[var(--muted)]">
+                Quick context on what REZZUM does, who it supports, and how review stays in the
+                workflow.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-5 lg:grid-cols-2">
+              {publicFaqItems.slice(0, 4).map((item) => (
+                <article key={item.question} className="surface-card rounded-xl p-6">
+                  <h3 className="font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
+                    {item.question}
+                  </h3>
+                  <p className="mt-4 text-sm leading-7 text-[var(--muted)]">{item.answer}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-8">
+              <Link
+                href="/faq"
+                className="button-secondary inline-flex items-center justify-center rounded-lg px-6 py-3.5 text-sm font-semibold"
+              >
+                Read all answers
+              </Link>
+            </div>
+          </div>
+        </section>
+
         <section className="px-4 pb-20 sm:px-6 lg:px-8 lg:pb-28">
           <div className="mx-auto max-w-7xl">
             <div className="rounded-xl bg-[linear-gradient(145deg,var(--primary),var(--primary-strong))] px-6 py-10 text-white shadow-[0_22px_46px_rgb(0_83_218_/_0.18)] sm:px-10 sm:py-12">
@@ -373,7 +400,7 @@ export default function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(organizationSchema),
+          __html: serializeStructuredData(structuredData),
         }}
       />
     </div>

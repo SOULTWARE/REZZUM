@@ -2,18 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LandingFooter } from "@/components/landing-footer";
 import { LandingHeader } from "@/components/landing-header";
+import { breadcrumbJsonLd, createPageMetadata, serializeStructuredData } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Privacy",
-  description: "Privacy policy for REZZUM.",
-  alternates: {
-    canonical: "/privacy",
-  },
-};
+export const metadata: Metadata = createPageMetadata({
+  title: "Privacy Policy",
+  description:
+    "Read the REZZUM privacy policy for information about account data, connected platforms, workflow content, retention, and security.",
+  pathname: "/privacy",
+  keywords: ["REZZUM privacy policy", "social media automation privacy", "RSS automation data"],
+});
 
 const primaryNavLinks = [
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 const sections = [
@@ -58,6 +60,11 @@ const sections = [
       "This privacy policy may be updated as REZZUM evolves. When material changes are made, the effective date and published policy will reflect the updated terms.",
   },
 ] as const;
+
+const structuredData = breadcrumbJsonLd([
+  { name: "Home", pathname: "/" },
+  { name: "Privacy Policy", pathname: "/privacy" },
+]);
 
 export default function PrivacyPage() {
   return (
@@ -120,6 +127,13 @@ export default function PrivacyPage() {
       </main>
 
       <LandingFooter />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeStructuredData(structuredData),
+        }}
+      />
     </div>
   );
 }

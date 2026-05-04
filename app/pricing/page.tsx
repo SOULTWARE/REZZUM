@@ -1,20 +1,32 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, Clock3 } from "lucide-react";
 import { LandingFooter } from "@/components/landing-footer";
 import { LandingHeader } from "@/components/landing-header";
+import {
+  breadcrumbJsonLd,
+  createPageMetadata,
+  getAbsoluteUrl,
+  serializeStructuredData,
+} from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Pricing",
-  description: "Simple monthly pricing for REZZUM with free, Starter, and Pro limits.",
-  alternates: {
-    canonical: "/pricing",
-  },
-};
+  description:
+    "Compare REZZUM plans for RSS-to-social automation, including a free plan and paid plans with 5-day trials.",
+  pathname: "/pricing",
+  keywords: [
+    "REZZUM pricing",
+    "RSS social media automation pricing",
+    "social media scheduler pricing",
+    "AI social media tool pricing",
+  ],
+});
 
 const primaryNavLinks = [
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 const plans = [
@@ -22,6 +34,7 @@ const plans = [
     name: "Free",
     slug: null,
     price: 0,
+    trial: null,
     description: "Included when no paid subscription is active.",
     features: [
       "5 generated and published posts",
@@ -35,6 +48,7 @@ const plans = [
     name: "Starter",
     slug: "starter",
     price: 5,
+    trial: "5-day trial included",
     description: "A lightweight plan for getting your RSS-to-social workflow running.",
     features: [
       "100 generated and published posts",
@@ -49,6 +63,7 @@ const plans = [
     name: "Pro",
     slug: "pro",
     price: 20,
+    trial: "5-day trial included",
     description: "More capacity for teams managing a steadier publishing cadence.",
     features: [
       "1,000 generated and published posts",
@@ -59,6 +74,34 @@ const plans = [
     highlighted: true,
   },
 ] as const;
+
+const structuredData = [
+  breadcrumbJsonLd([
+    { name: "Home", pathname: "/" },
+    { name: "Pricing", pathname: "/pricing" },
+  ]),
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "REZZUM",
+    description:
+      "RSS-to-social automation software with AI-assisted drafting, editorial review, scheduling, and publishing.",
+    brand: {
+      "@type": "Brand",
+      name: "REZZUM",
+    },
+    url: getAbsoluteUrl("/pricing"),
+    offers: plans.map((plan) => ({
+      "@type": "Offer",
+      name: `${plan.name} plan`,
+      url: getAbsoluteUrl(plan.slug ? `/signup?plan=${plan.slug}` : "/signup"),
+      price: plan.price.toString(),
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+      category: "Subscription",
+    })),
+  },
+];
 
 export default function PricingPage() {
   return (
@@ -75,8 +118,8 @@ export default function PricingPage() {
               Straightforward plans for consistent social publishing
             </h1>
             <p className="mt-6 text-lg leading-8 text-[var(--muted)] sm:text-xl">
-              Choose the plan that fits your publishing volume today. Both options
-              keep the workflow simple and predictable.
+              Choose the plan that fits your publishing volume today. Start free
+              or try a paid plan for 5 days before committing.
             </p>
           </div>
 
@@ -113,6 +156,17 @@ export default function PricingPage() {
                   <span className="pb-2 text-sm font-medium text-[var(--muted)]">/ month</span>
                 </div>
 
+                {plan.trial ? (
+                  <div className="mt-5 inline-flex w-fit items-center gap-2 rounded-full bg-[var(--surface-low)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--primary-strong)]">
+                    <Clock3 className="h-4 w-4" />
+                    {plan.trial}
+                  </div>
+                ) : (
+                  <div className="mt-5 inline-flex w-fit items-center rounded-full bg-[var(--surface-low)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+                    Free forever
+                  </div>
+                )}
+
                 <ul className="mt-10 space-y-4">
                   {plan.features.map((feature) => (
                     <li key={feature} className="flex items-start gap-3 text-sm text-[var(--foreground)]">
@@ -131,7 +185,7 @@ export default function PricingPage() {
                       plan.highlighted ? "button-primary" : "button-secondary"
                     }`}
                   >
-                    {plan.slug ? "Get started" : "Start free"}
+                    {plan.slug ? "Start 5-day trial" : "Start free"}
                   </Link>
                 </div>
               </article>
@@ -142,6 +196,13 @@ export default function PricingPage() {
       </main>
 
       <LandingFooter />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeStructuredData(structuredData),
+        }}
+      />
     </div>
   );
 }

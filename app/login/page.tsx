@@ -5,14 +5,14 @@ import { AuthPageShell } from "@/components/auth-page-shell";
 import { resolveBillingPlanSlug } from "@/server/billing/polar";
 import { enabledAuthProviders } from "@/server/auth";
 import { getAuthSession } from "@/server/auth/session";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Login",
-  description: "Login page for REZZUM.",
-  alternates: {
-    canonical: "/login",
-  },
-};
+  description: "Sign in to your REZZUM account.",
+  pathname: "/login",
+  noIndex: true,
+});
 
 function getPlanCheckoutUrl(plan: string | null | undefined) {
   const resolvedPlan = resolveBillingPlanSlug(plan);
