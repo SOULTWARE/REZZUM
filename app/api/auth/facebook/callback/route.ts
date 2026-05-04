@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { SocialPlatform } from "@prisma/client";
 import { getRequestAuthSession } from "@/server/auth/session";
-import { getRequestBaseUrl } from "@/server/app-url";
+import { getPublicRequestBaseUrl } from "@/server/app-url";
 import { assertPlatformsAllowed, getUserPlanAccess } from "@/server/billing/limits";
 import { connectFacebookPages } from "@/server/integrations/facebook";
 
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
   try {
     assertPlatformsAllowed(await getUserPlanAccess(session.user.id), [SocialPlatform.FACEBOOK]);
-    await connectFacebookPages(code, getRequestBaseUrl(request));
+    await connectFacebookPages(code, getPublicRequestBaseUrl(request));
 
     return NextResponse.redirect(new URL("/accounts?connected=facebook", request.url));
   } catch (error) {

@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { SocialPlatform } from "@prisma/client";
 import { getRequestAuthSession } from "@/server/auth/session";
-import { getRequestBaseUrl } from "@/server/app-url";
+import { getPublicRequestBaseUrl } from "@/server/app-url";
 import { assertPlatformsAllowed, getUserPlanAccess } from "@/server/billing/limits";
 import { getFacebookAuthorizationUrl } from "@/server/integrations/facebook";
 import { createOauthState } from "@/server/integrations/oauth";
@@ -37,5 +37,5 @@ export async function GET(request: Request) {
     maxAge: 60 * 10,
   });
 
-  return NextResponse.redirect(getFacebookAuthorizationUrl(state, getRequestBaseUrl(request)));
+  return NextResponse.redirect(getFacebookAuthorizationUrl(state, getPublicRequestBaseUrl(request)));
 }

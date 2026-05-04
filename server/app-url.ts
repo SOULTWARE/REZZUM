@@ -4,6 +4,16 @@ function stripTrailingSlash(value: string) {
   return value.replace(/\/+$/, "");
 }
 
+function isLocalhostUrl(value: string) {
+  try {
+    const { hostname } = new URL(value);
+
+    return hostname === "localhost" || hostname === "127.0.0.1";
+  } catch {
+    return value.startsWith("localhost") || value.startsWith("127.0.0.1");
+  }
+}
+
 function normalizeOrigin(value: string) {
   const trimmed = value.trim();
 
@@ -24,16 +34,17 @@ function normalizeOrigin(value: string) {
 
 export function getAppBaseUrl() {
   const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  const isDevelopment = process.env.NODE_ENV === "development";
 
-  if (configuredUrl) {
+  if (configuredUrl && (!isLocalhostUrl(configuredUrl) || isDevelopment)) {
     return stripTrailingSlash(configuredUrl);
   }
 
-  if (process.env.NODE_ENV === "production") {
-    return DEFAULT_PRODUCTION_APP_URL;
+  if (isDevelopment) {
+    return "http://localhost:3000";
   }
 
-  return "http://localhost:3000";
+  return DEFAULT_PRODUCTION_APP_URL;
 }
 
 export function getRequestBaseUrl(request: Request) {
@@ -59,6 +70,26 @@ export function getRequestBaseUrl(request: Request) {
   }
 
   return getAppBaseUrl();
+}
+
+export function getPublicRequestBaseUrl(request: Request) {
+  const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (configuredUrl && !isLocalhostUrl(configuredUrl)) {
+    return stripTrailingSlash(configuredUrl);
+  }
+
+  const requestBaseUrl = getRequestBaseUrl(request);
+
+  if (!isLocalhostUrl(requestBaseUrl)) {
+    return requestBaseUrl;
+  }
+
+  if (process.env.NODE_ENV === "development") {
+    return requestBaseUrl;
+  }
+
+  return DEFAULT_PRODUCTION_APP_URL;
 }
 
 export function getAbsoluteAppUrl(pathname: string, baseUrl = getAppBaseUrl()) {

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getRequestAuthSession } from "@/server/auth/session";
-import { getRequestBaseUrl } from "@/server/app-url";
+import { getPublicRequestBaseUrl } from "@/server/app-url";
 import { connectLinkedInOrganizations } from "@/server/integrations/linkedin";
 
 export async function GET(request: Request) {
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    await connectLinkedInOrganizations(code, getRequestBaseUrl(request));
+    await connectLinkedInOrganizations(code, getPublicRequestBaseUrl(request));
 
     return NextResponse.redirect(new URL("/accounts?connected=linkedin", request.url));
   } catch (error) {
