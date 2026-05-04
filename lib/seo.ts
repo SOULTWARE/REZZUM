@@ -41,6 +41,11 @@ export const publicSeoRoutes = [
     priority: 0.7,
   },
   {
+    pathname: "/faq",
+    changeFrequency: "monthly",
+    priority: 0.7,
+  },
+  {
     pathname: "/privacy",
     changeFrequency: "yearly",
     priority: 0.3,
@@ -207,6 +212,21 @@ export function breadcrumbJsonLd(items: Array<{ name: string; pathname: string }
       position: index + 1,
       name: item.name,
       item: getAbsoluteUrl(item.pathname),
+    })),
+  };
+}
+
+export function faqJsonLd(items: ReadonlyArray<{ question: string; answer: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
     })),
   };
 }

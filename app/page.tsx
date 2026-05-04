@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ArrowRight, Rss } from "lucide-react";
 import { LandingFooter } from "@/components/landing-footer";
 import { LandingHeader } from "@/components/landing-header";
+import { publicFaqItems } from "@/lib/public-faq";
 import {
   createPageMetadata,
   organizationJsonLd,
@@ -99,6 +100,7 @@ const features = [
 const primaryNavLinks = [
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 const structuredData = [
@@ -314,6 +316,43 @@ export default function HomePage() {
                   </article>
                 ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-[var(--surface-low)] px-4 py-20 sm:px-6 lg:px-8 lg:py-24">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-2xl">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[var(--primary)]">
+                Common questions
+              </p>
+              <h2 className="mt-4 font-[var(--font-display)] text-4xl font-semibold tracking-[-0.04em] text-[var(--foreground)]">
+                Direct answers for AI-assisted social publishing decisions
+              </h2>
+              <p className="mt-4 text-lg leading-8 text-[var(--muted)]">
+                Quick context on what REZZUM does, who it supports, and how review stays in the
+                workflow.
+              </p>
+            </div>
+
+            <div className="mt-10 grid gap-5 lg:grid-cols-2">
+              {publicFaqItems.slice(0, 4).map((item) => (
+                <article key={item.question} className="surface-card rounded-xl p-6">
+                  <h3 className="font-[var(--font-display)] text-2xl font-semibold text-[var(--foreground)]">
+                    {item.question}
+                  </h3>
+                  <p className="mt-4 text-sm leading-7 text-[var(--muted)]">{item.answer}</p>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-8">
+              <Link
+                href="/faq"
+                className="button-secondary inline-flex items-center justify-center rounded-lg px-6 py-3.5 text-sm font-semibold"
+              >
+                Read all answers
+              </Link>
             </div>
           </div>
         </section>

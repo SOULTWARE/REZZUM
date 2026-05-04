@@ -26,6 +26,7 @@ export const metadata: Metadata = createPageMetadata({
 const primaryNavLinks = [
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 const plans = [

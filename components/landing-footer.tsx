@@ -6,6 +6,7 @@ type LandingFooterProps = {
 };
 
 const footerLinks = [
+  { href: "/faq", label: "FAQ" },
   { href: "/terms", label: "Terms" },
   { href: "/privacy", label: "Privacy" },
   { href: "/about", label: "About" },
