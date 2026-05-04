@@ -14,12 +14,79 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+type AccountsSearchParams = { [key: string]: string | string[] | undefined };
+
 function formatPercentage(value: number, total: number) {
   if (total <= 0) {
     return 0;
   }
 
   return Math.round((value / total) * 100);
+}
+
+function getFirstSearchParam(
+  searchParams: AccountsSearchParams,
+  key: string,
+) {
+  const value = searchParams[key];
+
+  return typeof value === "string" ? value : null;
+}
+
+function getStatusBanner(searchParams: AccountsSearchParams) {
+  const connected = getFirstSearchParam(searchParams, "connected");
+  const error = getFirstSearchParam(searchParams, "error");
+
+  if (connected) {
+    return {
+      className: "border-[rgb(0_83_218_/_0.14)] bg-[rgb(240_247_255)] text-[var(--primary-strong)]",
+      message: `${connected.charAt(0).toUpperCase()}${connected.slice(1)} account connected.`,
+    };
+  }
+
+  if (searchParams.disconnected === "1") {
+    return {
+      className: "border-[rgb(0_83_218_/_0.14)] bg-[rgb(240_247_255)] text-[var(--primary-strong)]",
+      message: "The account was disconnected. It will no longer be used for publishing.",
+    };
+  }
+
+  if (searchParams.disconnectError === "1") {
+    return {
+      className: "border-[rgb(159_64_61_/_0.18)] bg-[rgb(255_245_245)] text-[rgb(117_33_33)]",
+      message: "We could not disconnect that account. Refresh the page and try again.",
+    };
+  }
+
+  if (error === "facebook_oauth_state") {
+    return {
+      className: "border-[rgb(159_64_61_/_0.18)] bg-[rgb(255_245_245)] text-[rgb(117_33_33)]",
+      message: "Facebook authorization could not be verified. Start the connection again.",
+    };
+  }
+
+  if (error === "linkedin_oauth_state") {
+    return {
+      className: "border-[rgb(159_64_61_/_0.18)] bg-[rgb(255_245_245)] text-[rgb(117_33_33)]",
+      message: "LinkedIn authorization could not be verified. Start the connection again.",
+    };
+  }
+
+  if (error === "x_oauth_state") {
+    return {
+      className: "border-[rgb(159_64_61_/_0.18)] bg-[rgb(255_245_245)] text-[rgb(117_33_33)]",
+      message: "X authorization could not be verified. Start the connection again.",
+    };
+  }
+
+  if (error) {
+    return {
+      className: "border-[rgb(159_64_61_/_0.18)] bg-[rgb(255_245_245)] text-[rgb(117_33_33)]",
+      message: error,
+    };
+  }
+
+  return null;
 }
 
 function StarterPlatformCard({
@@ -66,17 +133,33 @@ function StarterPlatformCard({
   );
 }
 
-export default async function AccountsPage() {
+export default async function AccountsPage({
+  searchParams,
+}: Readonly<{
+  searchParams: Promise<AccountsSearchParams>;
+}>) {
   const session = await requireAuthSession();
-  const overview = await getAccountsOverview();
-  const planAccess = await getUserPlanAccess(session.user.id);
+  const [resolvedSearchParams, overview, planAccess] = await Promise.all([
+    searchParams,
+    getAccountsOverview(),
+    getUserPlanAccess(session.user.id),
+  ]);
   const canUseX = planAccess.limits.allowedPlatforms.includes("X");
   const hasAccounts = overview.totalCount > 0;
   const connectionRate = formatPercentage(overview.connectedCount, overview.totalCount);
   const platformCoverage = formatPercentage(overview.activePlatformCount, 3);
+  const statusBanner = getStatusBanner(resolvedSearchParams);
 
   return (
     <PageContainer>
+      {statusBanner ? (
+        <div
+          className={`rounded-xl border px-4 py-4 text-sm font-medium ${statusBanner.className}`}
+        >
+          {statusBanner.message}
+        </div>
+      ) : null}
+
       <section data-onboarding="accounts-platforms" className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         {hasAccounts
           ? overview.accounts.map((account) => (

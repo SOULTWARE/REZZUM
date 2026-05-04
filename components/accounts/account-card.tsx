@@ -8,7 +8,6 @@ import {
   XIcon,
 } from "@/components/icons";
 import { AccountStatusBadge } from "@/components/accounts/account-status-badge";
-import { disconnectAccountAction } from "@/server/accounts/actions";
 import type { SocialAccountRecord } from "@/server/accounts/repository";
 
 function PlatformIcon({
@@ -87,11 +86,39 @@ function getInitials(value: string) {
 }
 
 function getPrimaryActionLabel(account: SocialAccountRecord) {
+  if (account.status === "DISCONNECTED") {
+    return "Reconnect";
+  }
+
+  if (account.status === "EXPIRED") {
+    return "Reconnect";
+  }
+
   if (account.status === "PENDING") {
     return "Finish setup";
   }
 
   return "Open profile";
+}
+
+function getConnectionHref(platform: SocialPlatform) {
+  if (platform === "FACEBOOK") {
+    return "/api/auth/facebook/start";
+  }
+
+  if (platform === "LINKEDIN") {
+    return "/api/auth/linkedin/start";
+  }
+
+  return "/api/auth/x/start";
+}
+
+function shouldReconnect(account: SocialAccountRecord) {
+  return (
+    account.status === "DISCONNECTED" ||
+    account.status === "EXPIRED" ||
+    account.status === "PENDING"
+  );
 }
 
 function getProfileImageUrl(account: SocialAccountRecord) {
@@ -129,6 +156,7 @@ export function AccountCard({
   showPlatformLabel?: boolean;
 }>) {
   const profileImageUrl = getProfileImageUrl(account);
+  const reconnect = shouldReconnect(account);
 
   return (
     <article className="group rounded-xl border border-transparent bg-white p-6 shadow-sm transition-all duration-300 hover:border-[rgb(0_83_218_/_0.1)]">
@@ -178,15 +206,18 @@ export function AccountCard({
         </div>
 
         <div className="mt-5 flex items-center gap-3">
-          {account.profileUrl ? (
+          {reconnect ? (
+            <Link
+              href={getConnectionHref(account.platform)}
+              className="button-primary flex-1 rounded-lg py-2 text-center text-xs font-semibold text-white"
+            >
+              {getPrimaryActionLabel(account)}
+            </Link>
+          ) : account.profileUrl ? (
             <Link
               href={account.profileUrl}
               target="_blank"
-              className={`flex-1 rounded-lg py-2 text-center text-xs font-semibold transition-colors ${
-                account.status === "PENDING"
-                  ? "button-primary text-white"
-                  : "bg-[var(--surface-low)] text-slate-500 hover:bg-[var(--surface-high)]"
-              }`}
+              className="flex-1 rounded-lg bg-[var(--surface-low)] py-2 text-center text-xs font-semibold text-slate-500 transition-colors hover:bg-[var(--surface-high)]"
             >
               {getPrimaryActionLabel(account)}
             </Link>
@@ -195,14 +226,26 @@ export function AccountCard({
               {getPrimaryActionLabel(account)}
             </span>
           )}
-          <form action={disconnectAccountAction.bind(null, account.id)}>
+          {account.status === "DISCONNECTED" ? (
             <button
-              type="submit"
-              className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--surface-low)] text-slate-500 transition-colors hover:bg-[rgb(159_64_61_/_0.14)] hover:text-[rgb(117_33_33)]"
+              type="button"
+              disabled
+              aria-label="Account already disconnected"
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--surface-low)] text-slate-300"
             >
               <DisconnectIcon className="h-4 w-4" />
             </button>
-          </form>
+          ) : (
+            <form action={`/api/accounts/${account.id}/disconnect`} method="post">
+              <button
+                type="submit"
+                aria-label={`Disconnect ${account.displayName}`}
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--surface-low)] text-slate-500 transition-colors hover:bg-[rgb(159_64_61_/_0.14)] hover:text-[rgb(117_33_33)]"
+              >
+                <DisconnectIcon className="h-4 w-4" />
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </article>
