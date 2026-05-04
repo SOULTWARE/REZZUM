@@ -92,6 +92,10 @@ export function getPublicRequestBaseUrl(request: Request) {
   return DEFAULT_PRODUCTION_APP_URL;
 }
 
+export function getPublicRequestUrl(pathname: string, request: Request) {
+  return new URL(pathname, `${getPublicRequestBaseUrl(request)}/`);
+}
+
 export function getAbsoluteAppUrl(pathname: string, baseUrl = getAppBaseUrl()) {
   return new URL(pathname, `${stripTrailingSlash(baseUrl)}/`).toString();
 }

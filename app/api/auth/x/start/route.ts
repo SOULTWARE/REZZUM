@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { SocialPlatform } from "@prisma/client";
 import { getRequestAuthSession } from "@/server/auth/session";
-import { getPublicRequestBaseUrl } from "@/server/app-url";
+import { getPublicRequestBaseUrl, getPublicRequestUrl } from "@/server/app-url";
 import { assertPlatformsAllowed, getUserPlanAccess } from "@/server/billing/limits";
 import { createOauthState } from "@/server/integrations/oauth";
 import { createXAuthorizationRequest } from "@/server/integrations/x";
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
   const session = await getRequestAuthSession(request);
 
   if (!session) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(getPublicRequestUrl("/login", request));
   }
 
   try {
@@ -20,7 +20,7 @@ export async function GET(request: Request) {
     const message = error instanceof Error ? error.message : "X is not available.";
 
     return NextResponse.redirect(
-      new URL(`/accounts?error=${encodeURIComponent(message)}`, request.url),
+      getPublicRequestUrl(`/accounts?error=${encodeURIComponent(message)}`, request),
     );
   }
 

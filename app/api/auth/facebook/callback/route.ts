@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { SocialPlatform } from "@prisma/client";
 import { getRequestAuthSession } from "@/server/auth/session";
-import { getPublicRequestBaseUrl } from "@/server/app-url";
+import { getPublicRequestBaseUrl, getPublicRequestUrl } from "@/server/app-url";
 import { assertPlatformsAllowed, getUserPlanAccess } from "@/server/billing/limits";
 import { connectFacebookPages } from "@/server/integrations/facebook";
 
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const session = await getRequestAuthSession(request);
 
   if (!session) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(getPublicRequestUrl("/login", request));
   }
 
   const url = new URL(request.url);
@@ -22,19 +22,19 @@ export async function GET(request: Request) {
   cookieStore.delete("rezzum_facebook_oauth_state");
 
   if (!code || !state || !expectedState || state !== expectedState) {
-    return NextResponse.redirect(new URL("/accounts?error=facebook_oauth_state", request.url));
+    return NextResponse.redirect(getPublicRequestUrl("/accounts?error=facebook_oauth_state", request));
   }
 
   try {
     assertPlatformsAllowed(await getUserPlanAccess(session.user.id), [SocialPlatform.FACEBOOK]);
     await connectFacebookPages(code, getPublicRequestBaseUrl(request));
 
-    return NextResponse.redirect(new URL("/accounts?connected=facebook", request.url));
+    return NextResponse.redirect(getPublicRequestUrl("/accounts?connected=facebook", request));
   } catch (error) {
     const message = error instanceof Error ? error.message : "Facebook connection failed.";
 
     return NextResponse.redirect(
-      new URL(`/accounts?error=${encodeURIComponent(message)}`, request.url),
+      getPublicRequestUrl(`/accounts?error=${encodeURIComponent(message)}`, request),
     );
   }
 }

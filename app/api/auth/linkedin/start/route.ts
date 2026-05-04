@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { getRequestAuthSession } from "@/server/auth/session";
-import { getPublicRequestBaseUrl } from "@/server/app-url";
+import { getPublicRequestBaseUrl, getPublicRequestUrl } from "@/server/app-url";
 import { getLinkedInAuthorizationUrl } from "@/server/integrations/linkedin";
 import { createOauthState } from "@/server/integrations/oauth";
 
@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   const session = await getRequestAuthSession(request);
 
   if (!session) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    return NextResponse.redirect(getPublicRequestUrl("/login", request));
   }
 
   const state = createOauthState();
