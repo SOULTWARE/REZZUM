@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/SOULTWARE/REZZUM/main/public/logo.svg" alt="REZZUM logo" width="112" height="112" />
+  <img src="./public/logo-256.png?raw=true" alt="REZZUM logo" width="112" height="112" />
   <h1>REZZUM</h1>
   <p><strong>Turn RSS feeds into reviewed, scheduled social posts.</strong></p>
   <p>
