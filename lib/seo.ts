@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const DEFAULT_SITE_URL = "https://rezzum.com";
+const DEFAULT_SITE_URL = "https://rezzum.online";
 
 export const siteConfig = {
   name: "REZZUM",
