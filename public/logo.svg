@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none" aria-label="REZZUM logo">
+  <rect width="40" height="40" rx="14" fill="url(#rezzum-gradient)" />
+  <path
+    d="M12 13.5H23.2C25.851 13.5 28 15.649 28 18.3C28 20.951 25.851 23.1 23.2 23.1H17.7L12 28.5V13.5Z"
+    fill="white"
+    fill-opacity="0.96"
+  />
+  <path
+    d="M18.2 11.5H27.1C28.7016 11.5 30 12.7984 30 14.4C30 16.0016 28.7016 17.3 27.1 17.3H18.2V11.5Z"
+    fill="white"
+    fill-opacity="0.22"
+  />
+  <defs>
+    <linearGradient id="rezzum-gradient" x1="6" y1="4" x2="32" y2="36" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0053DA" />
+      <stop offset="1" stop-color="#0048C1" />
+    </linearGradient>
+  </defs>
+</svg>
