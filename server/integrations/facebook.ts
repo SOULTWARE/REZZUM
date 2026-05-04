@@ -66,6 +66,8 @@ export function getFacebookAuthorizationUrl(state: string, baseUrl?: string) {
   url.searchParams.set("response_type", "code");
   url.searchParams.set("scope", FACEBOOK_SCOPES.join(","));
   url.searchParams.set("state", state);
+  url.searchParams.set("auth_type", "rerequest");
+  url.searchParams.set("return_scopes", "true");
 
   return url.toString();
 }

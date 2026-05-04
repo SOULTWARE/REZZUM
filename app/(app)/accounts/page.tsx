@@ -173,7 +173,7 @@ export default async function AccountsPage({
 
         <StarterPlatformCard
           title="Connect Facebook"
-          detail="Authorize Facebook and import the Pages this member can publish as."
+          detail="Authorize Facebook, choose Edit settings in Meta, and select every Page REZZUM should publish to."
           icon={<FacebookIcon className="h-6 w-6" />}
           href="/api/auth/facebook/start"
         />
