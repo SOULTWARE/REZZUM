@@ -4,6 +4,13 @@ import { ArrowRight, Rss } from "lucide-react";
 import { LandingFooter } from "@/components/landing-footer";
 import { LandingHeader } from "@/components/landing-header";
 import {
+  createPageMetadata,
+  organizationJsonLd,
+  serializeStructuredData,
+  softwareApplicationJsonLd,
+  websiteJsonLd,
+} from "@/lib/seo";
+import {
   ArrowRightIcon,
   FacebookIcon,
   FeedsIcon,
@@ -15,10 +22,15 @@ import {
   XIcon,
 } from "@/components/icons";
 
-export const metadata: Metadata = {
-  title: "REZZUM | RSS-to-Social Media Automation Platform",
-  description:
-    "Automate social media content from RSS feeds with AI-assisted drafting, editorial review, scheduling, and publishing for Facebook, LinkedIn, and X.",
+const pageTitle = "REZZUM | RSS-to-Social Media Automation Platform";
+const pageDescription =
+  "Automate social media content from RSS feeds with AI-assisted drafting, editorial review, scheduling, and publishing for Facebook, LinkedIn, and X.";
+
+export const metadata: Metadata = createPageMetadata({
+  title: pageTitle,
+  description: pageDescription,
+  pathname: "/",
+  absoluteTitle: true,
   keywords: [
     "RSS social media automation",
     "RSS to social media",
@@ -31,28 +43,7 @@ export const metadata: Metadata = {
     "X publishing",
     "editorial workflow",
   ],
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
-    title: "REZZUM | RSS-to-Social Media Automation Platform",
-    description:
-      "Convert RSS content into high-quality social media drafts with built-in review, scheduling, and publishing workflows.",
-    url: "/",
-    siteName: "REZZUM",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "REZZUM | RSS-to-Social Media Automation Platform",
-    description:
-      "Automate RSS-to-social publishing with AI drafts, human review, scheduling, and delivery to Facebook, LinkedIn, and X.",
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+});
 
 const workflowSteps = [
   {
@@ -110,14 +101,11 @@ const primaryNavLinks = [
   { href: "/about", label: "About" },
 ];
 
-const organizationSchema = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "REZZUM",
-  url: "/",
-  description:
-    "RSS-to-social media automation platform with AI drafting, editorial review, scheduling, and publishing.",
-};
+const structuredData = [
+  organizationJsonLd(),
+  websiteJsonLd(),
+  softwareApplicationJsonLd(),
+];
 
 export default function HomePage() {
   return (
@@ -373,7 +361,7 @@ export default function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: JSON.stringify(organizationSchema),
+          __html: serializeStructuredData(structuredData),
         }}
       />
     </div>

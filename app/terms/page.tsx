@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LandingFooter } from "@/components/landing-footer";
 import { LandingHeader } from "@/components/landing-header";
+import { breadcrumbJsonLd, createPageMetadata, serializeStructuredData } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "Terms",
-  description: "Terms of use for REZZUM.",
-  alternates: {
-    canonical: "/terms",
-  },
-};
+export const metadata: Metadata = createPageMetadata({
+  title: "Terms of Use",
+  description:
+    "Read the REZZUM terms of use for account access, billing, connected platforms, content responsibilities, and acceptable use.",
+  pathname: "/terms",
+  keywords: ["REZZUM terms", "REZZUM terms of use", "social media automation terms"],
+});
 
 const primaryNavLinks = [
   { href: "/pricing", label: "Pricing" },
@@ -63,6 +64,11 @@ const sections = [
       "REZZUM is provided on an as-available basis to the extent permitted by applicable law. To the extent permitted by law, REZZUM is not liable for indirect, incidental, special, consequential, or punitive damages arising from use of the service.",
   },
 ] as const;
+
+const structuredData = breadcrumbJsonLd([
+  { name: "Home", pathname: "/" },
+  { name: "Terms of Use", pathname: "/terms" },
+]);
 
 export default function TermsPage() {
   return (
@@ -125,6 +131,13 @@ export default function TermsPage() {
       </main>
 
       <LandingFooter />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeStructuredData(structuredData),
+        }}
+      />
     </div>
   );
 }

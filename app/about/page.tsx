@@ -3,15 +3,25 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { LandingFooter } from "@/components/landing-footer";
 import { LandingHeader } from "@/components/landing-header";
+import {
+  breadcrumbJsonLd,
+  createPageMetadata,
+  organizationJsonLd,
+  serializeStructuredData,
+} from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "About",
+export const metadata: Metadata = createPageMetadata({
+  title: "About REZZUM",
   description:
-    "Learn what REZZUM does and why it focuses on turning RSS feeds into reviewable social publishing workflows.",
-  alternates: {
-    canonical: "/about",
-  },
-};
+    "Learn how REZZUM helps teams turn RSS feeds into AI-assisted social drafts with editorial review, scheduling, and publishing workflows.",
+  pathname: "/about",
+  keywords: [
+    "about REZZUM",
+    "RSS publishing workflow",
+    "social media operations platform",
+    "AI content review workflow",
+  ],
+});
 
 const primaryNavLinks = [
   { href: "/pricing", label: "Pricing" },
@@ -42,6 +52,14 @@ const focusAreas = [
   "Editorial review workflows",
   "Scheduling and publishing operations",
 ] as const;
+
+const structuredData = [
+  organizationJsonLd(),
+  breadcrumbJsonLd([
+    { name: "Home", pathname: "/" },
+    { name: "About", pathname: "/about" },
+  ]),
+];
 
 export default function AboutPage() {
   return (
@@ -151,6 +169,13 @@ export default function AboutPage() {
       </main>
 
       <LandingFooter />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeStructuredData(structuredData),
+        }}
+      />
     </div>
   );
 }

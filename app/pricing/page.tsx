@@ -3,15 +3,25 @@ import Link from "next/link";
 import { Check, Clock3 } from "lucide-react";
 import { LandingFooter } from "@/components/landing-footer";
 import { LandingHeader } from "@/components/landing-header";
+import {
+  breadcrumbJsonLd,
+  createPageMetadata,
+  getAbsoluteUrl,
+  serializeStructuredData,
+} from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Pricing",
   description:
-    "Simple monthly pricing for REZZUM with a free plan and 5-day trials on paid plans.",
-  alternates: {
-    canonical: "/pricing",
-  },
-};
+    "Compare REZZUM plans for RSS-to-social automation, including a free plan and paid plans with 5-day trials.",
+  pathname: "/pricing",
+  keywords: [
+    "REZZUM pricing",
+    "RSS social media automation pricing",
+    "social media scheduler pricing",
+    "AI social media tool pricing",
+  ],
+});
 
 const primaryNavLinks = [
   { href: "/pricing", label: "Pricing" },
@@ -63,6 +73,34 @@ const plans = [
     highlighted: true,
   },
 ] as const;
+
+const structuredData = [
+  breadcrumbJsonLd([
+    { name: "Home", pathname: "/" },
+    { name: "Pricing", pathname: "/pricing" },
+  ]),
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: "REZZUM",
+    description:
+      "RSS-to-social automation software with AI-assisted drafting, editorial review, scheduling, and publishing.",
+    brand: {
+      "@type": "Brand",
+      name: "REZZUM",
+    },
+    url: getAbsoluteUrl("/pricing"),
+    offers: plans.map((plan) => ({
+      "@type": "Offer",
+      name: `${plan.name} plan`,
+      url: getAbsoluteUrl(plan.slug ? `/signup?plan=${plan.slug}` : "/signup"),
+      price: plan.price.toString(),
+      priceCurrency: "USD",
+      availability: "https://schema.org/InStock",
+      category: "Subscription",
+    })),
+  },
+];
 
 export default function PricingPage() {
   return (
@@ -157,6 +195,13 @@ export default function PricingPage() {
       </main>
 
       <LandingFooter />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: serializeStructuredData(structuredData),
+        }}
+      />
     </div>
   );
 }
