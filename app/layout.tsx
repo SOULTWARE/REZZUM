@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   category: "technology",
   icons: {
     icon: "/favicon.ico",
-    apple: "/REZZUM.png",
+    apple: "/logo-1024.png",
   },
   manifest: "/manifest.webmanifest",
   openGraph: {

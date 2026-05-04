@@ -74,14 +74,17 @@ export function getSiteUrl() {
   const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
 
   if (!configuredUrl) {
-    return process.env.NODE_ENV === "production" ? DEFAULT_SITE_URL : "http://localhost:3000";
+    return process.env.NODE_ENV === "production"
+      ? DEFAULT_SITE_URL
+      : "http://localhost:3000";
   }
 
   try {
     return new URL(configuredUrl).origin;
   } catch {
     const normalizedUrl =
-      configuredUrl.startsWith("localhost") || configuredUrl.startsWith("127.0.0.1")
+      configuredUrl.startsWith("localhost") ||
+      configuredUrl.startsWith("127.0.0.1")
         ? `http://${configuredUrl}`
         : `https://${configuredUrl}`;
 
@@ -101,7 +104,9 @@ export function createPageMetadata({
   noIndex = false,
   absoluteTitle = false,
 }: PageMetadataInput): Metadata {
-  const mergedKeywords = Array.from(new Set([...siteConfig.keywords, ...keywords]));
+  const mergedKeywords = Array.from(
+    new Set([...siteConfig.keywords, ...keywords]),
+  );
   const image = {
     url: siteConfig.ogImagePath,
     width: 1200,
@@ -160,7 +165,7 @@ export function organizationJsonLd() {
     "@type": "Organization",
     name: siteConfig.name,
     url: getAbsoluteUrl("/"),
-    logo: getAbsoluteUrl("/REZZUM.png"),
+    logo: getAbsoluteUrl("/logo-1024.png"),
     description: siteConfig.description,
   };
 }
@@ -177,7 +182,7 @@ export function websiteJsonLd() {
       name: siteConfig.name,
       logo: {
         "@type": "ImageObject",
-        url: getAbsoluteUrl("/REZZUM.png"),
+        url: getAbsoluteUrl("/logo-1024.png"),
       },
     },
   };
@@ -191,7 +196,7 @@ export function softwareApplicationJsonLd() {
     applicationCategory: "BusinessApplication",
     operatingSystem: "Web",
     url: getAbsoluteUrl("/"),
-    image: getAbsoluteUrl("/REZZUM.png"),
+    image: getAbsoluteUrl("/logo-1024.png"),
     description: siteConfig.description,
     offers: {
       "@type": "AggregateOffer",
@@ -203,7 +208,9 @@ export function softwareApplicationJsonLd() {
   };
 }
 
-export function breadcrumbJsonLd(items: Array<{ name: string; pathname: string }>) {
+export function breadcrumbJsonLd(
+  items: Array<{ name: string; pathname: string }>,
+) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -216,7 +223,9 @@ export function breadcrumbJsonLd(items: Array<{ name: string; pathname: string }
   };
 }
 
-export function faqJsonLd(items: ReadonlyArray<{ question: string; answer: string }>) {
+export function faqJsonLd(
+  items: ReadonlyArray<{ question: string; answer: string }>,
+) {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
