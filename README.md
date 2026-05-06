@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://rezzum.online/REZZUM.png" alt="REZZUM logo" width="112" height="112" />
+  <img src="https://rezzum.online/logo-1024.png" alt="REZZUM logo" width="112" height="112" />
   <h1>REZZUM</h1>
   <p><strong>Turn RSS feeds into reviewed, scheduled social posts.</strong></p>
   <p>
