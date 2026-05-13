@@ -30,6 +30,7 @@ function compareStatuses(left: GeneratedPostStatus, right: GeneratedPostStatus) 
     GeneratedPostStatus.APPROVED,
     GeneratedPostStatus.REJECTED,
     GeneratedPostStatus.SCHEDULED,
+    GeneratedPostStatus.PUBLISHING,
     GeneratedPostStatus.FAILED,
     GeneratedPostStatus.PUBLISHED,
   ];
@@ -91,6 +92,7 @@ function getQueueWhereInput() {
         GeneratedPostStatus.APPROVED,
         GeneratedPostStatus.REJECTED,
         GeneratedPostStatus.SCHEDULED,
+        GeneratedPostStatus.PUBLISHING,
         GeneratedPostStatus.FAILED,
         GeneratedPostStatus.PUBLISHED,
       ],
@@ -98,8 +100,8 @@ function getQueueWhereInput() {
   };
 }
 
-export async function getReviewQueue(filters: ReviewQueueFilters) {
-  const allItems = await listLatestGeneratedPosts(getQueueWhereInput());
+export async function getReviewQueue(userId: string, filters: ReviewQueueFilters) {
+  const allItems = await listLatestGeneratedPosts(userId, getQueueWhereInput());
   const items = allItems.filter((item) => matchesFilters(item, filters));
 
   return {
@@ -115,14 +117,14 @@ export async function getReviewQueue(filters: ReviewQueueFilters) {
   };
 }
 
-export async function getReviewQueuePost(postId: string) {
-  const post = await getGeneratedPostById(postId);
+export async function getReviewQueuePost(userId: string, postId: string) {
+  const post = await getGeneratedPostById(postId, userId);
 
   if (!post) {
     return null;
   }
 
-  const siblingPosts = await listLatestSiblingPosts(post.article.id);
+  const siblingPosts = await listLatestSiblingPosts(userId, post.article.id);
 
   return {
     post,

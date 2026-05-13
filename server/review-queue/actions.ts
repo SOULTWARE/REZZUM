@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { GeneratedPostStatus } from "@prisma/client";
 import type { ActionResult } from "@/lib/actions";
+import { getSocialAccount } from "@/server/accounts/service";
 import { requireAuthSession } from "@/server/auth/session";
 import { assertPlatformsAllowed, getUserPlanAccess, type PlanAccess } from "@/server/billing/limits";
 import { generateSocialPost } from "@/server/generation/service";
@@ -56,8 +57,8 @@ function buildActionError(message: string, error: unknown) {
   } satisfies ActionResult;
 }
 
-async function ensurePostPlatformAllowed(postId: string, access: PlanAccess) {
-  const post = await getGeneratedPostById(postId);
+async function ensurePostPlatformAllowed(userId: string, postId: string, access: PlanAccess) {
+  const post = await getGeneratedPostById(postId, userId);
 
   if (!post) {
     throw new Error("Draft not found.");
@@ -68,15 +69,40 @@ async function ensurePostPlatformAllowed(postId: string, access: PlanAccess) {
   return post;
 }
 
+async function getValidatedSocialAccountId(userId: string, postId: string, formData: FormData) {
+  const post = await getGeneratedPostById(postId, userId);
+  const socialAccountId = getSocialAccountId(formData);
+
+  if (!post) {
+    throw new Error("Draft not found.");
+  }
+
+  if (!socialAccountId) {
+    return null;
+  }
+
+  const account = await getSocialAccount(userId, socialAccountId);
+
+  if (!account) {
+    throw new Error("Destination account not found.");
+  }
+
+  if (account.platform !== post.platform) {
+    throw new Error("Destination account does not match the draft platform.");
+  }
+
+  return socialAccountId;
+}
+
 export async function saveDraftAction(postId: string, formData: FormData) {
-  await requireAuthSession();
+  const session = await requireAuthSession();
 
   try {
     await updateGeneratedPost(postId, {
       editedText: getDraftText(formData) || null,
-      socialAccountId: getSocialAccountId(formData),
+      socialAccountId: await getValidatedSocialAccountId(session.user.id, postId, formData),
       reviewedAt: new Date(),
-    });
+    }, session.user.id);
 
     revalidateQueuePaths(postId);
 
@@ -94,17 +120,17 @@ export async function saveDraftAction(postId: string, formData: FormData) {
 }
 
 export async function approveDraftAction(postId: string, formData: FormData) {
-  await requireAuthSession();
+  const session = await requireAuthSession();
 
   try {
     await updateGeneratedPost(postId, {
       editedText: getDraftText(formData) || null,
-      socialAccountId: getSocialAccountId(formData),
+      socialAccountId: await getValidatedSocialAccountId(session.user.id, postId, formData),
       status: GeneratedPostStatus.APPROVED,
       reviewedAt: new Date(),
       approvedAt: new Date(),
       rejectedAt: null,
-    });
+    }, session.user.id);
 
     revalidateQueuePaths(postId);
 
@@ -122,16 +148,16 @@ export async function approveDraftAction(postId: string, formData: FormData) {
 }
 
 export async function rejectDraftAction(postId: string, formData: FormData) {
-  await requireAuthSession();
+  const session = await requireAuthSession();
 
   try {
     await updateGeneratedPost(postId, {
       editedText: getDraftText(formData) || null,
-      socialAccountId: getSocialAccountId(formData),
+      socialAccountId: await getValidatedSocialAccountId(session.user.id, postId, formData),
       status: GeneratedPostStatus.REJECTED,
       reviewedAt: new Date(),
       rejectedAt: new Date(),
-    });
+    }, session.user.id);
 
     revalidateQueuePaths(postId);
 
@@ -164,15 +190,15 @@ export async function scheduleDraftAction(postId: string, formData: FormData) {
       } satisfies ActionResult;
     }
 
-    await ensurePostPlatformAllowed(postId, access);
+    await ensurePostPlatformAllowed(session.user.id, postId, access);
     await updateGeneratedPost(postId, {
       editedText: getDraftText(formData) || null,
-      socialAccountId: getSocialAccountId(formData),
+      socialAccountId: await getValidatedSocialAccountId(session.user.id, postId, formData),
       status: GeneratedPostStatus.SCHEDULED,
       reviewedAt: new Date(),
       approvedAt: new Date(),
       scheduledFor,
-    });
+    }, session.user.id);
 
     revalidateQueuePaths(postId);
 
@@ -198,14 +224,14 @@ export async function publishDraftNowAction(postId: string, formData: FormData) 
   try {
     const access = await getUserPlanAccess(session.user.id);
 
-    await ensurePostPlatformAllowed(postId, access);
+    await ensurePostPlatformAllowed(session.user.id, postId, access);
     await updateGeneratedPost(postId, {
       editedText: getDraftText(formData) || null,
-      socialAccountId: getSocialAccountId(formData),
+      socialAccountId: await getValidatedSocialAccountId(session.user.id, postId, formData),
       reviewedAt: new Date(),
-    });
+    }, session.user.id);
 
-    const publishedPost = await publishPostNow(postId, access);
+    const publishedPost = await publishPostNow(session.user.id, postId, access);
     revalidateQueuePaths(postId);
 
     if (publishedPost.status === GeneratedPostStatus.FAILED) {
@@ -235,7 +261,7 @@ export async function regenerateDraftAction(postId: string, formData: FormData) 
 
   try {
     const access = await getUserPlanAccess(session.user.id);
-    const post = await getGeneratedPostById(postId);
+    const post = await getGeneratedPostById(postId, session.user.id);
 
     if (!post) {
       return {
@@ -247,7 +273,7 @@ export async function regenerateDraftAction(postId: string, formData: FormData) 
     }
 
     assertPlatformsAllowed(access, [post.platform]);
-    const workspace = await getWorkspaceSettings();
+    const workspace = await getWorkspaceSettings(session.user.id);
     const draft = await generateSocialPost({
       article: post.article,
       feed: post.article.feed,
@@ -257,7 +283,8 @@ export async function regenerateDraftAction(postId: string, formData: FormData) 
     const regenerated = await createRegeneratedPostVersion({
       previousPostId: post.id,
       articleId: post.articleId,
-      socialAccountId: getSocialAccountId(formData) ?? post.socialAccountId,
+      socialAccountId:
+        (await getValidatedSocialAccountId(session.user.id, postId, formData)) ?? post.socialAccountId,
       platform: post.platform,
       tone: draft.tone,
       promptVersion: draft.promptVersion,

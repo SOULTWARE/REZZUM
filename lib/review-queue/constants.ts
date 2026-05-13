@@ -21,6 +21,7 @@ export const GENERATED_POST_STATUS_LABELS: Record<GeneratedPostStatus, string> =
   APPROVED: "Approved",
   REJECTED: "Rejected",
   SCHEDULED: "Scheduled",
+  PUBLISHING: "Publishing",
   PUBLISHED: "Published",
   FAILED: "Failed",
 };

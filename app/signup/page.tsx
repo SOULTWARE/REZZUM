@@ -24,15 +24,46 @@ function getPlanCheckoutUrl(plan: string | null | undefined) {
   return `/api/billing/checkout?plan=${resolvedPlan}&returnTo=%2Fpricing`;
 }
 
+function hasCredentialQueryParams(searchParams: {
+  [key: string]: string | string[] | undefined;
+}) {
+  return ["email", "password", "name"].some((key) => searchParams[key] !== undefined);
+}
+
+function getCleanSignupPath(plan: string | null) {
+  return plan ? `/signup?plan=${encodeURIComponent(plan)}` : "/signup";
+}
+
+function getSearchParamValue(
+  searchParams: { [key: string]: string | string[] | undefined },
+  key: string,
+) {
+  const value = searchParams[key];
+
+  return typeof value === "string" ? value : null;
+}
+
+function getSignupStatusMessage(value: string | null) {
+  if (value === "verification_sent") {
+    return "Account created. Check your inbox to verify your email address.";
+  }
+
+  return null;
+}
+
 export default async function SignupPage({
   searchParams,
 }: Readonly<{
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }>) {
-  const session = await getAuthSession();
   const resolvedSearchParams = await searchParams;
-  const planValue =
-    typeof resolvedSearchParams.plan === "string" ? resolvedSearchParams.plan : null;
+  const planValue = getSearchParamValue(resolvedSearchParams, "plan");
+
+  if (hasCredentialQueryParams(resolvedSearchParams)) {
+    redirect(getCleanSignupPath(planValue));
+  }
+
+  const session = await getAuthSession();
   const checkoutUrl = getPlanCheckoutUrl(planValue);
 
   if (session) {
@@ -49,6 +80,11 @@ export default async function SignupPage({
     >
       <AuthForm
         callbackURL={checkoutUrl ?? "/dashboard"}
+        errorRedirectPath={getCleanSignupPath(planValue)}
+        initialErrorCode={getSearchParamValue(resolvedSearchParams, "authError")}
+        initialSuccessMessage={getSignupStatusMessage(
+          getSearchParamValue(resolvedSearchParams, "authStatus"),
+        )}
         mode="signup"
         providers={enabledAuthProviders}
       />

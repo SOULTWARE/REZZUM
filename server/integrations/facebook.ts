@@ -115,7 +115,7 @@ async function fetchFacebookPages(accessToken: string) {
   return payload.data ?? [];
 }
 
-export async function connectFacebookPages(code: string, baseUrl?: string) {
+export async function connectFacebookPages(userId: string, code: string, baseUrl?: string) {
   const token = await exchangeFacebookCodeForToken(code, baseUrl);
   const pages = await fetchFacebookPages(token.access_token);
 
@@ -133,7 +133,7 @@ export async function connectFacebookPages(code: string, baseUrl?: string) {
     }
 
     connectedAccounts.push(
-      await upsertSocialAccount({
+      await upsertSocialAccount(userId, {
         platform: SocialPlatform.FACEBOOK,
         providerAccountId: page.id,
         status: SocialAccountStatus.CONNECTED,

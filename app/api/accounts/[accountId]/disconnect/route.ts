@@ -12,12 +12,12 @@ export async function POST(
     params: Promise<{ accountId: string }>;
   }>,
 ) {
-  await requireAuthSession();
+  const session = await requireAuthSession();
 
   const { accountId } = await params;
 
   try {
-    await disconnectAccount(accountId);
+    await disconnectAccount(session.user.id, accountId);
   } catch {
     return NextResponse.redirect(getPublicRequestUrl("/accounts?disconnectError=1", request));
   }

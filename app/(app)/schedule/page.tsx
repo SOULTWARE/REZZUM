@@ -6,6 +6,7 @@ import { ScheduleList } from "@/components/schedule/schedule-list";
 import { PageContainer } from "@/components/page-container";
 import { QueueIcon, ScheduleIcon, SparkIcon } from "@/components/icons";
 import { getGeneratedPostStatusLabel } from "@/lib/review-queue/constants";
+import { requireAuthSession } from "@/server/auth/session";
 import { getScheduleOverview } from "@/server/schedule/service";
 
 export const metadata: Metadata = {
@@ -36,7 +37,8 @@ function formatRelativeDate(value: Date | null) {
 }
 
 export default async function SchedulePage() {
-  const overview = await getScheduleOverview();
+  const session = await requireAuthSession();
+  const overview = await getScheduleOverview(session.user.id);
   const hasItems = overview.items.length > 0;
   const statusCounts = overview.items.reduce<Partial<Record<GeneratedPostStatus, number>>>(
     (accumulator, item) => {

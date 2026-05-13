@@ -14,9 +14,10 @@ function compareStatuses(left: GeneratedPostStatus, right: GeneratedPostStatus) 
     [GeneratedPostStatus.SCHEDULED]: 0,
     [GeneratedPostStatus.APPROVED]: 1,
     [GeneratedPostStatus.DRAFT]: 2,
-    [GeneratedPostStatus.PUBLISHED]: 3,
-    [GeneratedPostStatus.FAILED]: 4,
-    [GeneratedPostStatus.REJECTED]: 5,
+    [GeneratedPostStatus.PUBLISHING]: 3,
+    [GeneratedPostStatus.PUBLISHED]: 4,
+    [GeneratedPostStatus.FAILED]: 5,
+    [GeneratedPostStatus.REJECTED]: 6,
   };
 
   return order[left] - order[right];
@@ -43,16 +44,17 @@ function compareByPublishTime(left: ScheduleItem, right: ScheduleItem) {
   return comparePlatforms(left.platform, right.platform);
 }
 
-export async function getScheduleOverview() {
+export async function getScheduleOverview(userId: string) {
   const supportedStatuses = new Set<GeneratedPostStatus>([
     GeneratedPostStatus.DRAFT,
     GeneratedPostStatus.APPROVED,
     GeneratedPostStatus.SCHEDULED,
+    GeneratedPostStatus.PUBLISHING,
     GeneratedPostStatus.PUBLISHED,
     GeneratedPostStatus.FAILED,
   ]);
 
-  const items = (await listLatestGeneratedPosts())
+  const items = (await listLatestGeneratedPosts(userId))
     .filter((post) => supportedStatuses.has(post.status))
     .sort(compareByPublishTime);
 

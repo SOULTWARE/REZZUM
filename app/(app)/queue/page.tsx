@@ -11,6 +11,7 @@ import {
   parseReviewQueueFilters,
 } from "@/lib/review-queue/validation";
 import { getGeneratedPostStatusLabel } from "@/lib/review-queue/constants";
+import { requireAuthSession } from "@/server/auth/session";
 import { getReviewQueue } from "@/server/review-queue/service";
 
 export const metadata: Metadata = {
@@ -24,8 +25,9 @@ export default async function QueuePage({
 }: Readonly<{
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }>) {
+  const session = await requireAuthSession();
   const filters = parseReviewQueueFilters(await searchParams);
-  const queue = await getReviewQueue(filters);
+  const queue = await getReviewQueue(session.user.id, filters);
   const hasActiveFilters = hasActiveReviewQueueFilters(filters);
   const platformCount = new Set(queue.items.map((item) => item.platform)).size;
   const feedCount = new Set(queue.items.map((item) => item.article.feed.id)).size;

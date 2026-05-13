@@ -141,7 +141,7 @@ export default async function AccountsPage({
   const session = await requireAuthSession();
   const [resolvedSearchParams, overview, planAccess] = await Promise.all([
     searchParams,
-    getAccountsOverview(),
+    getAccountsOverview(session.user.id),
     getUserPlanAccess(session.user.id),
   ]);
   const canUseX = planAccess.limits.allowedPlatforms.includes("X");

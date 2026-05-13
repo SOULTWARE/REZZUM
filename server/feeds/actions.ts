@@ -87,7 +87,7 @@ export async function createFeedAction(
     const access = await ensureCanCreateFeed(session.user.id);
 
     assertPlatformsAllowed(access, getSelectedPlatforms(parsed.data));
-    await createManagedFeed(parsed.data);
+    await createManagedFeed(session.user.id, parsed.data);
   } catch (error) {
     if (error instanceof FeedConflictError) {
       return buildConflictState();
@@ -120,7 +120,7 @@ export async function updateFeedAction(
 
   try {
     assertPlatformsAllowed(access, getSelectedPlatforms(parsed.data));
-    await updateManagedFeed(feedId, parsed.data);
+    await updateManagedFeed(session.user.id, feedId, parsed.data);
   } catch (error) {
     if (error instanceof FeedConflictError) {
       return buildConflictState();
@@ -133,7 +133,7 @@ export async function updateFeedAction(
     return buildGenericErrorState();
   }
 
-  await reevaluateExistingArticlesForFeed(feedId, access);
+  await reevaluateExistingArticlesForFeed(session.user.id, feedId, access);
 
   revalidatePath("/feeds");
   revalidatePath(`/feeds/${feedId}/edit`);
@@ -147,7 +147,7 @@ export async function syncFeedNowAction(feedId: string) {
   const session = await requireAuthSession();
 
   try {
-    const result = await syncFeedNow(feedId, await getUserPlanAccess(session.user.id));
+    const result = await syncFeedNow(session.user.id, feedId, await getUserPlanAccess(session.user.id));
 
     if (result.articleIssues.length > 0) {
       const firstIssue = result.articleIssues[0];
@@ -189,10 +189,10 @@ export async function syncFeedNowAction(feedId: string) {
 }
 
 export async function pauseFeedAction(feedId: string) {
-  await requireAuthSession();
+  const session = await requireAuthSession();
 
   try {
-    await pauseManagedFeed(feedId);
+    await pauseManagedFeed(session.user.id, feedId);
     revalidateFeedPaths(feedId);
 
     return {
@@ -214,10 +214,10 @@ export async function pauseFeedAction(feedId: string) {
 }
 
 export async function activateFeedAction(feedId: string) {
-  await requireAuthSession();
+  const session = await requireAuthSession();
 
   try {
-    await activateManagedFeed(feedId);
+    await activateManagedFeed(session.user.id, feedId);
     revalidateFeedPaths(feedId);
 
     return {
@@ -239,10 +239,10 @@ export async function activateFeedAction(feedId: string) {
 }
 
 export async function deleteFeedAction(feedId: string) {
-  await requireAuthSession();
+  const session = await requireAuthSession();
 
   try {
-    await deleteManagedFeed(feedId);
+    await deleteManagedFeed(session.user.id, feedId);
     revalidateFeedPaths();
 
     return {

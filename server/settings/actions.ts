@@ -15,7 +15,7 @@ function normalizeAccountId(value: FormDataEntryValue | null) {
 }
 
 export async function updateWorkspaceSettingsAction(formData: FormData) {
-  await requireAuthSession();
+  const session = await requireAuthSession();
 
   const defaultLanguage = String(formData.get("defaultLanguage") ?? "").trim() || "English";
   const defaultFeel = String(formData.get("defaultFeel") ?? "").trim() || "Professional";
@@ -23,7 +23,7 @@ export async function updateWorkspaceSettingsAction(formData: FormData) {
   const intervalRaw = String(formData.get("defaultAutoPublishIntervalMinutes") ?? "").trim();
   const defaultAutoPublishIntervalMinutes = intervalRaw ? Number.parseInt(intervalRaw, 10) : null;
 
-  await updateWorkspaceSettings({
+  await updateWorkspaceSettings(session.user.id, {
     defaultLanguage,
     defaultFeel,
     defaultStyle,

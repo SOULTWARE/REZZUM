@@ -10,23 +10,7 @@ function getKeyMaterial() {
     return explicitKey;
   }
 
-  const derived = [
-    process.env.OPENAI_API_KEY,
-    process.env.FACEBOOK_CLIENT_SECRET,
-    process.env.LINKEDIN_CLIENT_SECRET,
-    process.env.X_CLIENT_SECRET,
-  ]
-    .filter(Boolean)
-    .join(":")
-    .trim();
-
-  if (!derived) {
-    throw new Error(
-      "APP_ENCRYPTION_KEY or at least one provider secret is required to encrypt tokens.",
-    );
-  }
-
-  return derived;
+  throw new Error("APP_ENCRYPTION_KEY is required to encrypt provider tokens.");
 }
 
 function getEncryptionKey() {

@@ -6,6 +6,7 @@ const POST_STATUS_STYLES: Record<GeneratedPostStatus, string> = {
   APPROVED: "bg-[rgb(0_83_218_/_0.06)] text-[var(--primary)]",
   REJECTED: "bg-[rgb(159_64_61_/_0.12)] text-[rgb(117_33_33)]",
   SCHEDULED: "bg-[var(--tertiary-soft)] text-[rgb(79_73_100)]",
+  PUBLISHING: "bg-[rgb(0_83_218_/_0.10)] text-[var(--primary-strong)]",
   PUBLISHED: "bg-[rgb(31_110_74_/_0.12)] text-[rgb(31_110_74)]",
   FAILED: "bg-[rgb(159_64_61_/_0.12)] text-[rgb(117_33_33)]",
 };

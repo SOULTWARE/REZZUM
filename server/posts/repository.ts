@@ -22,10 +22,28 @@ export type GeneratedPostRecord = Prisma.GeneratedPostGetPayload<{
   include: typeof generatedPostInclude;
 }>;
 
-export async function listLatestGeneratedPosts(where: Prisma.GeneratedPostWhereInput = {}) {
+function scopePostWhere(userId: string, where: Prisma.GeneratedPostWhereInput = {}) {
+  return {
+    AND: [
+      where,
+      {
+        article: {
+          feed: {
+            userId,
+          },
+        },
+      },
+    ],
+  } satisfies Prisma.GeneratedPostWhereInput;
+}
+
+export async function listLatestGeneratedPosts(
+  userId: string,
+  where: Prisma.GeneratedPostWhereInput = {},
+) {
   return db.generatedPost.findMany({
     where: {
-      ...where,
+      ...scopePostWhere(userId, where),
       nextVersions: {
         none: {},
       },
@@ -35,10 +53,15 @@ export async function listLatestGeneratedPosts(where: Prisma.GeneratedPostWhereI
   });
 }
 
-export async function countGeneratedPostsByStatus() {
+export async function countGeneratedPostsByStatus(userId: string) {
   return db.generatedPost.groupBy({
     by: ["status"],
     where: {
+      article: {
+        feed: {
+          userId,
+        },
+      },
       nextVersions: {
         none: {},
       },
@@ -49,17 +72,22 @@ export async function countGeneratedPostsByStatus() {
   });
 }
 
-export async function getGeneratedPostById(postId: string) {
-  return db.generatedPost.findUnique({
-    where: { id: postId },
+export async function getGeneratedPostById(postId: string, userId?: string) {
+  return db.generatedPost.findFirst({
+    where: userId ? scopePostWhere(userId, { id: postId }) : { id: postId },
     include: generatedPostInclude,
   });
 }
 
-export async function listLatestSiblingPosts(articleId: string) {
+export async function listLatestSiblingPosts(userId: string, articleId: string) {
   return db.generatedPost.findMany({
     where: {
       articleId,
+      article: {
+        feed: {
+          userId,
+        },
+      },
       nextVersions: {
         none: {},
       },
@@ -165,7 +193,16 @@ export async function createRegeneratedPostVersion(data: {
 export async function updateGeneratedPost(
   postId: string,
   data: Prisma.GeneratedPostUncheckedUpdateInput,
+  userId?: string,
 ) {
+  if (userId) {
+    const post = await getGeneratedPostById(postId, userId);
+
+    if (!post) {
+      throw new Error("Draft not found.");
+    }
+  }
+
   return db.generatedPost.update({
     where: { id: postId },
     data,

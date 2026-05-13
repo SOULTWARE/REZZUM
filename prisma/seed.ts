@@ -13,11 +13,21 @@ const adapter = new PrismaPg({
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  const owner = await prisma.user.findFirst({
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+
+  if (!owner) {
+    console.log("No users found. Workspace defaults will be created on first authenticated access.");
+    return;
+  }
+
   await prisma.workspaceSettings.upsert({
-    where: { id: "singleton" },
+    where: { userId: owner.id },
     update: {},
     create: {
-      id: "singleton",
+      userId: owner.id,
       defaultLanguage: "English",
       defaultFeel: "Professional",
       defaultStyle: "",

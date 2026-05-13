@@ -21,6 +21,7 @@ export const socialAccountDefaultSelect = {
 
 export const socialAccountInternalSelect = {
   ...socialAccountDefaultSelect,
+  userId: true,
   providerAccountId: true,
   scopes: true,
   accessTokenEncrypted: true,
@@ -35,28 +36,42 @@ export type SocialAccountInternalRecord = Prisma.SocialAccountGetPayload<{
   select: typeof socialAccountInternalSelect;
 }>;
 
-export async function listSocialAccounts() {
+export async function listSocialAccounts(userId: string) {
   return db.socialAccount.findMany({
+    where: { userId },
     select: socialAccountDefaultSelect,
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
   });
 }
 
-export async function listSocialAccountsInternal() {
+export async function listSocialAccountsInternal(userId: string) {
   return db.socialAccount.findMany({
+    where: { userId },
     select: socialAccountInternalSelect,
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
   });
 }
 
-export async function getSocialAccountById(accountId: string) {
+export async function getSocialAccountById(userId: string, accountId: string) {
+  return db.socialAccount.findUnique({
+    where: {
+      id_userId: {
+        id: accountId,
+        userId,
+      },
+    },
+    select: socialAccountInternalSelect,
+  });
+}
+
+export async function getSocialAccountByIdInternal(accountId: string) {
   return db.socialAccount.findUnique({
     where: { id: accountId },
     select: socialAccountInternalSelect,
   });
 }
 
-export async function upsertSocialAccount(data: {
+export async function upsertSocialAccount(userId: string, data: {
   platform: SocialPlatform;
   providerAccountId: string;
   status: SocialAccountStatus;
@@ -76,7 +91,8 @@ export async function upsertSocialAccount(data: {
 }) {
   return db.socialAccount.upsert({
     where: {
-      platform_providerAccountId: {
+      userId_platform_providerAccountId: {
+        userId,
         platform: data.platform,
         providerAccountId: data.providerAccountId,
       },
@@ -98,6 +114,7 @@ export async function upsertSocialAccount(data: {
       disconnectedAt: data.disconnectedAt,
     },
     create: {
+      userId,
       platform: data.platform,
       providerAccountId: data.providerAccountId,
       status: data.status,
@@ -119,9 +136,14 @@ export async function upsertSocialAccount(data: {
   });
 }
 
-export async function disconnectSocialAccount(accountId: string) {
+export async function disconnectSocialAccount(userId: string, accountId: string) {
   return db.socialAccount.update({
-    where: { id: accountId },
+    where: {
+      id_userId: {
+        id: accountId,
+        userId,
+      },
+    },
     data: {
       status: "DISCONNECTED",
       disconnectedAt: new Date(),

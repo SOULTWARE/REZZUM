@@ -23,11 +23,11 @@ export default async function EditFeedPage({
 }>) {
   const session = await requireAuthSession();
   const { feedId } = await params;
-  const feed = await getManagedFeed(feedId);
+  const feed = await getManagedFeed(session.user.id, feedId);
   const planAccess = await getUserPlanAccess(session.user.id);
-  const facebookAccounts = await getConnectedAccountOptions("FACEBOOK");
-  const linkedinAccounts = await getConnectedAccountOptions("LINKEDIN");
-  const xAccounts = await getConnectedAccountOptions("X");
+  const facebookAccounts = await getConnectedAccountOptions(session.user.id, "FACEBOOK");
+  const linkedinAccounts = await getConnectedAccountOptions(session.user.id, "LINKEDIN");
+  const xAccounts = await getConnectedAccountOptions(session.user.id, "X");
 
   if (!feed) {
     notFound();

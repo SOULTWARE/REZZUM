@@ -24,7 +24,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    await connectLinkedInOrganizations(code, getPublicRequestBaseUrl(request));
+    await connectLinkedInOrganizations(session.user.id, code, getPublicRequestBaseUrl(request));
 
     return NextResponse.redirect(getPublicRequestUrl("/accounts?connected=linkedin", request));
   } catch (error) {

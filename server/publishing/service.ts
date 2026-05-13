@@ -4,10 +4,10 @@ import {
   SocialAccountStatus,
   SocialPlatform,
 } from "@prisma/client";
-import { getSocialAccount } from "@/server/accounts/service";
+import { getSocialAccountInternal } from "@/server/accounts/service";
 import {
   assertPlatformsAllowed,
-  getWorkspaceAutomationPlanAccess,
+  getUserPlanAccess,
   type PlanAccess,
 } from "@/server/billing/limits";
 import { db } from "@/server/db/client";
@@ -30,6 +30,27 @@ async function createPublishAttempt(postId: string) {
       idempotencyKey: sha256(`${postId}:${Date.now()}`),
     },
   });
+}
+
+async function claimPostForPublishing(postId: string) {
+  const result = await db.generatedPost.updateMany({
+    where: {
+      id: postId,
+      status: {
+        in: [
+          GeneratedPostStatus.DRAFT,
+          GeneratedPostStatus.APPROVED,
+          GeneratedPostStatus.SCHEDULED,
+          GeneratedPostStatus.FAILED,
+        ],
+      },
+    },
+    data: {
+      status: GeneratedPostStatus.PUBLISHING,
+    },
+  });
+
+  return result.count === 1;
 }
 
 async function markAttemptSuccess(attemptId: string, params: {
@@ -59,8 +80,8 @@ async function markAttemptFailure(attemptId: string, message: string) {
   });
 }
 
-async function publishPost(postId: string, planAccess?: PlanAccess) {
-  const post = await getGeneratedPostById(postId);
+async function publishPost(postId: string, planAccess?: PlanAccess, userId?: string) {
+  const post = await getGeneratedPostById(postId, userId);
 
   if (!post) {
     throw new Error("Post not found.");
@@ -70,7 +91,12 @@ async function publishPost(postId: string, planAccess?: PlanAccess) {
     return post;
   }
 
-  const access = planAccess ?? await getWorkspaceAutomationPlanAccess();
+  if (post.status === GeneratedPostStatus.PUBLISHING) {
+    throw new Error("This post is already being published.");
+  }
+
+  const postUserId = post.article.feed.userId;
+  const access = planAccess ?? await getUserPlanAccess(postUserId);
 
   assertPlatformsAllowed(access, [post.platform]);
 
@@ -78,7 +104,7 @@ async function publishPost(postId: string, planAccess?: PlanAccess) {
     throw new Error("No destination account is assigned to this post.");
   }
 
-  const account = await getSocialAccount(post.socialAccountId);
+  const account = await getSocialAccountInternal(post.socialAccountId);
 
   if (!account || account.status !== SocialAccountStatus.CONNECTED) {
     throw new Error("The destination account is not connected.");
@@ -88,10 +114,26 @@ async function publishPost(postId: string, planAccess?: PlanAccess) {
     throw new Error("The destination account does not match the post platform.");
   }
 
+  if (account.userId !== postUserId) {
+    throw new Error("The destination account does not belong to this workspace.");
+  }
+
   const postText = getPostText(post);
 
   if (!postText) {
     throw new Error("The post has no content to publish.");
+  }
+
+  const claimed = await claimPostForPublishing(post.id);
+
+  if (!claimed) {
+    const currentPost = await getGeneratedPostById(post.id, userId);
+
+    if (currentPost?.status === GeneratedPostStatus.PUBLISHED) {
+      return currentPost;
+    }
+
+    throw new Error("This post is already being published.");
   }
 
   const attempt = await createPublishAttempt(post.id);
@@ -137,18 +179,20 @@ async function publishPost(postId: string, planAccess?: PlanAccess) {
   }
 }
 
-export async function publishPostNow(postId: string, planAccess?: PlanAccess) {
-  return publishPost(postId, planAccess);
+export async function publishPostNow(userId: string, postId: string, planAccess?: PlanAccess) {
+  return publishPost(postId, planAccess, userId);
 }
 
 export async function publishDuePosts() {
   const posts = await listDueScheduledPosts(new Date());
-  const access = await getWorkspaceAutomationPlanAccess();
   const results = [];
 
   for (const post of posts) {
     try {
-      const publishedPost = await publishPost(post.id, access);
+      const publishedPost = await publishPost(
+        post.id,
+        await getUserPlanAccess(post.article.feed.userId),
+      );
 
       results.push({
         postId: post.id,

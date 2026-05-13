@@ -94,28 +94,21 @@ export async function getUserPlanAccess(userId: string) {
   return getPlanAccess(subscription);
 }
 
-export async function getWorkspaceAutomationPlanAccess() {
-  const owner = await db.user.findFirst({
-    orderBy: { createdAt: "asc" },
-    select: { id: true },
-  });
-
-  if (!owner) {
-    return getPlanAccess(null);
-  }
-
-  return getUserPlanAccess(owner.id);
-}
-
-export async function getWorkspacePlanUsage() {
+export async function getWorkspacePlanUsage(userId: string) {
   const [rssFeedCount, generatedPostCount] = await Promise.all([
     db.rssFeed.count({
       where: {
         archivedAt: null,
+        userId,
       },
     }),
     db.generatedPost.count({
       where: {
+        article: {
+          feed: {
+            userId,
+          },
+        },
         nextVersions: {
           none: {},
         },
@@ -155,7 +148,7 @@ export function assertPlatformsAllowed(access: PlanAccess, platforms: SocialPlat
 export async function ensureCanCreateFeed(userId: string) {
   const [access, usage] = await Promise.all([
     getUserPlanAccess(userId),
-    getWorkspacePlanUsage(),
+    getWorkspacePlanUsage(userId),
   ]);
 
   if (usage.rssFeedCount >= access.limits.rssFeedLimit) {
@@ -170,18 +163,22 @@ export async function ensureCanCreateFeed(userId: string) {
   return access;
 }
 
-export async function getRemainingPostSlots(access: PlanAccess) {
-  const usage = await getWorkspacePlanUsage();
+export async function getRemainingPostSlots(userId: string, access: PlanAccess) {
+  const usage = await getWorkspacePlanUsage(userId);
 
   return Math.max(access.limits.postLimit - usage.generatedPostCount, 0);
 }
 
-export async function ensureCanCreatePosts(access: PlanAccess, requestedCount: number) {
+export async function ensureCanCreatePosts(
+  userId: string,
+  access: PlanAccess,
+  requestedCount: number,
+) {
   if (requestedCount <= 0) {
     return;
   }
 
-  const usage = await getWorkspacePlanUsage();
+  const usage = await getWorkspacePlanUsage(userId);
   const remaining = access.limits.postLimit - usage.generatedPostCount;
 
   if (remaining >= requestedCount) {

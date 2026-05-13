@@ -18,10 +18,10 @@ export const dynamic = "force-dynamic";
 export default async function NewFeedPage() {
   const session = await requireAuthSession();
   const planAccess = await getUserPlanAccess(session.user.id);
-  const facebookAccounts = await getConnectedAccountOptions("FACEBOOK");
-  const linkedinAccounts = await getConnectedAccountOptions("LINKEDIN");
-  const xAccounts = await getConnectedAccountOptions("X");
-  const workspace = await getWorkspaceSettings();
+  const facebookAccounts = await getConnectedAccountOptions(session.user.id, "FACEBOOK");
+  const linkedinAccounts = await getConnectedAccountOptions(session.user.id, "LINKEDIN");
+  const xAccounts = await getConnectedAccountOptions(session.user.id, "X");
+  const workspace = await getWorkspaceSettings(session.user.id);
   const canUseX = planAccess.limits.allowedPlatforms.includes("X");
 
   return (

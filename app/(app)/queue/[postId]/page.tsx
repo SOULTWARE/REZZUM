@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { PageContainer } from "@/components/page-container";
 import { ReviewEditor } from "@/components/review-queue/review-editor";
 import { getConnectedAccountOptions } from "@/server/accounts/service";
+import { requireAuthSession } from "@/server/auth/session";
 import {
   approveDraftAction,
   publishDraftNowAction,
@@ -22,8 +23,9 @@ export default async function QueueEditorPage({
 }: Readonly<{
   params: Promise<{ postId: string }>;
 }>) {
+  const session = await requireAuthSession();
   const { postId } = await params;
-  const result = await getReviewQueuePost(postId);
+  const result = await getReviewQueuePost(session.user.id, postId);
 
   if (!result) {
     notFound();
@@ -34,7 +36,7 @@ export default async function QueueEditorPage({
       <ReviewEditor
         post={result.post}
         siblingPosts={result.siblingPosts}
-        accountOptions={await getConnectedAccountOptions(result.post.platform)}
+        accountOptions={await getConnectedAccountOptions(session.user.id, result.post.platform)}
         saveAction={saveDraftAction.bind(null, result.post.id)}
         approveAction={approveDraftAction.bind(null, result.post.id)}
         rejectAction={rejectDraftAction.bind(null, result.post.id)}

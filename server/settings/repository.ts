@@ -11,9 +11,9 @@ export type WorkspaceSettingsRecord = Prisma.WorkspaceSettingsGetPayload<{
   include: typeof workspaceSettingsInclude;
 }>;
 
-export async function getWorkspaceSettingsRecord() {
+export async function getWorkspaceSettingsRecord(userId: string) {
   const settings = await db.workspaceSettings.findUnique({
-    where: { id: "singleton" },
+    where: { userId },
     include: workspaceSettingsInclude,
   });
 
@@ -23,13 +23,13 @@ export async function getWorkspaceSettingsRecord() {
 
   return db.workspaceSettings.create({
     data: {
-      id: "singleton",
+      userId,
     },
     include: workspaceSettingsInclude,
   });
 }
 
-export async function updateWorkspaceSettingsRecord(data: {
+export async function updateWorkspaceSettingsRecord(userId: string, data: {
   defaultLanguage: string;
   defaultFeel: string;
   defaultStyle: string;
@@ -39,10 +39,10 @@ export async function updateWorkspaceSettingsRecord(data: {
   defaultXAccountId: string | null;
 }) {
   return db.workspaceSettings.upsert({
-    where: { id: "singleton" },
+    where: { userId },
     update: data,
     create: {
-      id: "singleton",
+      userId,
       ...data,
     },
     include: workspaceSettingsInclude,

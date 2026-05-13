@@ -12,21 +12,27 @@ export type FeedRecord = Prisma.RssFeedGetPayload<{
   include: typeof feedWithFilterInclude;
 }>;
 
-export async function listFeeds() {
+export async function listFeeds(userId: string) {
   return db.rssFeed.findMany({
+    where: { userId },
     include: feedWithFilterInclude,
     orderBy: [{ createdAt: "desc" }, { updatedAt: "desc" }],
   });
 }
 
-export async function getFeedById(feedId: string) {
+export async function getFeedById(userId: string, feedId: string) {
   return db.rssFeed.findUnique({
-    where: { id: feedId },
+    where: {
+      id_userId: {
+        id: feedId,
+        userId,
+      },
+    },
     include: feedWithFilterInclude,
   });
 }
 
-export async function createFeedRecord(data: {
+export async function createFeedRecord(userId: string, data: {
   name: string;
   rssUrl: string;
   normalizedRssUrl: string;
@@ -50,6 +56,7 @@ export async function createFeedRecord(data: {
   return db.rssFeed.create({
     data: {
       name: data.name,
+      userId,
       rssUrl: data.rssUrl,
       normalizedRssUrl: data.normalizedRssUrl,
       defaultLanguage: data.defaultLanguage,
@@ -78,6 +85,7 @@ export async function createFeedRecord(data: {
 }
 
 export async function updateFeedRecord(
+  userId: string,
   feedId: string,
   data: {
     name: string;
@@ -102,7 +110,12 @@ export async function updateFeedRecord(
   },
 ) {
   return db.rssFeed.update({
-    where: { id: feedId },
+    where: {
+      id_userId: {
+        id: feedId,
+        userId,
+      },
+    },
     data: {
       name: data.name,
       rssUrl: data.rssUrl,
@@ -140,6 +153,7 @@ export async function updateFeedRecord(
 }
 
 export async function updateFeedStatusRecord(
+  userId: string,
   feedId: string,
   data: {
     status: "ACTIVE" | "PAUSED";
@@ -148,7 +162,12 @@ export async function updateFeedStatusRecord(
   },
 ) {
   return db.rssFeed.update({
-    where: { id: feedId },
+    where: {
+      id_userId: {
+        id: feedId,
+        userId,
+      },
+    },
     data: {
       status: data.status,
       nextSyncAt: data.nextSyncAt,
@@ -158,8 +177,13 @@ export async function updateFeedStatusRecord(
   });
 }
 
-export async function deleteFeedRecord(feedId: string) {
+export async function deleteFeedRecord(userId: string, feedId: string) {
   return db.rssFeed.delete({
-    where: { id: feedId },
+    where: {
+      id_userId: {
+        id: feedId,
+        userId,
+      },
+    },
   });
 }
