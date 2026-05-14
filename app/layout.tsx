@@ -76,7 +76,7 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${manrope.variable} min-h-full antialiased`}
     >
-      <body className="min-h-screen">
+      <body className="min-h-screen" suppressHydrationWarning>
         <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
