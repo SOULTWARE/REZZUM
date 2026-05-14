@@ -62,6 +62,31 @@ type FeedSyncResult = {
   articleIssues: FeedSyncArticleIssue[];
 };
 
+const DEFAULT_FEED_SYNC_BATCH_LIMIT = 10;
+const DEFAULT_ARTICLE_REEVALUATION_LIMIT = 500;
+
+function getPositiveIntegerEnv(name: string, fallback: number, max: number) {
+  const parsed = Number.parseInt(process.env[name] ?? "", 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return Math.min(parsed, max);
+}
+
+function getFeedSyncBatchLimit() {
+  return getPositiveIntegerEnv("CRON_FEED_SYNC_BATCH_SIZE", DEFAULT_FEED_SYNC_BATCH_LIMIT, 100);
+}
+
+function getArticleReevaluationLimit() {
+  return getPositiveIntegerEnv(
+    "FEED_ARTICLE_REEVALUATION_BATCH_SIZE",
+    DEFAULT_ARTICLE_REEVALUATION_LIMIT,
+    2000,
+  );
+}
+
 function normalizeUrl(value: string | null) {
   if (!value) {
     return null;
@@ -611,6 +636,7 @@ export async function reevaluateExistingArticlesForFeed(
       },
     },
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+    take: getArticleReevaluationLimit(),
   });
 
   const results = [];
@@ -666,6 +692,7 @@ export async function syncDueFeeds() {
       id: true,
     },
     orderBy: [{ nextSyncAt: "asc" }],
+    take: getFeedSyncBatchLimit(),
   });
 
   const results = [];

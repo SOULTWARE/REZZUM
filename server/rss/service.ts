@@ -1,4 +1,8 @@
 import { lookup } from "node:dns/promises";
+import type { LookupAddress } from "node:dns";
+import { request as httpRequest } from "node:http";
+import { request as httpsRequest } from "node:https";
+import type { IncomingMessage } from "node:http";
 import { isIP } from "node:net";
 import { XMLParser } from "fast-xml-parser";
 
@@ -29,6 +33,7 @@ const parser = new XMLParser({
 const MAX_REDIRECTS = 3;
 const MAX_FEED_BYTES = 2 * 1024 * 1024;
 const REQUEST_TIMEOUT_MS = 10_000;
+const MAX_RSS_ITEMS = 50;
 
 function ensureArray<T>(value: T | T[] | undefined): T[] {
   if (!value) {
@@ -177,7 +182,13 @@ async function assertPublicFeedUrl(feedUrl: string) {
       throw new FeedFetchError("RSS URL host is not allowed.");
     }
 
-    return;
+    return {
+      address: {
+        address: url.hostname,
+        family: isIP(url.hostname),
+      } satisfies LookupAddress,
+      url,
+    };
   }
 
   const addresses = await lookup(url.hostname, { all: true, verbatim: true }).catch(() => []);
@@ -189,71 +200,91 @@ async function assertPublicFeedUrl(feedUrl: string) {
   if (addresses.some((address) => isBlockedIpAddress(address.address))) {
     throw new FeedFetchError("RSS URL resolves to a private or reserved network address.");
   }
+
+  return {
+    address: addresses[0],
+    url,
+  };
 }
 
-async function readLimitedText(response: Response) {
-  const contentLength = response.headers.get("content-length");
+async function readLimitedText(response: IncomingMessage) {
+  const contentLength = response.headers["content-length"];
+  const contentLengthValue = Array.isArray(contentLength) ? contentLength[0] : contentLength;
 
-  if (contentLength && Number.parseInt(contentLength, 10) > MAX_FEED_BYTES) {
+  if (contentLengthValue && Number.parseInt(contentLengthValue, 10) > MAX_FEED_BYTES) {
     throw new FeedFetchError("RSS payload is too large.");
   }
 
-  if (!response.body) {
-    return "";
-  }
-
-  const reader = response.body.getReader();
-  const chunks: Uint8Array[] = [];
+  const chunks: Buffer[] = [];
   let receivedBytes = 0;
 
-  while (true) {
-    const { done, value } = await reader.read();
+  for await (const chunk of response) {
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
 
-    if (done) {
-      break;
-    }
-
-    receivedBytes += value.byteLength;
-
+    receivedBytes += buffer.byteLength;
     if (receivedBytes > MAX_FEED_BYTES) {
-      await reader.cancel();
+      response.destroy();
       throw new FeedFetchError("RSS payload is too large.");
     }
 
-    chunks.push(value);
+    chunks.push(buffer);
   }
 
-  return new TextDecoder().decode(Buffer.concat(chunks));
+  return Buffer.concat(chunks).toString("utf8");
 }
 
-async function fetchPublicFeed(feedUrl: string, redirectCount = 0): Promise<Response> {
+async function fetchPublicFeed(feedUrl: string, redirectCount = 0): Promise<{
+  payload: string;
+  statusCode: number;
+}> {
   if (redirectCount > MAX_REDIRECTS) {
     throw new FeedFetchError("RSS fetch followed too many redirects.");
   }
 
-  await assertPublicFeedUrl(feedUrl);
+  const { address, url } = await assertPublicFeedUrl(feedUrl);
+  const request = url.protocol === "https:" ? httpsRequest : httpRequest;
 
-  const response = await fetch(feedUrl, {
-    headers: {
-      "user-agent": "REZZUM RSS Ingestion/1.0",
-      accept: "application/rss+xml, application/atom+xml, text/xml, application/xml;q=0.9, */*;q=0.8",
-    },
-    cache: "no-store",
-    redirect: "manual",
-    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  return new Promise((resolve, reject) => {
+    const clientRequest = request(url, {
+      headers: {
+        "user-agent": "REZZUM RSS Ingestion/1.0",
+        accept: "application/rss+xml, application/atom+xml, text/xml, application/xml;q=0.9, */*;q=0.8",
+      },
+      lookup: (_hostname, _options, callback) => {
+        callback(null, address.address, address.family);
+      },
+      timeout: REQUEST_TIMEOUT_MS,
+    }, (response) => {
+      const statusCode = response.statusCode ?? 0;
+
+      if ([301, 302, 303, 307, 308].includes(statusCode)) {
+        const location = response.headers.location;
+        const redirectLocation = Array.isArray(location) ? location[0] : location;
+
+        response.resume();
+
+        if (!redirectLocation) {
+          reject(new FeedFetchError("RSS fetch redirect did not include a location."));
+          return;
+        }
+
+        fetchPublicFeed(new URL(redirectLocation, url).toString(), redirectCount + 1)
+          .then(resolve)
+          .catch(reject);
+        return;
+      }
+
+      readLimitedText(response)
+        .then((payload) => resolve({ payload, statusCode }))
+        .catch(reject);
+    });
+
+    clientRequest.on("timeout", () => {
+      clientRequest.destroy(new FeedFetchError("RSS fetch timed out."));
+    });
+    clientRequest.on("error", reject);
+    clientRequest.end();
   });
-
-  if ([301, 302, 303, 307, 308].includes(response.status)) {
-    const location = response.headers.get("location");
-
-    if (!location) {
-      throw new FeedFetchError("RSS fetch redirect did not include a location.");
-    }
-
-    return fetchPublicFeed(new URL(location, feedUrl).toString(), redirectCount + 1);
-  }
-
-  return response;
 }
 
 function pickFirstString(...values: unknown[]) {
@@ -320,7 +351,7 @@ function parseRssItems(channel: Record<string, unknown>) {
 }
 
 export async function fetchAndParseFeed(feedUrl: string) {
-  let response: Response;
+  let response: Awaited<ReturnType<typeof fetchPublicFeed>>;
 
   try {
     response = await fetchPublicFeed(feedUrl);
@@ -334,28 +365,14 @@ export async function fetchAndParseFeed(feedUrl: string) {
     });
   }
 
-  if (!response.ok) {
-    throw new FeedFetchError(`RSS fetch failed with status ${response.status}.`);
-  }
-
-  let payload: string;
-
-  try {
-    payload = await readLimitedText(response);
-  } catch (error) {
-    if (error instanceof FeedFetchError) {
-      throw error;
-    }
-
-    throw new FeedFetchError("RSS fetch succeeded, but the feed body could not be read.", {
-      cause: error,
-    });
+  if (response.statusCode < 200 || response.statusCode >= 300) {
+    throw new FeedFetchError(`RSS fetch failed with status ${response.statusCode}.`);
   }
 
   let parsed: Record<string, unknown>;
 
   try {
-    parsed = parser.parse(payload) as Record<string, unknown>;
+    parsed = parser.parse(response.payload) as Record<string, unknown>;
   } catch (error) {
     throw new FeedFetchError("RSS payload could not be parsed.", {
       cause: error,
@@ -365,11 +382,13 @@ export async function fetchAndParseFeed(feedUrl: string) {
   if (parsed.rss && typeof parsed.rss === "object") {
     const channel = (parsed.rss as Record<string, unknown>).channel as Record<string, unknown>;
 
-    return parseRssItems(channel).filter((item) => item.sourceUrl);
+    return parseRssItems(channel).filter((item) => item.sourceUrl).slice(0, MAX_RSS_ITEMS);
   }
 
   if (parsed.feed && typeof parsed.feed === "object") {
-    return parseAtomEntries(parsed.feed as Record<string, unknown>).filter((item) => item.sourceUrl);
+    return parseAtomEntries(parsed.feed as Record<string, unknown>)
+      .filter((item) => item.sourceUrl)
+      .slice(0, MAX_RSS_ITEMS);
   }
 
   throw new FeedFetchError("RSS payload is not a supported RSS or Atom document.");

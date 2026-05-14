@@ -14,11 +14,41 @@ import { db } from "@/server/db/client";
 import { publishToFacebook } from "@/server/integrations/facebook";
 import { publishToLinkedIn } from "@/server/integrations/linkedin";
 import { publishToX } from "@/server/integrations/x";
-import { getGeneratedPostById, listDueScheduledPosts, updateGeneratedPost } from "@/server/posts/repository";
+import {
+  getGeneratedPostById,
+  listDueScheduledPosts,
+  listStalePublishingPosts,
+  updateGeneratedPost,
+} from "@/server/posts/repository";
 import { sha256 } from "@/server/security/crypto";
+
+const PUBLISHING_STALE_AFTER_MS = 15 * 60_000;
+const DEFAULT_PUBLISH_BATCH_LIMIT = 25;
 
 function getPostText(post: Awaited<ReturnType<typeof getGeneratedPostById>>) {
   return post?.editedText?.trim() || post?.generatedText || "";
+}
+
+function getPublishBatchLimit() {
+  const parsed = Number.parseInt(process.env.CRON_PUBLISH_BATCH_SIZE ?? "", 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return DEFAULT_PUBLISH_BATCH_LIMIT;
+  }
+
+  return Math.min(parsed, 100);
+}
+
+function getPublishingStaleCutoff(now = new Date()) {
+  return new Date(now.getTime() - PUBLISHING_STALE_AFTER_MS);
+}
+
+function isStalePublishingPost(post: NonNullable<Awaited<ReturnType<typeof getGeneratedPostById>>>) {
+  return post.updatedAt.getTime() <= getPublishingStaleCutoff().getTime();
+}
+
+function getStalePublishingFailureMessage() {
+  return "Publishing was interrupted before completion. Review and retry this post.";
 }
 
 async function createPublishAttempt(postId: string) {
@@ -81,7 +111,7 @@ async function markAttemptFailure(attemptId: string, message: string) {
 }
 
 async function publishPost(postId: string, planAccess?: PlanAccess, userId?: string) {
-  const post = await getGeneratedPostById(postId, userId);
+  let post = await getGeneratedPostById(postId, userId);
 
   if (!post) {
     throw new Error("Post not found.");
@@ -92,7 +122,15 @@ async function publishPost(postId: string, planAccess?: PlanAccess, userId?: str
   }
 
   if (post.status === GeneratedPostStatus.PUBLISHING) {
-    throw new Error("This post is already being published.");
+    if (!isStalePublishingPost(post)) {
+      throw new Error("This post is already being published.");
+    }
+
+    post = await updateGeneratedPost(post.id, {
+      status: GeneratedPostStatus.FAILED,
+      failedAt: new Date(),
+      failureReason: getStalePublishingFailureMessage(),
+    }, userId);
   }
 
   const postUserId = post.article.feed.userId;
@@ -184,8 +222,23 @@ export async function publishPostNow(userId: string, postId: string, planAccess?
 }
 
 export async function publishDuePosts() {
-  const posts = await listDueScheduledPosts(new Date());
+  const limit = getPublishBatchLimit();
+  const stalePosts = await listStalePublishingPosts(getPublishingStaleCutoff(), limit);
+  const posts = await listDueScheduledPosts(new Date(), Math.max(limit - stalePosts.length, 0));
   const results = [];
+
+  for (const post of stalePosts) {
+    const failedPost = await updateGeneratedPost(post.id, {
+      status: GeneratedPostStatus.FAILED,
+      failedAt: new Date(),
+      failureReason: getStalePublishingFailureMessage(),
+    });
+
+    results.push({
+      postId: post.id,
+      status: failedPost.status,
+    });
+  }
 
   for (const post of posts) {
     try {

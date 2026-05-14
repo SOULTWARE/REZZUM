@@ -153,6 +153,7 @@ model RssFeed {
   @@index([userId, status])
   @@index([status])
   @@index([nextSyncAt])
+  @@index([status, nextSyncAt])
   @@map("rss_feeds")
 }
 
@@ -233,6 +234,8 @@ model GeneratedPost {
   @@index([socialAccountId])
   @@index([status])
   @@index([scheduledFor])
+  @@index([status, scheduledFor])
+  @@index([status, updatedAt])
   @@index([publishedAt])
   @@index([publishedExternalId])
   @@map("generated_posts")
