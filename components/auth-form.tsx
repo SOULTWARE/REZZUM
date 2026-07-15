@@ -12,6 +12,9 @@ type SocialProvider = "google" | "linkedin";
 
 type AuthFormProps = {
   callbackURL?: string;
+  errorRedirectPath?: string;
+  initialErrorCode?: string | null;
+  initialSuccessMessage?: string | null;
   mode: AuthFormMode;
   providers: {
     google: boolean;
@@ -67,6 +70,14 @@ function getErrorMessage(error: { code?: string; message?: string } | null | und
     return "Your email is not verified yet. We sent a fresh verification link.";
   }
 
+  if (error.code === "VALIDATION_ERROR") {
+    return "Check the form fields and try again.";
+  }
+
+  if (error.code === "AUTH_REQUEST_FAILED") {
+    return "The authentication request failed. Check your tunnel URL settings and try again.";
+  }
+
   return error.message || "Something went wrong. Please try again.";
 }
 
@@ -96,10 +107,19 @@ function resolveCallbackURL(callbackURL: string) {
   return new URL(callbackURL, window.location.origin).toString();
 }
 
-export function AuthForm({ callbackURL = "/dashboard", mode, providers }: Readonly<AuthFormProps>) {
+export function AuthForm({
+  callbackURL = "/dashboard",
+  errorRedirectPath,
+  initialErrorCode,
+  initialSuccessMessage,
+  mode,
+  providers,
+}: Readonly<AuthFormProps>) {
   const router = useRouter();
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(
+    initialErrorCode ? getErrorMessage({ code: initialErrorCode }) : null,
+  );
+  const [successMessage, setSuccessMessage] = useState<string | null>(initialSuccessMessage ?? null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingProvider, setPendingProvider] = useState<SocialProvider | null>(null);
 
@@ -211,10 +231,23 @@ export function AuthForm({ callbackURL = "/dashboard", mode, providers }: Readon
     }
   }
 
+  const credentialDisabled = isSubmitting || pendingProvider !== null;
   const socialDisabled = isSubmitting || pendingProvider !== null;
 
   return (
-    <form className="space-y-4" onSubmit={handleCredentialSubmit}>
+    <form
+      action="/api/auth/credentials"
+      className="space-y-4"
+      method="post"
+      onSubmit={handleCredentialSubmit}
+    >
+      <input type="hidden" name="mode" value={mode} />
+      <input type="hidden" name="callbackURL" value={callbackURL} />
+      <input
+        type="hidden"
+        name="errorRedirectPath"
+        value={errorRedirectPath ?? (mode === "signup" ? "/signup" : "/login")}
+      />
       {mode === "signup" ? (
         <label className="block">
           <span className="mb-2 block text-sm font-semibold text-[var(--foreground)]">
@@ -276,7 +309,7 @@ export function AuthForm({ callbackURL = "/dashboard", mode, providers }: Readon
 
       <button
         type="submit"
-        disabled={isSubmitting || pendingProvider !== null}
+        disabled={credentialDisabled}
         className="button-primary mt-3 inline-flex w-full items-center justify-center rounded-full px-6 py-4 text-lg font-semibold disabled:cursor-not-allowed disabled:opacity-70"
       >
         {getPrimaryButtonLabel(mode, isSubmitting)}

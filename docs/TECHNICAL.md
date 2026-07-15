@@ -165,7 +165,7 @@ you are running.
 | `DATABASE_URL` | Yes | PostgreSQL connection string for Prisma. |
 | `OPENAI_API_KEY` | Yes | Required for AI draft generation. |
 | `OPENAI_MODEL` | No | Overrides the default generation model. Current default is `gpt-5.4-mini`. |
-| `APP_ENCRYPTION_KEY` | Strongly recommended | Stable key for encrypting provider tokens at rest. |
+| `APP_ENCRYPTION_KEY` | Yes for integrations | Stable key for encrypting provider tokens at rest. |
 | `BETTER_AUTH_SECRET` | Yes for auth | Secret used to sign Better Auth sessions and OAuth state. Falls back to `APP_ENCRYPTION_KEY` if omitted. |
 | `SMTP_HOST` | Required for email verification | SMTP host used to send Better Auth verification emails. |
 | `SMTP_PORT` | Required for email verification | SMTP port used to send Better Auth verification emails. |
@@ -202,10 +202,8 @@ you are running.
 
 Notes:
 
-- `APP_ENCRYPTION_KEY` should be stable across restarts and deployments. If it
-  is omitted, REZZUM derives key material from provider secrets and
-  `OPENAI_API_KEY`, which is weaker operationally and can make token decryption
-  brittle if secrets change.
+- `APP_ENCRYPTION_KEY` must be stable across restarts and deployments. Changing
+  it makes already stored provider tokens undecryptable.
 - `BETTER_AUTH_SECRET` should be a long random string and should not change
   between deploys unless you intend to invalidate all active sessions.
 - Email verification and settings-page email changes are enabled only when the

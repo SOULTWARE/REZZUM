@@ -199,12 +199,13 @@ async function fetchAuthenticatedXUser(accessToken: string) {
 export async function connectXAccount(params: {
   code: string;
   verifier: string;
+  userId: string;
   baseUrl?: string;
 }) {
   const token = await exchangeXCodeForToken(params);
   const user = await fetchAuthenticatedXUser(token.access_token);
 
-  return upsertSocialAccount({
+  return upsertSocialAccount(params.userId, {
     platform: SocialPlatform.X,
     providerAccountId: user.id,
     status: SocialAccountStatus.CONNECTED,

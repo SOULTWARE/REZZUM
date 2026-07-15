@@ -2,6 +2,10 @@ import type { Prisma } from "@prisma/client";
 import { GeneratedPostStatus, GenerationTone, SocialPlatform } from "@prisma/client";
 import { db } from "@/server/db/client";
 
+const DEFAULT_POST_LIST_LIMIT = 1000;
+const DEFAULT_SIBLING_POST_LIMIT = 20;
+const DEFAULT_DUE_POST_LIMIT = 25;
+
 export const generatedPostInclude = {
   article: {
     include: {
@@ -22,23 +26,48 @@ export type GeneratedPostRecord = Prisma.GeneratedPostGetPayload<{
   include: typeof generatedPostInclude;
 }>;
 
-export async function listLatestGeneratedPosts(where: Prisma.GeneratedPostWhereInput = {}) {
+function scopePostWhere(userId: string, where: Prisma.GeneratedPostWhereInput = {}) {
+  return {
+    AND: [
+      where,
+      {
+        article: {
+          feed: {
+            userId,
+          },
+        },
+      },
+    ],
+  } satisfies Prisma.GeneratedPostWhereInput;
+}
+
+export async function listLatestGeneratedPosts(
+  userId: string,
+  where: Prisma.GeneratedPostWhereInput = {},
+  limit = DEFAULT_POST_LIST_LIMIT,
+) {
   return db.generatedPost.findMany({
     where: {
-      ...where,
+      ...scopePostWhere(userId, where),
       nextVersions: {
         none: {},
       },
     },
     include: generatedPostInclude,
     orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+    take: limit,
   });
 }
 
-export async function countGeneratedPostsByStatus() {
+export async function countGeneratedPostsByStatus(userId: string) {
   return db.generatedPost.groupBy({
     by: ["status"],
     where: {
+      article: {
+        feed: {
+          userId,
+        },
+      },
       nextVersions: {
         none: {},
       },
@@ -49,23 +78,29 @@ export async function countGeneratedPostsByStatus() {
   });
 }
 
-export async function getGeneratedPostById(postId: string) {
-  return db.generatedPost.findUnique({
-    where: { id: postId },
+export async function getGeneratedPostById(postId: string, userId?: string) {
+  return db.generatedPost.findFirst({
+    where: userId ? scopePostWhere(userId, { id: postId }) : { id: postId },
     include: generatedPostInclude,
   });
 }
 
-export async function listLatestSiblingPosts(articleId: string) {
+export async function listLatestSiblingPosts(userId: string, articleId: string) {
   return db.generatedPost.findMany({
     where: {
       articleId,
+      article: {
+        feed: {
+          userId,
+        },
+      },
       nextVersions: {
         none: {},
       },
     },
     include: generatedPostInclude,
     orderBy: [{ platform: "asc" }, { updatedAt: "desc" }],
+    take: DEFAULT_SIBLING_POST_LIMIT,
   });
 }
 
@@ -165,7 +200,16 @@ export async function createRegeneratedPostVersion(data: {
 export async function updateGeneratedPost(
   postId: string,
   data: Prisma.GeneratedPostUncheckedUpdateInput,
+  userId?: string,
 ) {
+  if (userId) {
+    const post = await getGeneratedPostById(postId, userId);
+
+    if (!post) {
+      throw new Error("Draft not found.");
+    }
+  }
+
   return db.generatedPost.update({
     where: { id: postId },
     data,
@@ -173,7 +217,11 @@ export async function updateGeneratedPost(
   });
 }
 
-export async function listDueScheduledPosts(now: Date) {
+export async function listDueScheduledPosts(now: Date, limit = DEFAULT_DUE_POST_LIMIT) {
+  if (limit <= 0) {
+    return [];
+  }
+
   return db.generatedPost.findMany({
     where: {
       status: GeneratedPostStatus.SCHEDULED,
@@ -186,6 +234,28 @@ export async function listDueScheduledPosts(now: Date) {
     },
     include: generatedPostInclude,
     orderBy: [{ scheduledFor: "asc" }],
+    take: limit,
+  });
+}
+
+export async function listStalePublishingPosts(cutoff: Date, limit = DEFAULT_DUE_POST_LIMIT) {
+  if (limit <= 0) {
+    return [];
+  }
+
+  return db.generatedPost.findMany({
+    where: {
+      status: GeneratedPostStatus.PUBLISHING,
+      updatedAt: {
+        lte: cutoff,
+      },
+      nextVersions: {
+        none: {},
+      },
+    },
+    include: generatedPostInclude,
+    orderBy: [{ updatedAt: "asc" }],
+    take: limit,
   });
 }
 

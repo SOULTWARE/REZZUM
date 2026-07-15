@@ -3,6 +3,7 @@ import { PageContainer } from "@/components/page-container";
 import { FeedEmptyState } from "@/components/feeds/feed-empty-state";
 import { FeedList } from "@/components/feeds/feed-list";
 import { FeedsIcon, ScheduleIcon, SparkIcon } from "@/components/icons";
+import { requireAuthSession } from "@/server/auth/session";
 import { listManagedFeeds } from "@/server/feeds/service";
 
 export const metadata: Metadata = {
@@ -41,7 +42,8 @@ function formatPercentage(value: number, total: number) {
 }
 
 export default async function FeedsPage() {
-  const feeds = await listManagedFeeds();
+  const session = await requireAuthSession();
+  const feeds = await listManagedFeeds(session.user.id);
   const activeFeedCount = feeds.filter((feed) => feed.status === "ACTIVE").length;
   const attentionFeedCount = feeds.filter(
     (feed) => feed.status === "ERROR" || feed.status === "PAUSED",

@@ -5,7 +5,7 @@ import {
   ensureCanCreatePosts,
   filterAllowedPlatforms,
   getRemainingPostSlots,
-  getWorkspaceAutomationPlanAccess,
+  getUserPlanAccess,
   type PlanAccess,
 } from "@/server/billing/limits";
 import { db } from "@/server/db/client";
@@ -25,6 +25,7 @@ import { getWorkspaceSettings } from "@/server/settings/service";
 
 type FeedForSync = {
   id: string;
+  userId: string;
   name: string;
   rssUrl: string;
   defaultLanguage: string | null;
@@ -60,6 +61,31 @@ type FeedSyncResult = {
   generatedPostCount: number;
   articleIssues: FeedSyncArticleIssue[];
 };
+
+const DEFAULT_FEED_SYNC_BATCH_LIMIT = 10;
+const DEFAULT_ARTICLE_REEVALUATION_LIMIT = 500;
+
+function getPositiveIntegerEnv(name: string, fallback: number, max: number) {
+  const parsed = Number.parseInt(process.env[name] ?? "", 10);
+
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+
+  return Math.min(parsed, max);
+}
+
+function getFeedSyncBatchLimit() {
+  return getPositiveIntegerEnv("CRON_FEED_SYNC_BATCH_SIZE", DEFAULT_FEED_SYNC_BATCH_LIMIT, 100);
+}
+
+function getArticleReevaluationLimit() {
+  return getPositiveIntegerEnv(
+    "FEED_ARTICLE_REEVALUATION_BATCH_SIZE",
+    DEFAULT_ARTICLE_REEVALUATION_LIMIT,
+    2000,
+  );
+}
 
 function normalizeUrl(value: string | null) {
   if (!value) {
@@ -179,11 +205,17 @@ function buildArticleDedupeWhere(params: {
   ];
 
   if (params.canonicalUrl) {
-    dedupeWhere.push({ canonicalUrl: params.canonicalUrl });
+    dedupeWhere.push({
+      feedId: params.feedId,
+      canonicalUrl: params.canonicalUrl,
+    });
   }
 
   if (params.contentHash) {
-    dedupeWhere.push({ contentHash: params.contentHash });
+    dedupeWhere.push({
+      feedId: params.feedId,
+      contentHash: params.contentHash,
+    });
   }
 
   return dedupeWhere;
@@ -403,8 +435,9 @@ export async function generatePostsForArticle(articleId: string, planAccess?: Pl
     return [];
   }
 
-  const access = planAccess ?? await getWorkspaceAutomationPlanAccess();
-  const workspace = await getWorkspaceSettings();
+  const userId = article.feed.userId;
+  const access = planAccess ?? await getUserPlanAccess(userId);
+  const workspace = await getWorkspaceSettings(userId);
   const personalization = resolveFeedPersonalization({
     feed: article.feed,
     workspace,
@@ -414,19 +447,19 @@ export async function generatePostsForArticle(articleId: string, planAccess?: Pl
     article.feed.generateLinkedIn ? SocialPlatform.LINKEDIN : null,
     article.feed.generateX ? SocialPlatform.X : null,
   ].filter(Boolean) as SocialPlatform[];
-  const remainingSlots = await getRemainingPostSlots(access);
+  const remainingSlots = await getRemainingPostSlots(userId, access);
   const platforms = filterAllowedPlatforms(access, requestedPlatforms).slice(0, remainingSlots);
   const createdPosts = [];
 
   if (requestedPlatforms.length > 0 && platforms.length === 0) {
     if (remainingSlots <= 0) {
-      await ensureCanCreatePosts(access, 1);
+      await ensureCanCreatePosts(userId, access, 1);
     }
 
     assertPlatformsAllowed(access, requestedPlatforms);
   }
 
-  await ensureCanCreatePosts(access, platforms.length);
+  await ensureCanCreatePosts(userId, access, platforms.length);
 
   for (const platform of platforms) {
     const socialAccountId = await resolveTargetAccountId({
@@ -475,9 +508,17 @@ export async function generatePostsForArticle(articleId: string, planAccess?: Pl
 async function ingestSingleFeed(
   feedId: string,
   planAccess?: PlanAccess,
+  userId?: string,
 ): Promise<FeedSyncResult> {
   const feed = await db.rssFeed.findUnique({
-    where: { id: feedId },
+    where: userId
+      ? {
+          id_userId: {
+            id: feedId,
+            userId,
+          },
+        }
+      : { id: feedId },
     include: {
       filter: true,
       facebookAccount: true,
@@ -490,7 +531,7 @@ async function ingestSingleFeed(
     throw new Error("Feed not found.");
   }
 
-  const access = planAccess ?? await getWorkspaceAutomationPlanAccess();
+  const access = planAccess ?? await getUserPlanAccess(feed.userId);
   const now = new Date();
 
   await db.rssFeed.update({
@@ -558,16 +599,22 @@ async function ingestSingleFeed(
   }
 }
 
-export async function syncFeedNow(feedId: string, planAccess?: PlanAccess) {
-  return ingestSingleFeed(feedId, planAccess);
+export async function syncFeedNow(userId: string, feedId: string, planAccess?: PlanAccess) {
+  return ingestSingleFeed(feedId, planAccess, userId);
 }
 
 export async function reevaluateExistingArticlesForFeed(
+  userId: string,
   feedId: string,
   planAccess?: PlanAccess,
 ) {
   const feed = await db.rssFeed.findUnique({
-    where: { id: feedId },
+    where: {
+      id_userId: {
+        id: feedId,
+        userId,
+      },
+    },
     include: {
       filter: true,
       facebookAccount: true,
@@ -580,7 +627,7 @@ export async function reevaluateExistingArticlesForFeed(
     throw new Error("Feed not found.");
   }
 
-  const access = planAccess ?? await getWorkspaceAutomationPlanAccess();
+  const access = planAccess ?? await getUserPlanAccess(userId);
   const articles = await db.article.findMany({
     where: {
       feedId,
@@ -589,6 +636,7 @@ export async function reevaluateExistingArticlesForFeed(
       },
     },
     orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+    take: getArticleReevaluationLimit(),
   });
 
   const results = [];
@@ -644,6 +692,7 @@ export async function syncDueFeeds() {
       id: true,
     },
     orderBy: [{ nextSyncAt: "asc" }],
+    take: getFeedSyncBatchLimit(),
   });
 
   const results = [];

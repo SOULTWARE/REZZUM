@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
   try {
     assertPlatformsAllowed(await getUserPlanAccess(session.user.id), [SocialPlatform.FACEBOOK]);
-    await connectFacebookPages(code, getPublicRequestBaseUrl(request));
+    await connectFacebookPages(session.user.id, code, getPublicRequestBaseUrl(request));
 
     return NextResponse.redirect(getPublicRequestUrl("/accounts?connected=facebook", request));
   } catch (error) {

@@ -167,7 +167,7 @@ async function fetchLinkedInOrganizations(accessToken: string) {
   return organizations;
 }
 
-export async function connectLinkedInOrganizations(code: string, baseUrl?: string) {
+export async function connectLinkedInOrganizations(userId: string, code: string, baseUrl?: string) {
   const token = await exchangeLinkedInCodeForToken(code, baseUrl);
   const user = await fetchLinkedInUserInfo(token.access_token);
   const organizations = await fetchLinkedInOrganizations(token.access_token);
@@ -182,7 +182,7 @@ export async function connectLinkedInOrganizations(code: string, baseUrl?: strin
 
   for (const organization of organizations) {
     connectedAccounts.push(
-      await upsertSocialAccount({
+      await upsertSocialAccount(userId, {
         platform: SocialPlatform.LINKEDIN,
         providerAccountId: organization.id,
         status: SocialAccountStatus.CONNECTED,

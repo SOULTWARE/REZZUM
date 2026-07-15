@@ -2,6 +2,7 @@ import { SocialAccountStatus, SocialPlatform } from "@prisma/client";
 import {
   disconnectSocialAccount,
   getSocialAccountById,
+  getSocialAccountByIdInternal,
   listSocialAccounts,
   listSocialAccountsInternal,
 } from "@/server/accounts/repository";
@@ -20,8 +21,8 @@ function compareStatuses(
   return STATUS_ORDER.indexOf(left) - STATUS_ORDER.indexOf(right);
 }
 
-export async function getAccountsOverview() {
-  const accounts = await listSocialAccounts();
+export async function getAccountsOverview(userId: string) {
+  const accounts = await listSocialAccounts(userId);
   const orderedAccounts = [...accounts].sort((left, right) => {
     const statusComparison = compareStatuses(left.status, right.status);
 
@@ -55,8 +56,8 @@ export async function getAccountsOverview() {
   };
 }
 
-export async function getConnectedAccountOptions(platform?: SocialPlatform) {
-  const accounts = await listSocialAccounts();
+export async function getConnectedAccountOptions(userId: string, platform?: SocialPlatform) {
+  const accounts = await listSocialAccounts(userId);
 
   return accounts
     .filter(
@@ -71,16 +72,20 @@ export async function getConnectedAccountOptions(platform?: SocialPlatform) {
     }));
 }
 
-export async function getConnectedSocialAccountsInternal() {
-  const accounts = await listSocialAccountsInternal();
+export async function getConnectedSocialAccountsInternal(userId: string) {
+  const accounts = await listSocialAccountsInternal(userId);
 
   return accounts.filter((account) => account.status === SocialAccountStatus.CONNECTED);
 }
 
-export async function getSocialAccount(accountId: string) {
-  return getSocialAccountById(accountId);
+export async function getSocialAccount(userId: string, accountId: string) {
+  return getSocialAccountById(userId, accountId);
 }
 
-export async function disconnectAccount(accountId: string) {
-  return disconnectSocialAccount(accountId);
+export async function getSocialAccountInternal(accountId: string) {
+  return getSocialAccountByIdInternal(accountId);
+}
+
+export async function disconnectAccount(userId: string, accountId: string) {
+  return disconnectSocialAccount(userId, accountId);
 }

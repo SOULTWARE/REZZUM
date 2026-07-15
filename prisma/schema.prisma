@@ -7,15 +7,18 @@ datasource db {
 }
 
 model user {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  sessions      session[]
-  accounts      account[]
+  id                String             @id
+  name              String
+  email             String             @unique
+  emailVerified     Boolean            @default(false)
+  image             String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  sessions          session[]
+  accounts          account[]
+  rssFeeds          RssFeed[]
+  socialAccounts    SocialAccount[]
+  workspaceSettings WorkspaceSettings?
 }
 
 model session {
@@ -94,6 +97,7 @@ enum GeneratedPostStatus {
   APPROVED
   REJECTED
   SCHEDULED
+  PUBLISHING
   PUBLISHED
   FAILED
 }
@@ -113,9 +117,10 @@ enum PublishAttemptStatus {
 
 model RssFeed {
   id                         String         @id @default(cuid())
+  userId                     String         @map("user_id")
   name                       String         @db.VarChar(120)
   rssUrl                     String         @map("rss_url") @db.Text
-  normalizedRssUrl           String         @unique @map("normalized_rss_url") @db.Text
+  normalizedRssUrl           String         @map("normalized_rss_url") @db.Text
   status                     FeedStatus     @default(ACTIVE)
   defaultLanguage            String?        @map("default_language") @db.VarChar(64)
   defaultFeel                String?        @map("default_feel") @db.VarChar(120)
@@ -136,14 +141,19 @@ model RssFeed {
   createdAt                  DateTime       @default(now()) @map("created_at")
   updatedAt                  DateTime       @updatedAt @map("updated_at")
   archivedAt                 DateTime?      @map("archived_at")
+  user                       user           @relation(fields: [userId], references: [id], onDelete: Cascade)
   filter                     FeedFilter?
   articles                   Article[]
   facebookAccount            SocialAccount? @relation("FeedFacebookAccount", fields: [facebookAccountId], references: [id], onDelete: SetNull)
   linkedinAccount            SocialAccount? @relation("FeedLinkedInAccount", fields: [linkedinAccountId], references: [id], onDelete: SetNull)
   xAccount                   SocialAccount? @relation("FeedXAccount", fields: [xAccountId], references: [id], onDelete: SetNull)
 
+  @@unique([userId, normalizedRssUrl])
+  @@unique([id, userId])
+  @@index([userId, status])
   @@index([status])
   @@index([nextSyncAt])
+  @@index([status, nextSyncAt])
   @@map("rss_feeds")
 }
 
@@ -166,8 +176,8 @@ model Article {
   sourceEntryId     String?       @map("source_entry_id") @db.VarChar(255)
   title             String        @db.Text
   sourceUrl         String        @map("source_url") @db.Text
-  canonicalUrl      String?       @unique @map("canonical_url") @db.Text
-  contentHash       String?       @unique @map("content_hash") @db.VarChar(64)
+  canonicalUrl      String?       @map("canonical_url") @db.Text
+  contentHash       String?       @map("content_hash") @db.VarChar(64)
   excerpt           String?       @db.Text
   contentText       String?       @map("content_text") @db.Text
   authorName        String?       @map("author_name") @db.VarChar(191)
@@ -181,6 +191,8 @@ model Article {
   generatedPosts    GeneratedPost[]
 
   @@unique([feedId, sourceUrl])
+  @@unique([feedId, canonicalUrl])
+  @@unique([feedId, contentHash])
   @@index([feedId, status])
   @@index([publishedAt])
   @@index([discoveredAt])
@@ -222,6 +234,8 @@ model GeneratedPost {
   @@index([socialAccountId])
   @@index([status])
   @@index([scheduledFor])
+  @@index([status, scheduledFor])
+  @@index([status, updatedAt])
   @@index([publishedAt])
   @@index([publishedExternalId])
   @@map("generated_posts")
@@ -249,6 +263,7 @@ model PublishAttempt {
 
 model SocialAccount {
   id                          String              @id @default(cuid())
+  userId                      String              @map("user_id")
   platform                    SocialPlatform
   status                      SocialAccountStatus @default(PENDING)
   displayName                 String              @map("display_name") @db.VarChar(191)
@@ -267,6 +282,7 @@ model SocialAccount {
   metadataJson                Json?               @map("metadata_json")
   createdAt                   DateTime            @default(now()) @map("created_at")
   updatedAt                   DateTime            @updatedAt @map("updated_at")
+  user                        user                @relation(fields: [userId], references: [id], onDelete: Cascade)
   facebookFeeds               RssFeed[]           @relation("FeedFacebookAccount")
   linkedinFeeds               RssFeed[]           @relation("FeedLinkedInAccount")
   xFeeds                      RssFeed[]           @relation("FeedXAccount")
@@ -275,14 +291,17 @@ model SocialAccount {
   workspaceDefaultLinkedInFor WorkspaceSettings[] @relation("WorkspaceDefaultLinkedInAccount")
   workspaceDefaultXFor        WorkspaceSettings[] @relation("WorkspaceDefaultXAccount")
 
-  @@unique([platform, providerAccountId])
+  @@unique([userId, platform, providerAccountId])
+  @@unique([id, userId])
+  @@index([userId, platform, status])
   @@index([platform, status])
   @@index([status])
   @@map("social_accounts")
 }
 
 model WorkspaceSettings {
-  id                                String         @id @default("singleton")
+  id                                String         @id @default(cuid())
+  userId                            String         @unique @map("user_id")
   defaultLanguage                   String         @default("English") @map("default_language") @db.VarChar(64)
   defaultFeel                       String         @default("Professional") @map("default_feel") @db.VarChar(120)
   defaultStyle                      String         @default("") @map("default_style") @db.Text
@@ -292,6 +311,7 @@ model WorkspaceSettings {
   defaultXAccountId                 String?        @map("default_x_account_id")
   createdAt                         DateTime       @default(now()) @map("created_at")
   updatedAt                         DateTime       @updatedAt @map("updated_at")
+  user                              user           @relation(fields: [userId], references: [id], onDelete: Cascade)
   defaultFacebookAccount            SocialAccount? @relation("WorkspaceDefaultFacebookAccount", fields: [defaultFacebookAccountId], references: [id], onDelete: SetNull)
   defaultLinkedInAccount            SocialAccount? @relation("WorkspaceDefaultLinkedInAccount", fields: [defaultLinkedInAccountId], references: [id], onDelete: SetNull)
   defaultXAccount                   SocialAccount? @relation("WorkspaceDefaultXAccount", fields: [defaultXAccountId], references: [id], onDelete: SetNull)

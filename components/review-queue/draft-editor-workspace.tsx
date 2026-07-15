@@ -7,6 +7,7 @@ import type { GeneratedPostStatus, GenerationTone, SocialPlatform } from "@prism
 import {
   ApproveIcon,
   CalendarIcon,
+  FacebookIcon,
   LinkedInIcon,
   PublishIcon,
   RefreshIcon,
@@ -60,7 +61,23 @@ function PlatformIcon({
     return <LinkedInIcon className={className} />;
   }
 
+  if (platform === "FACEBOOK") {
+    return <FacebookIcon className={className} />;
+  }
+
   return <XIcon className={className} />;
+}
+
+function getPlatformTitle(platform: SocialPlatform) {
+  if (platform === "FACEBOOK") {
+    return "Facebook";
+  }
+
+  if (platform === "LINKEDIN") {
+    return "LinkedIn";
+  }
+
+  return "X";
 }
 
 function ActionButton({
@@ -171,7 +188,7 @@ export function DraftEditorWorkspace({
             Draft editor
           </p>
           <h2 className="mt-3 font-[var(--font-display)] text-[2rem] font-semibold tracking-[-0.04em] text-[var(--foreground)]">
-            {platform === "LINKEDIN" ? "LinkedIn" : "X"} review draft
+            {getPlatformTitle(platform)} review draft
           </h2>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">
             Review the draft, edit it, then approve, schedule, publish, or regenerate it.

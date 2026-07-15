@@ -24,15 +24,38 @@ function getPlanCheckoutUrl(plan: string | null | undefined) {
   return `/api/billing/checkout?plan=${resolvedPlan}&returnTo=%2Fpricing`;
 }
 
+function hasCredentialQueryParams(searchParams: {
+  [key: string]: string | string[] | undefined;
+}) {
+  return ["email", "password", "name"].some((key) => searchParams[key] !== undefined);
+}
+
+function getCleanLoginPath(plan: string | null) {
+  return plan ? `/login?plan=${encodeURIComponent(plan)}` : "/login";
+}
+
+function getSearchParamValue(
+  searchParams: { [key: string]: string | string[] | undefined },
+  key: string,
+) {
+  const value = searchParams[key];
+
+  return typeof value === "string" ? value : null;
+}
+
 export default async function LoginPage({
   searchParams,
 }: Readonly<{
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }>) {
-  const session = await getAuthSession();
   const resolvedSearchParams = await searchParams;
-  const planValue =
-    typeof resolvedSearchParams.plan === "string" ? resolvedSearchParams.plan : null;
+  const planValue = getSearchParamValue(resolvedSearchParams, "plan");
+
+  if (hasCredentialQueryParams(resolvedSearchParams)) {
+    redirect(getCleanLoginPath(planValue));
+  }
+
+  const session = await getAuthSession();
   const checkoutUrl = getPlanCheckoutUrl(planValue);
 
   if (session) {
@@ -49,6 +72,8 @@ export default async function LoginPage({
     >
       <AuthForm
         callbackURL={checkoutUrl ?? "/dashboard"}
+        errorRedirectPath={getCleanLoginPath(planValue)}
+        initialErrorCode={getSearchParamValue(resolvedSearchParams, "authError")}
         mode="login"
         providers={enabledAuthProviders}
       />

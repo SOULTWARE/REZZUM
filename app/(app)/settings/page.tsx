@@ -125,10 +125,10 @@ export default async function SettingsPage({
   ] =
     await Promise.all([
       searchParams,
-      getWorkspaceSettings(),
-      getConnectedAccountOptions("FACEBOOK"),
-      getConnectedAccountOptions("LINKEDIN"),
-      getConnectedAccountOptions("X"),
+      getWorkspaceSettings(session.user.id),
+      getConnectedAccountOptions(session.user.id, "FACEBOOK"),
+      getConnectedAccountOptions(session.user.id, "LINKEDIN"),
+      getConnectedAccountOptions(session.user.id, "X"),
       db.account.findFirst({
         select: {
           id: true,

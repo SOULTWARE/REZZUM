@@ -31,6 +31,7 @@ export async function GET(request: Request) {
     assertPlatformsAllowed(await getUserPlanAccess(session.user.id), [SocialPlatform.X]);
     await connectXAccount({
       code,
+      userId: session.user.id,
       verifier,
       baseUrl: getPublicRequestBaseUrl(request),
     });

@@ -48,6 +48,16 @@ export function getAppBaseUrl() {
 }
 
 export function getRequestBaseUrl(request: Request) {
+  const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+
+  if (configuredUrl && !isLocalhostUrl(configuredUrl)) {
+    return stripTrailingSlash(configuredUrl);
+  }
+
+  if (process.env.NODE_ENV !== "development") {
+    return getAppBaseUrl();
+  }
+
   const forwardedProto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
   const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
   const host = request.headers.get("host")?.trim();

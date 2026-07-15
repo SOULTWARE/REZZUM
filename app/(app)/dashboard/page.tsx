@@ -11,6 +11,7 @@ import {
   SparkIcon,
 } from "@/components/icons";
 import { getGeneratedPostStatusLabel, getSocialPlatformLabel } from "@/lib/review-queue/constants";
+import { requireAuthSession } from "@/server/auth/session";
 import { getDashboardOverview } from "@/server/dashboard/overview";
 
 export const metadata: Metadata = {
@@ -96,6 +97,10 @@ function getStatusClassName(status: GeneratedPostStatus) {
     return "bg-[var(--tertiary-soft)] text-[rgb(79_73_100)]";
   }
 
+  if (status === GeneratedPostStatus.PUBLISHING) {
+    return "bg-[var(--primary-soft)] text-[var(--primary-strong)]";
+  }
+
   if (status === GeneratedPostStatus.APPROVED) {
     return "bg-emerald-100 text-emerald-700";
   }
@@ -108,7 +113,8 @@ function getStatusClassName(status: GeneratedPostStatus) {
 }
 
 export default async function DashboardPage() {
-  const overview = await getDashboardOverview();
+  const session = await requireAuthSession();
+  const overview = await getDashboardOverview(session.user.id);
   const hasFeeds = overview.totalFeeds > 0;
   const hasActivity = overview.recentActivity.length > 0;
 
